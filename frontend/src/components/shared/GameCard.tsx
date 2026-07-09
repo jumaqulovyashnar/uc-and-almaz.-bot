@@ -65,13 +65,16 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
             </span>
           </div>
 
-          {/* Game name */}
-          <h3 className="text-2xl font-black text-white leading-tight tracking-wide drop-shadow-lg">
+          {/* Game name — always white/orange, never black */}
+          <h3
+            className="text-2xl font-black leading-tight tracking-wide drop-shadow-lg"
+            style={{ color: isPubg ? '#ffffff' : '#FF6B00' }}
+          >
             {isPubg ? 'UC Sotib\nOlish' : 'Olmos\nSotib Olish'}
           </h3>
 
           {/* Package count */}
-          <p className="text-xs text-white/60 mt-1.5 font-medium">
+          <p className="text-xs mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.65)' }}>
             {packagesCount}+ xil paket mavjud
           </p>
         </div>

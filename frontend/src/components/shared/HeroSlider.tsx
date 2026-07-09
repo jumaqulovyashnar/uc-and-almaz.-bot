@@ -42,7 +42,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({
 
   return (
     /* aspect-video = 16/9, rasmlar to'liq ko'rinadi */
-    <div className="relative w-full overflow-hidden rounded-b-3xl bg-black" style={{ height: '220px' }}>
+    <div className="relative w-full overflow-hidden rounded-b-sm bg-black" style={{ height: '220px' }}>
       {/* Slides strip */}
       <div
         className="flex h-full transition-transform duration-500 ease-in-out"
