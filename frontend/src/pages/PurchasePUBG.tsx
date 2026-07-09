@@ -6,15 +6,11 @@ import { pubgPackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
 
-import pubgImg1 from '../assets/pubg.jpg';
-import pubgImg2 from '../assets/pubg1.webp';
-import pubgImg3 from '../assets/pubg2.jpg';
-
 // ─── PUBG banner slides (infinity loop) ─────────────────────────────────────
 const PUBG_SLIDES = [
-  { id: 1, imageUrl: pubgImg1 },
-  { id: 2, imageUrl: pubgImg2 },
-  { id: 3, imageUrl: pubgImg3 },
+  { id: 1, imageUrl: '/images/pubg.jpg' },
+  { id: 2, imageUrl: '/images/pubg1.webp' },
+  { id: 3, imageUrl: '/images/pubg2.jpg' },
 ];
 
 // ─── Mini Infinity Slider ────────────────────────────────────────────────────

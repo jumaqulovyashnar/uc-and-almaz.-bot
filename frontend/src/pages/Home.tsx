@@ -13,11 +13,11 @@ import freeImg1 from '../assets/free.jpg';
 import freeImg2 from '../assets/free1.webp';
 
 const HERO_SLIDES = [
-  { id: 1, imageUrl: pubgImg1,  title: 'PUBG MOBILE',   subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
-  { id: 2, imageUrl: freeImg1,  title: 'FREE FIRE',      subtitle: '💎 Olmos & Propuski — tez yetkazib berish' },
-  { id: 3, imageUrl: pubgImg2,  title: 'PUBG MOBILE',    subtitle: "🏆 Prime & Prime Plus obunalar" },
-  { id: 4, imageUrl: freeImg2,  title: 'FREE FIRE MAX',  subtitle: "⚡ 24/7 avtomatik to'ldirish" },
-  { id: 5, imageUrl: pubgImg3,  title: 'PUBG MOBILE',    subtitle: '🎯 Barcha paketlar bir joyda' },
+  { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
+  { id: 2, imageUrl: '/images/free.jpg',   title: 'FREE FIRE',    subtitle: '💎 Olmos & Propuski — tez yetkazib berish' },
+  { id: 3, imageUrl: '/images/pubg1.webp', title: 'PUBG MOBILE',  subtitle: "🏆 Prime & Prime Plus obunalar" },
+  { id: 4, imageUrl: '/images/free1.webp', title: 'FREE FIRE MAX', subtitle: "⚡ 24/7 avtomatik to'ldirish" },
+  { id: 5, imageUrl: '/images/pubg2.jpg',  title: 'PUBG MOBILE',  subtitle: '🎯 Barcha paketlar bir joyda' },
 ];
 
 const Home: React.FC = () => {
