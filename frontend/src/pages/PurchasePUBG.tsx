@@ -13,6 +13,7 @@ import type { CategoryType } from '../types';
 const PurchasePUBG: React.FC = () => {
   const navigate = useNavigate();
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     selectedCategory,
@@ -29,13 +30,24 @@ const PurchasePUBG: React.FC = () => {
 
   const handleVerify = () => {
     if (!playerId) return;
+    
+    // Zod-matching regex check: only numbers, 5-12 digits
+    const pubgRegex = /^\d{5,12}$/;
+    if (!pubgRegex.test(playerId)) {
+      setError("PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak (M-n: 5123456789)");
+      setVerified(false);
+      return;
+    }
+    
+    setError(null);
     setVerifyLoading(true);
     setTimeout(() => {
-      setNickname('ProGamer_' + playerId.slice(-3));
+      setNickname('ProGamer_' + playerId.slice(-4));
       setVerified(true);
       setVerifyLoading(false);
     }, 1500);
   };
+
 
   const handleCategoryChange = (category: CategoryType) => {
     setCategory(category);
@@ -89,8 +101,13 @@ const PurchasePUBG: React.FC = () => {
               <Input
                 placeholder="ID raqamini kiriting..."
                 value={playerId}
-                onChange={(e) => setPlayerId(e.target.value)}
+                error={error || undefined}
+                onChange={(e) => {
+                  setPlayerId(e.target.value);
+                  if (error) setError(null);
+                }}
               />
+
             </div>
             <Button
               variant="primary"

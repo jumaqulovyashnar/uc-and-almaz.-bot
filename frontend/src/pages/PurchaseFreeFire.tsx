@@ -13,6 +13,7 @@ import type { CategoryType } from '../types';
 const PurchaseFreeFire: React.FC = () => {
   const navigate = useNavigate();
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     selectedCategory,
@@ -29,13 +30,24 @@ const PurchaseFreeFire: React.FC = () => {
 
   const handleVerify = () => {
     if (!playerId) return;
+    
+    // Zod-matching regex check: only numbers, 8-12 digits
+    const ffRegex = /^\d{8,12}$/;
+    if (!ffRegex.test(playerId)) {
+      setError("Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak (M-n: 1234567890)");
+      setVerified(false);
+      return;
+    }
+    
+    setError(null);
     setVerifyLoading(true);
     setTimeout(() => {
-      setNickname('ProGamer_' + playerId.slice(-3));
+      setNickname('ProGamer_' + playerId.slice(-4));
       setVerified(true);
       setVerifyLoading(false);
     }, 1500);
   };
+
 
   const handleCategoryChange = (category: CategoryType) => {
     setCategory(category);
@@ -89,8 +101,13 @@ const PurchaseFreeFire: React.FC = () => {
               <Input
                 placeholder="ID raqamini kiriting..."
                 value={playerId}
-                onChange={(e) => setPlayerId(e.target.value)}
+                error={error || undefined}
+                onChange={(e) => {
+                  setPlayerId(e.target.value);
+                  if (error) setError(null);
+                }}
               />
+
             </div>
             <Button
               variant="primary"
