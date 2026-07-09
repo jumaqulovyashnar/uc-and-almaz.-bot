@@ -158,6 +158,11 @@ const PurchaseFreeFire: React.FC = () => {
         <CategoryTabs
           activeCategory={selectedCategory}
           onChange={handleCategoryChange}
+          tabs={[
+            { id: 'almazar', label: isUz ? 'Paketlar' : 'Packages' },
+            { id: 'propuski', label: isUz ? 'Propuski' : 'Passes' },
+            { id: 'levelup', label: isUz ? 'Level Up' : 'Level Up' },
+          ]}
         />
       </div>
 

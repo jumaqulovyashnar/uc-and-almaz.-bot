@@ -156,6 +156,10 @@ const PurchasePUBG: React.FC = () => {
         <CategoryTabs
           activeCategory={selectedCategory}
           onChange={handleCategoryChange}
+          tabs={[
+            { id: 'almazar', label: isUz ? 'Paketlar' : 'Packages' },
+            { id: 'propuski', label: isUz ? "To'plamlar" : 'Bundles' },
+          ]}
         />
       </div>
 
