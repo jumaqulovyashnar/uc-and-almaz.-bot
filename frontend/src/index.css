@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cyber-bg: #0D0B1A;
+  --cyber-card: #1A1730;
+  --cyber-border: #2D2B48;
+  --cyber-purple: #7C3AED;
+  --cyber-cyan: #06B6D4;
+  --cyber-success: #10B981;
+  --cyber-warning: #F59E0B;
+  --cyber-error: #EF4444;
+  --text-primary: #F5F5F5;
+  --text-secondary: #9CA3AF;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D0B1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7C3AED;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5B21B6;
+}
+
+/* Utility classes */
+@layer components {
+  .gradient-primary {
+    background: linear-gradient(135deg, #7C3AED, #06B6D4);
+  }
+
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(26, 23, 48, 0.7);
+    border: 1px solid #2D2B48;
+  }
+
+  .card-hover {
+    transition: transform 0.2s ease;
+  }
+
+  .card-hover:hover {
+    transform: scale(1.02);
+  }
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--cyber-bg);
+  font-family: 'Inter', sans-serif;
+  color: #ffffff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: rgba(124, 58, 237, 0.4);
+  color: #ffffff;
+}
+
+/* Input autofill dark override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1A1730 inset !important;
+  -webkit-text-fill-color: #F5F5F5 !important;
+  caret-color: #F5F5F5;
+  transition: background-color 5000s ease-in-out 0s;
+}

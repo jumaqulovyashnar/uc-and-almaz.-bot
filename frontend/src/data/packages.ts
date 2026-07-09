@@ -1,0 +1,204 @@
+import type { GamePackage } from '../types';
+
+export const packages: GamePackage[] = [
+  // ─── PUBG Almazar ────────────────────────────────────────
+  {
+    id: 'pubg-almazar-60',
+    name: '60 UC',
+    amount: 60,
+    price: 12000,
+    game: 'pubg',
+    category: 'almazar',
+  },
+  {
+    id: 'pubg-almazar-325',
+    name: '325 UC',
+    amount: 325,
+    price: 60000,
+    game: 'pubg',
+    category: 'almazar',
+  },
+  {
+    id: 'pubg-almazar-660',
+    name: '660 UC',
+    amount: 660,
+    price: 115000,
+    game: 'pubg',
+    category: 'almazar',
+  },
+  {
+    id: 'pubg-almazar-1800',
+    name: '1800 UC',
+    amount: 1800,
+    price: 300000,
+    game: 'pubg',
+    category: 'almazar',
+  },
+  {
+    id: 'pubg-almazar-3850',
+    name: '3850 UC',
+    amount: 3850,
+    price: 600000,
+    game: 'pubg',
+    category: 'almazar',
+  },
+  {
+    id: 'pubg-almazar-8100',
+    name: '8100 UC',
+    amount: 8100,
+    price: 1200000,
+    game: 'pubg',
+    category: 'almazar',
+  },
+
+  // ─── PUBG Propuski ───────────────────────────────────────
+  {
+    id: 'pubg-propuski-elite',
+    name: 'Elite Pass',
+    amount: 1,
+    price: 12000,
+    game: 'pubg',
+    category: 'propuski',
+  },
+  {
+    id: 'pubg-propuski-elite-plus',
+    name: 'Elite Pass Plus',
+    amount: 1,
+    price: 28000,
+    game: 'pubg',
+    category: 'propuski',
+  },
+
+  // ─── PUBG Level Up ───────────────────────────────────────
+  {
+    id: 'pubg-levelup-1',
+    name: '1 Level Up',
+    amount: 1,
+    price: 5000,
+    game: 'pubg',
+    category: 'levelup',
+  },
+  {
+    id: 'pubg-levelup-5',
+    name: '5 Level Up',
+    amount: 5,
+    price: 20000,
+    game: 'pubg',
+    category: 'levelup',
+  },
+  {
+    id: 'pubg-levelup-10',
+    name: '10 Level Up',
+    amount: 10,
+    price: 35000,
+    game: 'pubg',
+    category: 'levelup',
+  },
+
+  // ─── Free Fire Almazar ───────────────────────────────────
+  {
+    id: 'ff-almazar-100',
+    name: '100 Olmos',
+    amount: 100,
+    price: 11000,
+    game: 'freefire',
+    category: 'almazar',
+  },
+  {
+    id: 'ff-almazar-310',
+    name: '310 Olmos',
+    amount: 310,
+    price: 33000,
+    game: 'freefire',
+    category: 'almazar',
+  },
+  {
+    id: 'ff-almazar-520',
+    name: '520 Olmos',
+    amount: 520,
+    price: 55000,
+    game: 'freefire',
+    category: 'almazar',
+  },
+  {
+    id: 'ff-almazar-1060',
+    name: '1060 Olmos',
+    amount: 1060,
+    price: 110000,
+    game: 'freefire',
+    category: 'almazar',
+  },
+  {
+    id: 'ff-almazar-2180',
+    name: '2180 Olmos',
+    amount: 2180,
+    price: 220000,
+    game: 'freefire',
+    category: 'almazar',
+  },
+  {
+    id: 'ff-almazar-5600',
+    name: '5600 Olmos',
+    amount: 5600,
+    price: 550000,
+    game: 'freefire',
+    category: 'almazar',
+  },
+
+  // ─── Free Fire Propuski ──────────────────────────────────
+  {
+    id: 'ff-propuski-elite',
+    name: 'Elite Pass',
+    amount: 1,
+    price: 4900,
+    game: 'freefire',
+    category: 'propuski',
+  },
+  {
+    id: 'ff-propuski-bundle',
+    name: 'Propuski Bundle',
+    amount: 1,
+    price: 76000,
+    game: 'freefire',
+    category: 'propuski',
+  },
+
+  // ─── Free Fire Level Up ──────────────────────────────────
+  {
+    id: 'ff-levelup-5',
+    name: '5 Level Up',
+    amount: 5,
+    price: 5000,
+    game: 'freefire',
+    category: 'levelup',
+  },
+  {
+    id: 'ff-levelup-10',
+    name: '10 Level Up',
+    amount: 10,
+    price: 9000,
+    game: 'freefire',
+    category: 'levelup',
+  },
+  {
+    id: 'ff-levelup-15',
+    name: '15 Level Up',
+    amount: 15,
+    price: 9000,
+    game: 'freefire',
+    category: 'levelup',
+  },
+  {
+    id: 'ff-levelup-20',
+    name: '20 Level Up',
+    amount: 20,
+    price: 9000,
+    game: 'freefire',
+    category: 'levelup',
+  },
+];
+
+export const pubgPackages = packages.filter((p) => p.game === 'pubg');
+export const freeFirePackages = packages.filter((p) => p.game === 'freefire');
+export default packages;
+

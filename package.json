@@ -1,0 +1,12 @@
+{
+  "name": "cyberpay",
+  "version": "1.0.0",
+  "description": "CyberPay fullstack Telegram Mini App",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "npx -y concurrently -n \"backend,frontend\" -c \"magenta,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\""
+  }
+}
