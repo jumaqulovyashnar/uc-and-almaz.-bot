@@ -6,12 +6,6 @@ import GameCard from '../components/shared/GameCard';
 import HeroSlider from '../components/shared/HeroSlider';
 import useStore from '../store/useStore';
 
-import pubgImg1 from '../assets/pubg.jpg';
-import pubgImg2 from '../assets/pubg1.webp';
-import pubgImg3 from '../assets/pubg2.jpg';
-import freeImg1 from '../assets/free.jpg';
-import freeImg2 from '../assets/free1.webp';
-
 const HERO_SLIDES = [
   { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
   { id: 2, imageUrl: '/images/free.jpg',   title: 'FREE FIRE',    subtitle: '💎 Olmos & Propuski — tez yetkazib berish' },
@@ -22,17 +16,9 @@ const HERO_SLIDES = [
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { setGame, language, telegramUser } = useStore();
+  const { setGame, language } = useStore();
 
   const isUz = language === 'uz';
-
-  const displayName = telegramUser
-    ? telegramUser.username
-      ? `@${telegramUser.username}`
-      : telegramUser.first_name
-    : isUz
-    ? 'Mehmon'
-    : 'Guest';
 
   const handleGameSelect = (game: 'pubg' | 'freefire') => {
     setGame(game);
@@ -46,26 +32,6 @@ const Home: React.FC = () => {
       {/* Hero slider — full width, below fixed header */}
       <div className="pt-16">
         <HeroSlider slides={HERO_SLIDES} autoPlayInterval={5000} />
-      </div>
-
-      {/* Greeting section */}
-      <div className="px-4 mt-5 animate-fade-in">
-        <div className="flex items-center gap-2">
-          <span
-            className="text-2xl select-none"
-            style={{ display: 'inline-block', animation: 'waveHand 1.8s ease-in-out infinite' }}
-          >
-            👋
-          </span>
-          <div>
-            <p className="text-xs text-gray-400">
-              {isUz ? 'Xush kelibsiz,' : 'Welcome back,'}
-            </p>
-            <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-cyber-purple to-cyber-cyan leading-tight">
-              {displayName}
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Stats row */}
@@ -96,14 +62,6 @@ const Home: React.FC = () => {
           <GameCard game="freefire" packagesCount={6} onClick={() => handleGameSelect('freefire')} />
         </div>
       </div>
-
-      <style>{`
-        @keyframes waveHand {
-          0%, 60%, 100% { transform: rotate(0deg); }
-          10%, 30% { transform: rotate(18deg); }
-          20% { transform: rotate(-8deg); }
-        }
-      `}</style>
 
       <BottomNav />
     </div>
