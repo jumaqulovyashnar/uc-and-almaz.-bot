@@ -7,6 +7,13 @@ import type {
   Order,
 } from '../types';
 
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+}
+
 interface StoreState {
   // Cart state
   selectedGame: GameType | null;
@@ -24,6 +31,9 @@ interface StoreState {
   // Orders
   orders: Order[];
 
+  // Telegram user
+  telegramUser: TelegramUser | null;
+
   // Actions
   setGame: (game: GameType | null) => void;
   setPackage: (pkg: GamePackage | null) => void;
@@ -38,6 +48,19 @@ interface StoreState {
   clearCart: () => void;
 }
 
+// Try to get Telegram WebApp user data
+const getTelegramUser = (): TelegramUser | null => {
+  try {
+    const tg = (window as any)?.Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user) {
+      return tg.initDataUnsafe.user as TelegramUser;
+    }
+  } catch {
+    // not in Telegram WebApp
+  }
+  return null;
+};
+
 export const useStore = create<StoreState>((set) => ({
   // Initial state
   selectedGame: null,
@@ -50,6 +73,7 @@ export const useStore = create<StoreState>((set) => ({
   language: 'uz',
   theme: 'dark',
   orders: [],
+  telegramUser: getTelegramUser(),
 
   // Actions
   setGame: (game) =>
@@ -80,7 +104,6 @@ export const useStore = create<StoreState>((set) => ({
   setLanguage: (lang) => set({ language: lang }),
 
   setTheme: (theme) => {
-    // Optionally update document class for styling
     if (theme === 'light') {
       document.documentElement.classList.add('light-theme');
     } else {

@@ -1,5 +1,5 @@
 export type GameType = 'pubg' | 'freefire';
-export type CategoryType = 'almazar' | 'propuski' | 'levelup';
+export type CategoryType = 'almazar' | 'propuski' | 'levelup' | 'toplamlar';
 export type PaymentMethodType = 'uzcard' | 'humo' | 'visa';
 export type OrderStatusType = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -11,6 +11,7 @@ export interface GamePackage {
   game: GameType;
   category: CategoryType;
   discount?: number;
+  image?: string;
 }
 
 export interface Game {
