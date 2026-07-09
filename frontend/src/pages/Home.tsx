@@ -49,23 +49,8 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Promo banner */}
-        <div className="mt-5 rounded-2xl overflow-hidden relative animate-slide-up">
-          <div className="bg-gradient-to-r from-cyber-purple via-purple-600 to-cyber-cyan animate-shimmer bg-[length:200%_100%]">
-            {/* Subtle overlay pattern */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.05),transparent)] pointer-events-none" />
-            <div className="p-4 relative">
-              <p className="text-lg font-bold text-white">🔥 20% CHEGIRMA</p>
-              <p className="text-sm text-white/80">UC PAKETLARGA!</p>
-              {/* Sparkle decorations */}
-              <span className="absolute top-2 right-4 text-lg animate-float">✨</span>
-              <span className="absolute bottom-2 right-12 text-sm animate-float" style={{ animationDelay: '0.5s' }}>✨</span>
-              <span className="absolute top-3 right-20 text-xs animate-float" style={{ animationDelay: '1s' }}>✨</span>
-            </div>
-          </div>
-        </div>
-
         {/* Top games section */}
+
         <h2 className="text-lg font-semibold text-white mt-6 mb-3">
           Top O'yin Paketlari
         </h2>

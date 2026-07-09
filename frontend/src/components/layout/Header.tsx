@@ -4,13 +4,23 @@ export const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-cyber-bg/85 backdrop-blur-md border-b border-cyber-border z-50 flex items-center justify-between px-4">
       <div className="flex items-center gap-2">
-        <span className="text-xl font-extrabold bg-gradient-to-r from-cyber-purple to-cyber-cyan bg-clip-text text-transparent tracking-wider animate-pulse-glow">
+        <svg className="w-6 h-6 animate-float" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" fill="url(#logo-grad)" />
+          <defs>
+            <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF5E5E" />
+              <stop offset="100%" stopColor="#FF9F43" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <span className="text-lg font-black bg-gradient-to-r from-cyber-purple to-cyber-cyan bg-clip-text text-transparent tracking-wide">
           CYBERPAY
         </span>
-        <span className="text-[10px] bg-cyber-purple/20 border border-cyber-purple/30 text-cyber-purple-light font-bold px-1.5 py-0.5 rounded">
-          v2.0
+        <span className="text-[9px] bg-cyber-purple/10 border border-cyber-purple/20 text-cyber-purple-light font-bold px-1 py-0.5 rounded tracking-tighter">
+          V2.0
         </span>
       </div>
+
       
       <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-cyber-card border border-cyber-border text-gray-400 hover:text-white hover:border-cyber-purple/50 transition-all duration-300">
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
