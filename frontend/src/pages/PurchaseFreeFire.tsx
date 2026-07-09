@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
-import PackageCard from '../components/shared/PackageCard';
-import CategoryTabs from '../components/shared/CategoryTabs';
-import useStore from '../store/useStore';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { CategoryTabs } from '../components/shared/CategoryTabs';
+import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
+import { useStore } from '../store/useStore';
 import type { CategoryType } from '../types';
 
 
@@ -21,6 +21,7 @@ const PurchaseFreeFire: React.FC = () => {
     playerId,
     playerNickname,
     isVerified,
+    language,
     setCategory,
     setPackage,
     setPlayerId,
@@ -28,13 +29,19 @@ const PurchaseFreeFire: React.FC = () => {
     setVerified,
   } = useStore();
 
+  const isUz = language === 'uz';
+
   const handleVerify = () => {
     if (!playerId) return;
     
     // Zod-matching regex check: only numbers, 8-12 digits
     const ffRegex = /^\d{8,12}$/;
     if (!ffRegex.test(playerId)) {
-      setError("Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak (M-n: 1234567890)");
+      setError(
+        isUz
+          ? "Free Fire ID faqat 8-12 ta raqamdan iborat bo'lishi kerak (M-n: 1234567890)"
+          : 'Free Fire ID must be 8-12 digits of numbers (e.g. 1234567890)'
+      );
       setVerified(false);
       return;
     }
@@ -47,7 +54,6 @@ const PurchaseFreeFire: React.FC = () => {
       setVerifyLoading(false);
     }, 1500);
   };
-
 
   const handleCategoryChange = (category: CategoryType) => {
     setCategory(category);
@@ -66,7 +72,7 @@ const PurchaseFreeFire: React.FC = () => {
   return (
     <div className="min-h-screen bg-cyber-bg pb-24">
       {/* Top section with banner */}
-      <div className="relative">
+      <div className="relative animate-fade-in">
         {/* Back button */}
         <button
           onClick={() => navigate('/home')}
@@ -84,10 +90,10 @@ const PurchaseFreeFire: React.FC = () => {
         </button>
 
         {/* Header banner */}
-        <div className="h-32 bg-gradient-to-br from-orange-900 via-red-900 to-cyber-bg rounded-b-3xl flex items-end p-5">
+        <div className="h-32 bg-gradient-to-br from-orange-950 via-amber-950 to-cyber-bg rounded-b-3xl flex items-end p-5">
           <div>
-            <h1 className="text-2xl font-bold text-white">FREE FIRE</h1>
-            <p className="text-sm text-gray-300 mt-1">💎 Olmos & Propuski</p>
+            <h1 className="text-2xl font-black text-white">FREE FIRE</h1>
+            <p className="text-xs text-gray-400 mt-1">💎 {isUz ? 'Olmos & Propuski' : 'Diamonds & Passes'}</p>
           </div>
         </div>
       </div>
@@ -95,11 +101,13 @@ const PurchaseFreeFire: React.FC = () => {
       {/* Player ID section */}
       <div className="px-4 mt-4 animate-fade-in">
         <Card>
-          <p className="text-sm font-semibold text-white mb-2">O'yinchi ID</p>
+          <p className="text-sm font-black text-white mb-2">
+            {isUz ? "O'yinchi ID" : 'Player ID'}
+          </p>
           <div className="flex gap-2 items-start">
             <div className="flex-1">
               <Input
-                placeholder="ID raqamini kiriting..."
+                placeholder={isUz ? "ID raqamini kiriting..." : "Enter ID number..."}
                 value={playerId}
                 error={error || undefined}
                 inputMode="numeric"
@@ -110,12 +118,11 @@ const PurchaseFreeFire: React.FC = () => {
                   if (error) setError(null);
                 }}
               />
-
-
             </div>
             <Button
               variant="primary"
               size="sm"
+              className="py-3 px-4 font-bold"
               onClick={handleVerify}
               disabled={!playerId || verifyLoading}
             >
@@ -127,25 +134,27 @@ const PurchaseFreeFire: React.FC = () => {
                   </svg>
                 </span>
               ) : (
-                'Tekshirish'
+                isUz ? 'Tekshirish' : 'Verify'
               )}
             </Button>
           </div>
 
           {/* Verification status */}
           {isVerified && playerNickname && (
-            <div className="mt-3 bg-green-900/30 border border-green-500/30 rounded-lg px-3 py-2 animate-slide-up">
-              <p className="text-sm text-green-400">✅ {playerNickname}</p>
+            <div className="mt-3 bg-green-950/20 border border-green-500/20 rounded-lg px-3 py-2 animate-slide-up">
+              <p className="text-xs text-green-400 font-medium">✅ {playerNickname}</p>
             </div>
           )}
           {!isVerified && playerId && !verifyLoading && (
-            <p className="text-xs text-gray-400 mt-2">ID ni tekshiring</p>
+            <p className="text-xs text-gray-500 mt-2">
+              {isUz ? "Tugmani bosib ID ni tekshiring" : "Click button to verify ID"}
+            </p>
           )}
         </Card>
       </div>
 
       {/* Category tabs */}
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-5">
         <CategoryTabs
           activeCategory={selectedCategory}
           onChange={handleCategoryChange}
@@ -153,7 +162,7 @@ const PurchaseFreeFire: React.FC = () => {
       </div>
 
       {/* Package grid */}
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-2">
         <div
           className={
             selectedCategory === 'almazar'
@@ -168,33 +177,35 @@ const PurchaseFreeFire: React.FC = () => {
               isSelected={selectedPackage?.id === pkg.id}
               onClick={() => setPackage(pkg)}
             />
-
           ))}
         </div>
       </div>
 
       {/* Fixed bottom purchase bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-cyber-bg/80 backdrop-blur-xl border-t border-cyber-border p-4">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-cyber-bg/85 backdrop-blur-xl border-t border-cyber-border p-4 animate-fade-in">
         {selectedPackage ? (
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm text-gray-400">Tanlangan:</p>
-              <p className="text-white font-semibold text-sm">{selectedPackage.name}</p>
+              <p className="text-xs text-gray-500 font-medium">{isUz ? 'Tanlangan:' : 'Selected:'}</p>
+              <p className="text-white font-bold text-sm">{selectedPackage.name}</p>
             </div>
-            <p className="text-cyber-purple font-bold">
+            <p className="text-cyber-purple font-black">
               {formatPrice(selectedPackage.price)} so'm
             </p>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm text-center mb-3">Paketni tanlang</p>
+          <p className="text-gray-500 text-xs font-semibold text-center mb-3">
+            {isUz ? 'Paketni tanlang' : 'Choose a package'}
+          </p>
         )}
         <Button
           variant="primary"
           fullWidth
           disabled={!selectedPackage || !isVerified}
           onClick={() => navigate('/checkout')}
+          className="font-black text-sm uppercase py-3"
         >
-          SOTIB OLISH 🛒
+          {isUz ? 'SOTIB OLISH 🛒' : 'BUY NOW 🛒'}
         </Button>
       </div>
     </div>

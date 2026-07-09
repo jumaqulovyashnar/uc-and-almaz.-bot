@@ -29,7 +29,7 @@ const Welcome: React.FC = () => {
       <div className="animate-fade-in flex flex-col items-center">
         {/* Pulsing logo icon */}
         <div className="animate-float mb-6">
-          <svg className="w-16 h-16 shadow-[0_0_50px_rgba(255,107,0,0.3)] rounded-full p-2.5 bg-cyber-card border border-cyber-border" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg className="w-28 h-28 shadow-[0_0_60px_rgba(255,107,0,0.4)] rounded-full p-4 bg-cyber-card border border-cyber-border" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L2 7l10 15L22 7L12 2z" fill="url(#welcome-logo-grad)" />
             <defs>
               <linearGradient id="welcome-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -39,6 +39,7 @@ const Welcome: React.FC = () => {
             </defs>
           </svg>
         </div>
+
 
         {/* Title */}
         <h1 className="text-3xl font-black bg-gradient-to-r from-cyber-purple to-cyber-cyan bg-clip-text text-transparent tracking-widest uppercase">

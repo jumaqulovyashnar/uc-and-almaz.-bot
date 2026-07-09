@@ -3,9 +3,9 @@ import { Header } from '../components/layout/Header';
 import { BottomNav } from '../components/layout/BottomNav';
 import { OrderCard } from '../components/shared/OrderCard';
 import type { Order } from '../types';
+import useStore from '../store/useStore';
 
 const mockOrders: Order[] = [
-
   {
     id: '1',
     game: 'pubg',
@@ -54,31 +54,22 @@ const mockOrders: Order[] = [
     paymentMethod: 'uzcard',
     createdAt: '2 kun oldin',
   },
-  {
-    id: '5',
-    game: 'pubg',
-    packageName: '325 UC',
-    amount: 325,
-    price: 60000,
-    playerId: '2938475610',
-    playerNickname: 'BattleRoyal',
-    status: 'completed' as const,
-    paymentMethod: 'humo',
-    createdAt: '3 kun oldin',
-  },
 ];
 
 type FilterType = 'all' | 'completed' | 'processing' | 'failed';
 
-const filters: { label: string; value: FilterType }[] = [
-  { label: 'Barchasi', value: 'all' },
-  { label: 'Bajarildi', value: 'completed' },
-  { label: 'Jarayonda', value: 'processing' },
-  { label: 'Xatolik', value: 'failed' },
-];
-
 export default function OrderHistory() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const { language } = useStore();
+
+  const isUz = language === 'uz';
+
+  const filters: { label: string; value: FilterType }[] = [
+    { label: isUz ? 'Barchasi' : 'All', value: 'all' },
+    { label: isUz ? 'Bajarildi' : 'Completed', value: 'completed' },
+    { label: isUz ? 'Jarayonda' : 'Processing', value: 'processing' },
+    { label: isUz ? 'Xatolik' : 'Failed', value: 'failed' },
+  ];
 
   const filteredOrders =
     activeFilter === 'all'
@@ -86,20 +77,22 @@ export default function OrderHistory() {
       : mockOrders.filter((order) => order.status === activeFilter);
 
   return (
-    <div className="pt-16 pb-24 px-4">
+    <div className="pt-20 pb-24 px-4 bg-cyber-bg min-h-screen">
       <Header />
 
-      <h1 className="text-xl font-bold text-white mt-2">Buyurtmalar Tarixi</h1>
+      <h1 className="text-2xl font-black text-white mt-2 tracking-wide uppercase">
+        {isUz ? 'Buyurtmalar Tarixi' : 'Order History'}
+      </h1>
 
       {/* Filter tabs */}
-      <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide">
+      <div className="mt-5 flex gap-2 overflow-x-auto scrollbar-hide">
         {filters.map((filter) => (
           <button
             key={filter.value}
             onClick={() => setActiveFilter(filter.value)}
-            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm transition-colors ${
+            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ${
               activeFilter === filter.value
-                ? 'bg-gradient-to-r from-cyber-purple to-cyber-cyan text-white'
+                ? 'bg-gradient-to-r from-cyber-purple to-cyber-cyan text-white shadow-lg'
                 : 'bg-cyber-card text-gray-400 border border-cyber-border hover:text-gray-300'
             }`}
           >
@@ -110,7 +103,7 @@ export default function OrderHistory() {
 
       {/* Order list */}
       {filteredOrders.length > 0 ? (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-5 flex flex-col gap-3">
           {filteredOrders.map((order, index) => (
             <div
               key={order.id}
@@ -124,8 +117,8 @@ export default function OrderHistory() {
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
           <span className="text-4xl mb-3">😔</span>
-          <span className="text-gray-500 text-sm">
-            Buyurtmalar topilmadi
+          <span className="text-gray-500 text-sm font-medium">
+            {isUz ? 'Buyurtmalar topilmadi' : 'No orders found'}
           </span>
         </div>
       )}

@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import useStore from './store/useStore';
 import Welcome from './pages/Welcome';
 import Home from './pages/Home';
 import PurchasePUBG from './pages/PurchasePUBG';
@@ -32,10 +34,22 @@ function AppContent() {
   );
 }
 
+
 export default function App() {
+  const { theme } = useStore();
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  }, [theme]);
+
   return (
     <BrowserRouter>
       <AppContent />
     </BrowserRouter>
   );
 }
+

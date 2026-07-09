@@ -19,10 +19,13 @@ export default function Checkout() {
     playerId,
     playerNickname,
     paymentMethod,
+    language,
     setPaymentMethod,
     addOrder,
     clearCart,
   } = useStore();
+
+  const isUz = language === 'uz';
 
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -33,9 +36,9 @@ export default function Checkout() {
   const [errors, setErrors] = useState<{ cardNumber?: string; expiry?: string; cvv?: string }>({});
 
   const overlaySteps = [
-    'To\'lov tekshirilmoqda...',
-    'Buyurtma yaratilmoqda...',
-    'Muvaffaqiyatli! ✅',
+    isUz ? "To'lov tekshirilmoqda..." : "Verifying payment...",
+    isUz ? "Buyurtma yaratilmoqda..." : "Creating order...",
+    isUz ? "Muvaffaqiyatli! ✅" : "Successful! ✅",
   ];
 
   useEffect(() => {
@@ -106,39 +109,45 @@ export default function Checkout() {
 
     if (paymentMethod === 'uzcard') {
       if (!/^8600\d{12}$/.test(cleanCard)) {
-        newErrors.cardNumber = "Uzcard karta raqami noto'g'ri (8600 bilan boshlanishi va 16 raqam bo'lishi kerak)";
+        newErrors.cardNumber = isUz 
+          ? "Uzcard karta raqami noto'g'ri (8600 bilan boshlanishi va 16 raqam bo'lishi kerak)"
+          : "Invalid Uzcard card number (must start with 8600 and be 16 digits)";
       }
     } else if (paymentMethod === 'humo') {
       if (!/^9860\d{12}$/.test(cleanCard)) {
-        newErrors.cardNumber = "Humo karta raqami noto'g'ri (9860 bilan boshlanishi va 16 raqam bo'lishi kerak)";
+        newErrors.cardNumber = isUz
+          ? "Humo karta raqami noto'g'ri (9860 bilan boshlanishi va 16 raqam bo'lishi kerak)"
+          : "Invalid Humo card number (must start with 9860 and be 16 digits)";
       }
     } else if (paymentMethod === 'visa') {
       if (!/^4\d{15}$/.test(cleanCard)) {
-        newErrors.cardNumber = "Visa karta raqami noto'g'ri (4 bilan boshlanishi va 16 raqam bo'lishi kerak)";
+        newErrors.cardNumber = isUz
+          ? "Visa karta raqami noto'g'ri (4 bilan boshlanishi va 16 raqam bo'lishi kerak)"
+          : "Invalid Visa card number (must start with 4 and be 16 digits)";
       }
     }
 
     if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-      newErrors.expiry = "Muddat noto'g'ri (MM/YY)";
+      newErrors.expiry = isUz ? "Muddat noto'g'ri (MM/YY)" : "Invalid expiry format (MM/YY)";
     } else {
       const [mStr, yStr] = expiry.split('/');
       const m = parseInt(mStr, 10);
       const y = parseInt(yStr, 10);
       if (m < 1 || m > 12) {
-        newErrors.expiry = "Oy noto'g'ri (01-12)";
+        newErrors.expiry = isUz ? "Oy noto'g'ri (01-12)" : "Invalid month (01-12)";
       } else {
         const now = new Date();
         const curYear = now.getFullYear() % 100;
         const curMonth = now.getMonth() + 1;
         if (y < curYear || (y === curYear && m < curMonth)) {
-          newErrors.expiry = "Karta muddati tugagan";
+          newErrors.expiry = isUz ? "Karta muddati tugagan" : "Card has expired";
         }
       }
     }
 
     if (paymentMethod === 'visa') {
       if (!/^\d{3,4}$/.test(cvv)) {
-        newErrors.cvv = "CVV noto'g'ri (3 yoki 4 raqam)";
+        newErrors.cvv = isUz ? "CVV noto'g'ri (3 yoki 4 raqam)" : "Invalid CVV (3 or 4 digits)";
       }
     }
 
@@ -156,8 +165,6 @@ export default function Checkout() {
   const price = selectedPackage?.price || 0;
   const gameIcon = selectedGame === 'freefire' ? '💎' : '🎮';
   const gameName = selectedGame === 'freefire' ? 'FREE FIRE' : 'PUBG MOBILE';
-
-
 
   return (
     <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8">
@@ -180,45 +187,47 @@ export default function Checkout() {
           <path d="M19 12H5" />
           <path d="m12 19-7-7 7-7" />
         </svg>
-        <span className="text-sm">Ortga</span>
+        <span className="text-sm font-semibold">{isUz ? 'Ortga' : 'Back'}</span>
       </button>
 
       {/* Title */}
-      <h1 className="text-xl font-bold text-white mt-2">Buyurtma</h1>
+      <h1 className="text-xl font-black text-white mt-4 tracking-wide uppercase">
+        {isUz ? 'Buyurtma' : 'Checkout'}
+      </h1>
 
       {/* Order summary */}
       <Card className="mt-4">
         <div className="flex items-center gap-2">
           <span className="text-lg">{gameIcon}</span>
-          <span className="text-white font-semibold">{gameName}</span>
+          <span className="text-white font-black tracking-wide">{gameName}</span>
         </div>
 
         <div className="h-px bg-cyber-border my-3" />
 
-        <div className="flex justify-between text-sm py-1.5">
-          <span className="text-gray-400">Paket:</span>
-          <span className="text-white">{selectedPackage?.name || '—'}</span>
+        <div className="flex justify-between text-xs py-1.5 font-medium">
+          <span className="text-gray-400">{isUz ? 'Paket:' : 'Package:'}</span>
+          <span className="text-white font-bold">{selectedPackage?.name || '—'}</span>
         </div>
-        <div className="flex justify-between text-sm py-1.5">
-          <span className="text-gray-400">O'yinchi ID:</span>
-          <span className="text-white">{playerId || '—'}</span>
+        <div className="flex justify-between text-xs py-1.5 font-medium">
+          <span className="text-gray-400">{isUz ? "O'yinchi ID:" : 'Player ID:'}</span>
+          <span className="text-white font-mono font-bold">{playerId || '—'}</span>
         </div>
-        <div className="flex justify-between text-sm py-1.5">
+        <div className="flex justify-between text-xs py-1.5 font-medium">
           <span className="text-gray-400">Nickname:</span>
-          <span className="text-white">{playerNickname || '—'}</span>
+          <span className="text-white font-bold">{playerNickname || '—'}</span>
         </div>
-        <div className="flex justify-between text-sm py-1.5">
-          <span className="text-gray-400">Narxi:</span>
-          <span className="text-cyber-cyan font-semibold">
+        <div className="flex justify-between text-xs py-1.5 font-medium">
+          <span className="text-gray-400">{isUz ? 'Narxi:' : 'Price:'}</span>
+          <span className="text-cyber-cyan font-bold">
             {formatPrice(price)} so'm
           </span>
         </div>
       </Card>
 
       {/* Payment method selection */}
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold text-white mb-3">
-          To'lov usulini tanlang
+      <div className="mt-6 animate-fade-in">
+        <h2 className="text-md font-black text-white mb-3 tracking-wide uppercase">
+          {isUz ? "To'lov usulini tanlang" : 'Choose payment method'}
         </h2>
         <div className="flex flex-col gap-3">
           <PaymentMethodCard
@@ -236,7 +245,6 @@ export default function Checkout() {
             selected={paymentMethod === 'visa'}
             onSelect={() => setPaymentMethod('visa')}
           />
-
         </div>
       </div>
 
@@ -246,7 +254,7 @@ export default function Checkout() {
           {paymentMethod === 'visa' ? (
             <>
               <Input
-                label="Karta raqami"
+                label={isUz ? "Karta raqami" : "Card Number"}
                 placeholder="0000 0000 0000 0000"
                 value={cardNumber}
                 error={errors.cardNumber}
@@ -257,7 +265,7 @@ export default function Checkout() {
               />
               <div className="flex gap-3 mt-3">
                 <Input
-                  label="Amal qilish"
+                  label={isUz ? "Amal qilish" : "Expiry"}
                   placeholder="MM/YY"
                   value={expiry}
                   error={errors.expiry}
@@ -280,7 +288,7 @@ export default function Checkout() {
           ) : (
             <>
               <Input
-                label="Karta raqami"
+                label={isUz ? "Karta raqami" : "Card Number"}
                 placeholder={
                   paymentMethod === 'uzcard'
                     ? '8600 0000 0000 0000'
@@ -295,7 +303,7 @@ export default function Checkout() {
               />
               <div className="mt-3">
                 <Input
-                  label="Amal qilish muddati"
+                  label={isUz ? "Amal qilish muddati" : "Expiry Date"}
                   placeholder="MM/YY"
                   value={expiry}
                   error={errors.expiry}
@@ -309,14 +317,13 @@ export default function Checkout() {
         </div>
       )}
 
-
       {/* Terms checkbox */}
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-5 flex items-center gap-3 animate-fade-in">
         <button
           onClick={() => setAgreed(!agreed)}
-          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
             agreed
-              ? 'bg-cyber-purple border-cyber-purple'
+              ? 'bg-cyber-purple border-cyber-purple shadow-[0_0_8px_rgba(255,107,0,0.4)]'
               : 'border-gray-600 bg-transparent'
           }`}
         >
@@ -336,35 +343,35 @@ export default function Checkout() {
             </svg>
           )}
         </button>
-        <span className="text-sm text-gray-400">
-          Xizmat shartlariga roziman
+        <span className="text-xs text-gray-400 font-medium">
+          {isUz ? "Xizmat shartlariga roziman" : "I agree to the terms of service"}
         </span>
       </div>
 
       {/* Total */}
-      <div className="mt-6 flex justify-between items-center">
-        <span className="text-gray-400">Jami:</span>
-        <span className="text-2xl font-bold bg-gradient-to-r from-cyber-purple to-cyber-cyan bg-clip-text text-transparent">
+      <div className="mt-6 flex justify-between items-center animate-fade-in">
+        <span className="text-gray-400 text-sm font-semibold">{isUz ? 'Jami:' : 'Total:'}</span>
+        <span className="text-2xl font-black bg-gradient-to-r from-cyber-purple to-cyber-cyan bg-clip-text text-transparent tracking-wide">
           {formatPrice(price)} so'm
         </span>
       </div>
 
       {/* Submit button */}
-      <div className="mt-4">
+      <div className="mt-5 animate-fade-in">
         <Button
           variant="primary"
           fullWidth
           size="lg"
           disabled={!paymentMethod || !agreed || !cardNumber}
           onClick={handleSubmit}
+          className="font-black text-sm uppercase py-3.5 tracking-wider"
         >
-          TO'LOV QILISH 💳
+          {isUz ? "TO'LOV QILISH 💳" : 'PAY NOW 💳'}
         </Button>
       </div>
 
       {/* Loading overlay */}
       <LoadingOverlay isVisible={showOverlay} steps={overlaySteps} currentStep={currentStep} />
-
     </div>
   );
 }

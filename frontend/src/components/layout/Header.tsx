@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
         {/* Language selector toggle */}
         <button
           onClick={toggleLanguage}
-          className="h-8 px-2.5 flex items-center justify-center rounded-lg bg-cyber-card border border-cyber-border text-xs font-black tracking-wider text-gray-300 hover:text-white transition-all duration-300"
+          className="h-8 px-3 flex items-center justify-center rounded-full bg-cyber-card border border-cyber-border text-xs font-black tracking-wider text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
           title={language === 'uz' ? "Switch to English" : "O'zbek tiliga o'tish"}
         >
           {language === 'uz' ? 'UZ' : 'EN'}
@@ -35,9 +35,10 @@ export const Header: React.FC = () => {
         {/* Theme switcher toggle */}
         <button
           onClick={toggleTheme}
-          className="w-8 h-8 flex items-center justify-center rounded-lg bg-cyber-card border border-cyber-border text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-card border border-cyber-border text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
           title={theme === 'dark' ? "Kunduzgi rejim" : "Tungi rejim"}
         >
+
           {theme === 'dark' ? (
             // Sun icon for switching to light mode
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

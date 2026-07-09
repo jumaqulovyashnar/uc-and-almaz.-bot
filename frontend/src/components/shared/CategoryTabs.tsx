@@ -1,17 +1,23 @@
 import React from 'react';
 import type { CategoryType } from '../../types';
 
+import useStore from '../../store/useStore';
+
 interface CategoryTabsProps {
   activeCategory: CategoryType;
   onChange: (category: CategoryType) => void;
 }
 
 export const CategoryTabs: React.FC<CategoryTabsProps> = ({ activeCategory, onChange }) => {
+  const { language } = useStore();
+  const isUz = language === 'uz';
+
   const tabs: { id: CategoryType; label: string }[] = [
-    { id: 'almazar', label: 'Almazar' },
-    { id: 'propuski', label: 'Propuski' },
-    { id: 'levelup', label: 'Level Up' },
+    { id: 'almazar', label: isUz ? 'Paketlar' : 'Packages' },
+    { id: 'propuski', label: isUz ? 'Propuski' : 'Passes' },
+    { id: 'levelup', label: isUz ? 'Level Up' : 'Level Up' },
   ];
+
 
   return (
     <div className="flex bg-cyber-card border border-cyber-border rounded-xl p-1 gap-1 mb-4 select-none">

@@ -1,14 +1,18 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useStore from '../../store/useStore';
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { language } = useStore();
+
+  const isUz = language === 'uz';
 
   const navItems = [
     {
       id: 'home',
-      label: 'Asosiy',
+      label: isUz ? 'Asosiy' : 'Home',
       path: '/home',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -18,7 +22,7 @@ export const BottomNav: React.FC = () => {
     },
     {
       id: 'referrals',
-      label: 'Referallar',
+      label: isUz ? 'Referallar' : 'Referrals',
       path: '/referrals',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -28,7 +32,7 @@ export const BottomNav: React.FC = () => {
     },
     {
       id: 'orders',
-      label: 'Tarix',
+      label: isUz ? 'Tarix' : 'History',
       path: '/orders',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,7 +42,7 @@ export const BottomNav: React.FC = () => {
     },
     {
       id: 'profile',
-      label: 'Profil',
+      label: isUz ? 'Profil' : 'Profile',
       path: '/profile',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,6 +51,7 @@ export const BottomNav: React.FC = () => {
       ),
     },
   ];
+
 
   // Helper to determine if path is active (handling sub-paths if necessary)
   const isActive = (path: string) => {

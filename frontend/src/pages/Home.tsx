@@ -7,7 +7,9 @@ import useStore from '../store/useStore';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { setGame } = useStore();
+  const { setGame, language } = useStore();
+
+  const isUz = language === 'uz';
 
   const handleGameSelect = (game: 'pubg' | 'freefire') => {
     setGame(game);
@@ -15,34 +17,34 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cyber-bg">
+    <div className="min-h-screen bg-cyber-bg pb-24 pt-16">
       <Header />
 
-      <div className="pt-16 pb-24 px-4">
+      <div className="px-4">
         {/* Greeting */}
-        <p className="text-lg font-semibold text-white mt-2 animate-fade-in">
-          Xush kelibsiz! 👋
+        <p className="text-lg font-bold text-white mt-4 animate-fade-in">
+          {isUz ? 'Xush kelibsiz! 👋' : 'Welcome! 👋'}
         </p>
 
         {/* Stats row */}
-        <div className="flex gap-3 mt-4 animate-slide-up">
+        <div className="flex gap-4 mt-5 animate-slide-up">
           {/* UC stat card */}
-          <div className="bg-gradient-to-br from-purple-900/40 to-cyber-card border border-cyber-border rounded-xl p-3 flex-1">
-            <p className="text-xs text-gray-400">Jami UC</p>
-            <p className="text-xl font-bold text-white mt-1">12,450</p>
+          <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-cyber-border rounded-xl p-3 flex-1 transition-all hover:border-cyber-purple/30">
+            <p className="text-xs text-gray-400 font-medium">{isUz ? 'Jami UC' : 'Total UC'}</p>
+            <p className="text-xl font-black text-white mt-1">12,450</p>
             <div className="mt-1">
-              <svg className="w-4 h-4 text-cyber-purple opacity-50" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-4 h-4 text-cyber-purple opacity-60" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
           </div>
 
           {/* Olmos stat card */}
-          <div className="bg-gradient-to-br from-cyan-900/40 to-cyber-card border border-cyber-border rounded-xl p-3 flex-1">
-            <p className="text-xs text-gray-400">Jami Olmos</p>
-            <p className="text-xl font-bold text-white mt-1">8,920</p>
+          <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-cyber-border rounded-xl p-3 flex-1 transition-all hover:border-cyber-cyan/30">
+            <p className="text-xs text-gray-400 font-medium">{isUz ? 'Jami Olmos' : 'Total Diamonds'}</p>
+            <p className="text-xl font-black text-white mt-1">8,920</p>
             <div className="mt-1">
-              <svg className="w-4 h-4 text-cyber-cyan opacity-50" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-4 h-4 text-cyber-cyan opacity-60" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
             </div>
@@ -50,12 +52,11 @@ const Home: React.FC = () => {
         </div>
 
         {/* Top games section */}
-
-        <h2 className="text-lg font-semibold text-white mt-6 mb-3">
-          Top O'yin Paketlari
+        <h2 className="text-lg font-black text-white mt-8 mb-4 tracking-wide uppercase">
+          {isUz ? "Top O'yin Paketlari" : 'Top Game Packages'}
         </h2>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <GameCard
             game="pubg"
             packagesCount={6}
@@ -67,14 +68,6 @@ const Home: React.FC = () => {
             onClick={() => handleGameSelect('freefire')}
           />
         </div>
-
-        {/* Recommended deal mini-banner */}
-        <div className="mt-4 bg-gradient-to-r from-amber-900/30 to-cyber-card border border-amber-500/20 rounded-xl p-3 animate-slide-up">
-          <p className="text-sm text-amber-400">
-            Kun taklifi: 660 UC atigi 99,000 so'm!
-          </p>
-        </div>
-
       </div>
 
       <BottomNav />

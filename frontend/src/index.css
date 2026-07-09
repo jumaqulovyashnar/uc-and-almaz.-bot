@@ -80,6 +80,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+
 
 ::selection {
   background-color: rgba(255, 107, 0, 0.4);
