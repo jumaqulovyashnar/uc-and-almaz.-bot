@@ -6,12 +6,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import useStore from '../store/useStore';
 import Modal from '../components/ui/Modal';
 
+const ADMIN_ID = 6709001451;
+
 export default function Profile() {
   const navigate = useNavigate();
-  const { language } = useStore();
+  const { language, telegramUser } = useStore();
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   const isUz = language === 'uz';
+  const isAdmin = telegramUser?.id === ADMIN_ID;
 
   return (
     <div className="pt-16 pb-24 px-4 bg-cyber-bg min-h-screen">

@@ -64,12 +64,52 @@ html {
 }
 
 .light-theme {
-  --cyber-bg: #F4F3F6;
-  --cyber-card: #FFFFFF;
+  --cyber-bg:     #F4F3F6;
+  --cyber-card:   #FFFFFF;
   --cyber-border: #E2E1E6;
-  --text-primary: #121118;
+  --cyber-purple: #FF6B00;
+  --cyber-cyan:   #D97706;
+  --text-primary:   #121118;
   --text-secondary: #5E5D66;
 }
+
+/* Light theme global overrides */
+.light-theme body,
+.light-theme #root {
+  background-color: var(--cyber-bg);
+  color: var(--text-primary);
+}
+
+/* All white text → dark in light mode */
+.light-theme .text-white       { color: #121118 !important; }
+.light-theme .text-gray-400    { color: #6B6B80 !important; }
+.light-theme .text-gray-500    { color: #7A7A8C !important; }
+.light-theme .text-gray-300    { color: #4A4A5A !important; }
+
+/* Backgrounds */
+.light-theme .bg-cyber-bg      { background-color: #F4F3F6 !important; }
+.light-theme .bg-cyber-card    { background-color: #FFFFFF !important; }
+.light-theme .bg-cyber-bg\/85,
+.light-theme .bg-cyber-bg\/90,
+.light-theme .bg-cyber-bg\/95  { background-color: rgba(244,243,246,0.95) !important; }
+
+/* Borders */
+.light-theme .border-cyber-border { border-color: #E2E1E6 !important; }
+
+/* Card backgrounds in gradients */
+.light-theme .from-amber-900\/10 { --tw-gradient-from: rgba(255,248,230,0.6) !important; }
+.light-theme .to-cyber-card      { --tw-gradient-to: #FFFFFF !important; }
+
+/* Inputs */
+.light-theme input {
+  background-color: #F8F7FA !important;
+  color: #121118 !important;
+  border-color: #E2E1E6 !important;
+}
+.light-theme input::placeholder { color: #9CA3AF !important; }
+
+/* Nav */
+.light-theme nav.fixed { background-color: rgba(244,243,246,0.97) !important; }
 
 body {
   background-color: var(--cyber-bg);

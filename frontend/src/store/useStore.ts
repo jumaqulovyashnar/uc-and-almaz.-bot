@@ -62,6 +62,24 @@ const getTelegramUser = (): TelegramUser | null => {
   return null;
 };
 
+// Saved theme from localStorage
+const getSavedTheme = (): 'dark' | 'light' => {
+  try {
+    const saved = localStorage.getItem('cyberpay-theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch { /* ignore */ }
+  return 'dark';
+};
+
+const applyTheme = (theme: 'dark' | 'light') => {
+  if (theme === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+  try { localStorage.setItem('cyberpay-theme', theme); } catch { /* ignore */ }
+};
+
 export const useStore = create<StoreState>((set) => ({
   // Initial state
   selectedGame: null,
@@ -72,7 +90,7 @@ export const useStore = create<StoreState>((set) => ({
   isVerified: false,
   paymentMethod: null,
   language: 'uz',
-  theme: 'dark',
+  theme: getSavedTheme(),
   orders: [],
   telegramUser: getTelegramUser(),
 
@@ -105,11 +123,7 @@ export const useStore = create<StoreState>((set) => ({
   setLanguage: (lang) => set({ language: lang }),
 
   setTheme: (theme) => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light-theme');
-    } else {
-      document.documentElement.classList.remove('light-theme');
-    }
+    applyTheme(theme);
     set({ theme });
   },
 

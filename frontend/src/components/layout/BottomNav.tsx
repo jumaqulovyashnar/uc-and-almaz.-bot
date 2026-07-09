@@ -5,18 +5,9 @@ import useStore from '../../store/useStore';
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language, telegramUser } = useStore();
+  const { language } = useStore();
 
   const isUz = language === 'uz';
-
-  // Get display name from Telegram user
-  const displayName = telegramUser
-    ? telegramUser.username
-      ? `@${telegramUser.username}`
-      : telegramUser.first_name
-    : isUz
-    ? 'Mehmon'
-    : 'Guest';
 
   const navItems = [
     {
@@ -65,32 +56,6 @@ export const BottomNav: React.FC = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40">
-      {/* Welcome sticker strip */}
-      <div className="bg-gradient-to-r from-cyber-purple/20 via-cyber-bg/95 to-cyber-cyan/20 backdrop-blur-md border-t border-cyber-purple/30 px-4 py-1.5 flex items-center gap-2">
-        {/* Animated wave emoji */}
-        <span
-          className="text-base select-none"
-          style={{ display: 'inline-block', animation: 'waveHand 1.8s ease-in-out infinite' }}
-        >
-          👋
-        </span>
-        <div className="flex items-center gap-1 min-w-0">
-          <span className="text-[11px] text-gray-400 whitespace-nowrap">
-            {isUz ? 'Xush kelibsiz,' : 'Welcome,'}
-          </span>
-          <span className="text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyber-purple to-cyber-cyan truncate max-w-[140px]">
-            {displayName}
-          </span>
-        </div>
-        {/* Decorative dots */}
-        <div className="ml-auto flex gap-1 items-center opacity-40">
-          <span className="w-1 h-1 rounded-full bg-cyber-purple animate-pulse" />
-          <span className="w-1 h-1 rounded-full bg-cyber-cyan animate-pulse" style={{ animationDelay: '300ms' }} />
-          <span className="w-1 h-1 rounded-full bg-cyber-purple animate-pulse" style={{ animationDelay: '600ms' }} />
-        </div>
-      </div>
-
-      {/* Nav buttons */}
       <div className="h-16 bg-cyber-bg/95 backdrop-blur-lg border-t border-cyber-border flex items-center justify-around px-2 pb-1">
         {navItems.map((item) => {
           const active = isActive(item.path);
@@ -115,14 +80,6 @@ export const BottomNav: React.FC = () => {
           );
         })}
       </div>
-
-      <style>{`
-        @keyframes waveHand {
-          0%, 60%, 100% { transform: rotate(0deg); }
-          10%, 30% { transform: rotate(18deg); }
-          20% { transform: rotate(-8deg); }
-        }
-      `}</style>
     </nav>
   );
 };
