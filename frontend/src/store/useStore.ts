@@ -46,6 +46,7 @@ interface StoreState {
   setTheme: (theme: 'dark' | 'light') => void;
   addOrder: (order: Order) => void;
   clearCart: () => void;
+  setTelegramUser: (user: TelegramUser) => void;
 }
 
 // Try to get Telegram WebApp user data
@@ -123,6 +124,8 @@ export const useStore = create<StoreState>((set) => ({
       isVerified: false,
       paymentMethod: null,
     }),
+
+  setTelegramUser: (user) => set({ telegramUser: user }),
 }));
 
 export default useStore;

@@ -1,26 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { pubgPackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
 
+import pubgImg1 from '../assets/pubg.jpg';
+import pubgImg2 from '../assets/pubg1.webp';
+import pubgImg3 from '../assets/pubg2.jpg';
+
 // ─── PUBG banner slides (infinity loop) ─────────────────────────────────────
 const PUBG_SLIDES = [
-  {
-    id: 1,
-    imageUrl: 'https://images.alphacoders.com/132/1326382.jpg',
-  },
-  {
-    id: 2,
-    imageUrl: 'https://images3.alphacoders.com/132/1320882.jpg',
-  },
-  {
-    id: 3,
-    imageUrl: 'https://images8.alphacoders.com/134/1345639.jpg',
-  },
+  { id: 1, imageUrl: pubgImg1 },
+  { id: 2, imageUrl: pubgImg2 },
+  { id: 3, imageUrl: pubgImg3 },
 ];
 
 // ─── Mini Infinity Slider ────────────────────────────────────────────────────
@@ -32,7 +26,7 @@ const PubgBannerSlider: React.FC = () => {
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setCurrent((prev) => (prev + 1) % total);
-    }, 3200);
+    }, 5000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -43,26 +37,27 @@ const PubgBannerSlider: React.FC = () => {
     setCurrent(i);
     timerRef.current = setInterval(() => {
       setCurrent((prev) => (prev + 1) % total);
-    }, 3200);
+    }, 5000);
   };
 
   return (
-    <div className="relative w-full h-44 overflow-hidden">
+    <div className="relative w-full overflow-hidden bg-black" style={{ height: '220px' }}>
       {/* Slides strip */}
       <div
         className="flex h-full transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
         {PUBG_SLIDES.map((slide) => (
-          <div key={slide.id} className="relative min-w-full h-full flex-shrink-0">
+          <div key={slide.id} className="relative min-w-full h-full flex-shrink-0 bg-black">
             <img
               src={slide.imageUrl}
               alt="PUBG"
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full"
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
               draggable={false}
             />
             {/* dark gradient bottom */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
           </div>
         ))}
       </div>
@@ -94,7 +89,7 @@ const PubgBannerSlider: React.FC = () => {
         <div
           key={current}
           className="h-full bg-gradient-to-r from-cyber-purple to-cyber-cyan"
-          style={{ animation: 'pubgProgress 3.2s linear' }}
+          style={{ animation: 'pubgProgress 5s linear' }}
         />
       </div>
 
@@ -381,9 +376,9 @@ const PurchasePUBG: React.FC = () => {
           </div>
         )}
 
-        {/* ── To'plamlar mode: list cards ── */}
+        {/* ── To'plamlar mode: full-width list cards ── */}
         {tabMode === 'toplamlar' && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {toplamlarPackages.map((pkg) => (
               <ToplamlarCard
                 key={pkg.id}

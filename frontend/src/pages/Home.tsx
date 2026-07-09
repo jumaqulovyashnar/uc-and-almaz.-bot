@@ -6,32 +6,18 @@ import GameCard from '../components/shared/GameCard';
 import HeroSlider from '../components/shared/HeroSlider';
 import useStore from '../store/useStore';
 
-// PUBG & Free Fire banner images (public CDN URLs)
+import pubgImg1 from '../assets/pubg.jpg';
+import pubgImg2 from '../assets/pubg1.webp';
+import pubgImg3 from '../assets/pubg2.jpg';
+import freeImg1 from '../assets/free.jpg';
+import freeImg2 from '../assets/free1.webp';
+
 const HERO_SLIDES = [
-  {
-    id: 1,
-    imageUrl: 'https://images.alphacoders.com/132/1326382.jpg',
-    title: 'PUBG MOBILE',
-    subtitle: '🎮 UC & To\'plamlar — eng qulay narxlarda',
-  },
-  {
-    id: 2,
-    imageUrl: 'https://staticg.sportskeeda.com/editor/2022/11/e4aa7-16677585151370-1920.jpg',
-    title: 'FREE FIRE',
-    subtitle: '💎 Olmos & Propuski — tez yetkazib berish',
-  },
-  {
-    id: 3,
-    imageUrl: 'https://images3.alphacoders.com/132/1320882.jpg',
-    title: 'PUBG MOBILE',
-    subtitle: '🏆 Prime & Prime Plus obunalar',
-  },
-  {
-    id: 4,
-    imageUrl: 'https://images8.alphacoders.com/134/1345639.jpg',
-    title: 'FREE FIRE MAX',
-    subtitle: '⚡ 24/7 avtomatik to\'ldirish',
-  },
+  { id: 1, imageUrl: pubgImg1,  title: 'PUBG MOBILE',   subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
+  { id: 2, imageUrl: freeImg1,  title: 'FREE FIRE',      subtitle: '💎 Olmos & Propuski — tez yetkazib berish' },
+  { id: 3, imageUrl: pubgImg2,  title: 'PUBG MOBILE',    subtitle: "🏆 Prime & Prime Plus obunalar" },
+  { id: 4, imageUrl: freeImg2,  title: 'FREE FIRE MAX',  subtitle: "⚡ 24/7 avtomatik to'ldirish" },
+  { id: 5, imageUrl: pubgImg3,  title: 'PUBG MOBILE',    subtitle: '🎯 Barcha paketlar bir joyda' },
 ];
 
 const Home: React.FC = () => {
@@ -59,7 +45,7 @@ const Home: React.FC = () => {
 
       {/* Hero slider — full width, below fixed header */}
       <div className="pt-16">
-        <HeroSlider slides={HERO_SLIDES} autoPlayInterval={3500} height="h-52" />
+        <HeroSlider slides={HERO_SLIDES} autoPlayInterval={5000} />
       </div>
 
       {/* Greeting section */}
