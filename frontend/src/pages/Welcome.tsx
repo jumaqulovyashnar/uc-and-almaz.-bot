@@ -29,12 +29,12 @@ const Welcome: React.FC = () => {
       <div className="animate-fade-in flex flex-col items-center">
         {/* Pulsing logo icon */}
         <div className="animate-float mb-6">
-          <svg className="w-16 h-16 shadow-[0_0_50px_rgba(255,94,94,0.3)] rounded-full p-2 bg-cyber-card border border-cyber-border" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" fill="url(#welcome-logo-grad)" />
+          <svg className="w-16 h-16 shadow-[0_0_50px_rgba(255,107,0,0.3)] rounded-full p-2.5 bg-cyber-card border border-cyber-border" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L2 7l10 15L22 7L12 2z" fill="url(#welcome-logo-grad)" />
             <defs>
               <linearGradient id="welcome-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FF5E5E" />
-                <stop offset="100%" stopColor="#FF9F43" />
+                <stop offset="0%" stopColor="#FF6B00" />
+                <stop offset="100%" stopColor="#FFB300" />
               </linearGradient>
             </defs>
           </svg>
@@ -47,8 +47,9 @@ const Welcome: React.FC = () => {
 
         {/* Subtitle */}
         <p className="text-[10px] text-gray-500 tracking-[0.4em] uppercase mt-2 font-mono">
-          RESELLER PORTAL v2.0
+          RESELLER PORTAL
         </p>
+
 
 
         {/* Animated loading dots */}

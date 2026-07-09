@@ -6,6 +6,7 @@ import PurchaseFreeFire from './pages/PurchaseFreeFire';
 import Checkout from './pages/Checkout';
 import OrderHistory from './pages/OrderHistory';
 import Profile from './pages/Profile';
+import Referrals from './pages/Referrals';
 
 function AppContent() {
   const location = useLocation();
@@ -24,7 +25,7 @@ function AppContent() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/games" element={<Home />} />
+          <Route path="/referrals" element={<Referrals />} />
         </Routes>
       </div>
     </div>

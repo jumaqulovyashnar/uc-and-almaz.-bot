@@ -6,13 +6,13 @@ export default {
     extend: {
       colors: {
         cyber: {
-          bg: '#0C0B10',
-          card: '#14131A',
-          border: '#262430',
-          purple: '#FF5E5E',
-          cyan: '#FF9F43',
-          'purple-dark': '#C0392B',
-          'purple-light': '#FF8A8A',
+          bg: '#0A090E',
+          card: '#121118',
+          border: '#201E29',
+          purple: '#FF6B00',
+          cyan: '#FFB300',
+          'purple-dark': '#D35400',
+          'purple-light': '#FF9F43',
         },
       },
       fontFamily: {
@@ -35,13 +35,14 @@ export default {
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(255, 94, 94, 0.3)' },
-          '50%': { boxShadow: '0 0 40px rgba(255, 94, 94, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(255, 107, 0, 0.3)' },
+          '50%': { boxShadow: '0 0 40px rgba(255, 107, 0, 0.6)' },
         },
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+
 
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },

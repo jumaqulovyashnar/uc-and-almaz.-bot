@@ -17,6 +17,10 @@ interface StoreState {
   isVerified: boolean;
   paymentMethod: PaymentMethodType | null;
 
+  // Language & Theme state
+  language: 'uz' | 'en';
+  theme: 'dark' | 'light';
+
   // Orders
   orders: Order[];
 
@@ -28,6 +32,8 @@ interface StoreState {
   setNickname: (nickname: string) => void;
   setVerified: (verified: boolean) => void;
   setPaymentMethod: (method: PaymentMethodType | null) => void;
+  setLanguage: (lang: 'uz' | 'en') => void;
+  setTheme: (theme: 'dark' | 'light') => void;
   addOrder: (order: Order) => void;
   clearCart: () => void;
 }
@@ -41,6 +47,8 @@ export const useStore = create<StoreState>((set) => ({
   playerNickname: '',
   isVerified: false,
   paymentMethod: null,
+  language: 'uz',
+  theme: 'dark',
   orders: [],
 
   // Actions
@@ -69,6 +77,18 @@ export const useStore = create<StoreState>((set) => ({
 
   setPaymentMethod: (method) => set({ paymentMethod: method }),
 
+  setLanguage: (lang) => set({ language: lang }),
+
+  setTheme: (theme) => {
+    // Optionally update document class for styling
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+    set({ theme });
+  },
+
   addOrder: (order) =>
     set((state) => ({ orders: [order, ...state.orders] })),
 
@@ -83,4 +103,3 @@ export const useStore = create<StoreState>((set) => ({
 }));
 
 export default useStore;
-

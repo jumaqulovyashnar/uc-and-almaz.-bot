@@ -68,12 +68,13 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Flash sale mini-banner */}
+        {/* Recommended deal mini-banner */}
         <div className="mt-4 bg-gradient-to-r from-amber-900/30 to-cyber-card border border-amber-500/20 rounded-xl p-3 animate-slide-up">
           <p className="text-sm text-amber-400">
-            ⚡ Flash Sale: 660 UC atigi 99,000 so'm!
+            Kun taklifi: 660 UC atigi 99,000 so'm!
           </p>
         </div>
+
       </div>
 
       <BottomNav />

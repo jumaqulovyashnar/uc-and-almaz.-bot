@@ -30,6 +30,7 @@ export default function Checkout() {
   const [agreed, setAgreed] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [errors, setErrors] = useState<{ cardNumber?: string; expiry?: string; cvv?: string }>({});
 
   const overlaySteps = [
     'To\'lov tekshirilmoqda...',
@@ -69,8 +70,85 @@ export default function Checkout() {
     }
   }, [showOverlay, currentStep]);
 
+  const handleCardNumberChange = (val: string) => {
+    const digits = val.replace(/\D/g, '');
+    const limited = digits.substring(0, 16);
+    const formatted = limited.replace(/(\d{4})(?=\d)/g, '$1 ');
+    setCardNumber(formatted);
+    if (errors.cardNumber) {
+      setErrors((prev) => ({ ...prev, cardNumber: undefined }));
+    }
+  };
+
+  const handleExpiryChange = (val: string) => {
+    const digits = val.replace(/[^\d/]/g, '');
+    let formatted = digits.substring(0, 5);
+    if (formatted.length === 2 && !formatted.includes('/') && val.length > expiry.length) {
+      formatted = formatted + '/';
+    }
+    setExpiry(formatted);
+    if (errors.expiry) {
+      setErrors((prev) => ({ ...prev, expiry: undefined }));
+    }
+  };
+
+  const handleCvvChange = (val: string) => {
+    const digits = val.replace(/\D/g, '').substring(0, 4);
+    setCvv(digits);
+    if (errors.cvv) {
+      setErrors((prev) => ({ ...prev, cvv: undefined }));
+    }
+  };
+
+  const validateInputs = () => {
+    const newErrors: typeof errors = {};
+    const cleanCard = cardNumber.replace(/\s/g, '');
+
+    if (paymentMethod === 'uzcard') {
+      if (!/^8600\d{12}$/.test(cleanCard)) {
+        newErrors.cardNumber = "Uzcard karta raqami noto'g'ri (8600 bilan boshlanishi va 16 raqam bo'lishi kerak)";
+      }
+    } else if (paymentMethod === 'humo') {
+      if (!/^9860\d{12}$/.test(cleanCard)) {
+        newErrors.cardNumber = "Humo karta raqami noto'g'ri (9860 bilan boshlanishi va 16 raqam bo'lishi kerak)";
+      }
+    } else if (paymentMethod === 'visa') {
+      if (!/^4\d{15}$/.test(cleanCard)) {
+        newErrors.cardNumber = "Visa karta raqami noto'g'ri (4 bilan boshlanishi va 16 raqam bo'lishi kerak)";
+      }
+    }
+
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+      newErrors.expiry = "Muddat noto'g'ri (MM/YY)";
+    } else {
+      const [mStr, yStr] = expiry.split('/');
+      const m = parseInt(mStr, 10);
+      const y = parseInt(yStr, 10);
+      if (m < 1 || m > 12) {
+        newErrors.expiry = "Oy noto'g'ri (01-12)";
+      } else {
+        const now = new Date();
+        const curYear = now.getFullYear() % 100;
+        const curMonth = now.getMonth() + 1;
+        if (y < curYear || (y === curYear && m < curMonth)) {
+          newErrors.expiry = "Karta muddati tugagan";
+        }
+      }
+    }
+
+    if (paymentMethod === 'visa') {
+      if (!/^\d{3,4}$/.test(cvv)) {
+        newErrors.cvv = "CVV noto'g'ri (3 yoki 4 raqam)";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
     if (!paymentMethod || !agreed || !cardNumber) return;
+    if (!validateInputs()) return;
     setShowOverlay(true);
     setCurrentStep(0);
   };
@@ -78,6 +156,7 @@ export default function Checkout() {
   const price = selectedPackage?.price || 0;
   const gameIcon = selectedGame === 'freefire' ? '💎' : '🎮';
   const gameName = selectedGame === 'freefire' ? 'FREE FIRE' : 'PUBG MOBILE';
+
 
 
   return (
@@ -170,21 +249,31 @@ export default function Checkout() {
                 label="Karta raqami"
                 placeholder="0000 0000 0000 0000"
                 value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
+                error={errors.cardNumber}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={19}
+                onChange={(e) => handleCardNumberChange(e.target.value)}
               />
               <div className="flex gap-3 mt-3">
                 <Input
                   label="Amal qilish"
                   placeholder="MM/YY"
                   value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
+                  error={errors.expiry}
+                  inputMode="numeric"
+                  maxLength={5}
+                  onChange={(e) => handleExpiryChange(e.target.value)}
                 />
                 <Input
                   label="CVV"
                   placeholder="***"
                   type="password"
                   value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
+                  error={errors.cvv}
+                  inputMode="numeric"
+                  maxLength={4}
+                  onChange={(e) => handleCvvChange(e.target.value)}
                 />
               </div>
             </>
@@ -198,20 +287,28 @@ export default function Checkout() {
                     : '9860 0000 0000 0000'
                 }
                 value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
+                error={errors.cardNumber}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={19}
+                onChange={(e) => handleCardNumberChange(e.target.value)}
               />
               <div className="mt-3">
                 <Input
                   label="Amal qilish muddati"
                   placeholder="MM/YY"
                   value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
+                  error={errors.expiry}
+                  inputMode="numeric"
+                  maxLength={5}
+                  onChange={(e) => handleExpiryChange(e.target.value)}
                 />
               </div>
             </>
           )}
         </div>
       )}
+
 
       {/* Terms checkbox */}
       <div className="mt-4 flex items-center gap-2">

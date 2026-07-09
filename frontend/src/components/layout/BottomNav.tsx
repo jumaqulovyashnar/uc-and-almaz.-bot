@@ -17,12 +17,12 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      id: 'games',
-      label: 'O\'yinlar',
-      path: '/games',
+      id: 'referrals',
+      label: 'Referallar',
+      path: '/referrals',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
       ),
     },
@@ -50,9 +50,6 @@ export const BottomNav: React.FC = () => {
 
   // Helper to determine if path is active (handling sub-paths if necessary)
   const isActive = (path: string) => {
-    if (path === '/games') {
-      return location.pathname.startsWith('/purchase');
-    }
     return location.pathname === path;
   };
 
@@ -63,7 +60,7 @@ export const BottomNav: React.FC = () => {
         return (
           <button
             key={item.id}
-            onClick={() => navigate(item.path === '/games' ? '/home' : item.path)}
+            onClick={() => navigate(item.path)}
             className={`flex flex-col items-center justify-center flex-1 py-2 transition-all duration-300 ${
               active
                 ? 'text-cyber-purple scale-105 font-semibold'
@@ -75,7 +72,7 @@ export const BottomNav: React.FC = () => {
             </div>
             <span className="text-[10px] mt-1 tracking-wider">{item.label}</span>
             {active && (
-              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-cyber-purple to-cyber-cyan mt-1 shadow-[0_0_8px_#7C3AED]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-cyber-purple to-cyber-cyan mt-1 shadow-[0_0_8px_rgba(255,107,0,0.8)]" />
             )}
           </button>
         );
@@ -83,5 +80,6 @@ export const BottomNav: React.FC = () => {
     </nav>
   );
 };
+
 
 export default BottomNav;

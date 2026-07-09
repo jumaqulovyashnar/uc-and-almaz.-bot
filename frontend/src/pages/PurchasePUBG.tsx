@@ -102,11 +102,15 @@ const PurchasePUBG: React.FC = () => {
                 placeholder="ID raqamini kiriting..."
                 value={playerId}
                 error={error || undefined}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={12}
                 onChange={(e) => {
-                  setPlayerId(e.target.value);
+                  setPlayerId(e.target.value.replace(/\D/g, ''));
                   if (error) setError(null);
                 }}
               />
+
 
             </div>
             <Button
