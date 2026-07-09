@@ -268,14 +268,42 @@ export default function Profile() {
       {/* About Modal */}
       <Modal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} title={isUz ? 'Ilova haqida' : 'About App'}>
         <div className="p-4 pt-2">
-          <p className="text-sm text-gray-300 mb-3">
+          <p className="text-sm text-gray-300 mb-4 leading-relaxed">
             {isUz 
-              ? 'CyberPay bot orqali siz turli xil o\'yin paketlarini eng arzon va ishonchli tarzda xarid qilishingiz mumkin. Tezkor yetkazib berish kafolatlanadi.' 
-              : 'With CyberPay bot you can purchase various game packages in the cheapest and most reliable way. Instant delivery is guaranteed.'}
+              ? 'CyberPay bot — O\'zbekistondagi eng yirik va ishonchli geyming do\'koni. Biz orqali siz turli xil o\'yin paketlarini eng arzon narxlarda xarid qilishingiz mumkin.' 
+              : 'CyberPay bot is the largest and most reliable gaming store in Uzbekistan. Purchase various game packages at the cheapest prices.'}
           </p>
-          <div className="text-xs text-gray-500">
-            <p>Versiya: 2.0</p>
-            <p>Yaratuvchi: @yashnar</p>
+          
+          <div className="bg-cyber-bg/50 rounded-xl p-4 mb-4 border border-cyber-border">
+            <h4 className="text-xs font-black text-white uppercase tracking-wider mb-2">
+              {isUz ? 'Nega aynan biz?' : 'Why choose us?'}
+            </h4>
+            <ul className="text-sm text-gray-400 space-y-2">
+              <li className="flex items-center gap-2">
+                <span className="text-cyber-cyan">✓</span> {isUz ? '100% Xavfsiz to\'lovlar' : '100% Secure payments'}
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-cyber-cyan">✓</span> {isUz ? '24/7 Avtomatlashtirilgan tizim' : '24/7 Automated system'}
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-cyber-cyan">✓</span> {isUz ? 'Tezkor yetkazib berish (1 daqiqada)' : 'Instant delivery (in 1 min)'}
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-cyber-cyan">✓</span> {isUz ? 'Eng arzon va kafolatlangan narxlar' : 'Cheapest guaranteed prices'}
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-500 border-t border-cyber-border pt-3 mt-2">
+            <div className="flex flex-col gap-1">
+              <p>Versiya: <span className="text-white font-mono">2.0.1</span></p>
+              <p>Yaratuvchi: <a href="https://t.me/yashnar" target="_blank" rel="noopener noreferrer" className="text-cyber-purple hover:underline">@yashnar</a></p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyber-purple to-cyber-cyan flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
           </div>
         </div>
       </Modal>
