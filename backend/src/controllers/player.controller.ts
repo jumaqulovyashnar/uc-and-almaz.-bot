@@ -5,7 +5,28 @@ import { AppError } from '../middleware/errorHandler.js';
 const verifyPlayerSchema = z.object({
   game: z.enum(['pubg', 'freefire']),
   player_id: z.string().min(1).max(50),
+}).superRefine((data, ctx) => {
+  if (data.game === 'pubg') {
+    const pubgRegex = /^\d{5,12}$/;
+    if (!pubgRegex.test(data.player_id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak",
+        path: ['player_id'],
+      });
+    }
+  } else if (data.game === 'freefire') {
+    const ffRegex = /^\d{8,12}$/;
+    if (!ffRegex.test(data.player_id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak",
+        path: ['player_id'],
+      });
+    }
+  }
 });
+
 
 export async function verifyPlayer(
   req: Request,

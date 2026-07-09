@@ -12,8 +12,31 @@ const createOrderSchema = z.object({
   package_id: z.number().int().positive(),
   player_id: z.string().min(1).max(50),
   player_nickname: z.string().max(100).optional(),
-  payment_method: z.string().max(50).optional(),
+  payment_method: z.enum(['uzcard', 'humo', 'visa']),
+}).superRefine((data, ctx) => {
+  if (data.game === 'pubg') {
+    // PUBG player ID: numeric, 5 to 12 digits
+    const pubgRegex = /^\d{5,12}$/;
+    if (!pubgRegex.test(data.player_id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak (M-n: 5123456789)",
+        path: ['player_id'],
+      });
+    }
+  } else if (data.game === 'freefire') {
+    // Free Fire player ID: numeric, 8 to 12 digits
+    const ffRegex = /^\d{8,12}$/;
+    if (!ffRegex.test(data.player_id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak (M-n: 1234567890)",
+        path: ['player_id'],
+      });
+    }
+  }
 });
+
 
 export async function createOrder(
   req: AuthRequest,
