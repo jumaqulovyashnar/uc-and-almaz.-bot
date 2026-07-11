@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import useStore from './store/useStore';
 
 // Lazy loaded pages — har bir sahifa alohida chunk ga bo'linadi
@@ -30,7 +30,34 @@ function PageLoader() {
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { setTelegramUser } = useStore();
+
+  // Telegram native BackButton integration
+  useEffect(() => {
+    try {
+      const tg = (window as any)?.Telegram?.WebApp;
+      if (tg?.BackButton) {
+        const isSubpage = location.pathname !== '/' && location.pathname !== '/home';
+        if (isSubpage) {
+          tg.BackButton.show();
+        } else {
+          tg.BackButton.hide();
+        }
+
+        const handleBack = () => {
+          navigate(-1);
+        };
+
+        tg.BackButton.onClick(handleBack);
+        return () => {
+          tg.BackButton.offClick(handleBack);
+        };
+      }
+    } catch (e) {
+      console.error('[Telegram BackButton] Error:', e);
+    }
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     const initTelegramUser = async () => {

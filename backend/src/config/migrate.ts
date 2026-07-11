@@ -33,6 +33,8 @@ async function migrate(): Promise<void> {
         amount INT NOT NULL,
         base_price DECIMAL(12,2) NOT NULL,
         sell_price DECIMAL(12,2) NOT NULL,
+        usd_price DECIMAL(12,2) DEFAULT 0,
+        markup_percent DECIMAL(5,2) DEFAULT 10.00,
         currency VARCHAR(10) DEFAULT 'UZS',
         is_active BOOLEAN DEFAULT TRUE,
         discount INT DEFAULT 0,
@@ -132,107 +134,107 @@ async function seed(): Promise<void> {
 
     // ── PUBG Mobile - Almazar (UC) ──
     const pubgAlmazar = [
-      { name: '60 UC', amount: 60, price: 12000 },
-      { name: '325 UC', amount: 325, price: 60000 },
-      { name: '660 UC', amount: 660, price: 115000 },
-      { name: '1800 UC', amount: 1800, price: 300000 },
-      { name: '3850 UC', amount: 3850, price: 600000 },
-      { name: '8100 UC', amount: 8100, price: 1200000 },
+      { name: '60 UC', amount: 60, price: 12000, usd: 0.99 },
+      { name: '325 UC', amount: 325, price: 60000, usd: 4.99 },
+      { name: '660 UC', amount: 660, price: 115000, usd: 9.99 },
+      { name: '1800 UC', amount: 1800, price: 300000, usd: 24.99 },
+      { name: '3850 UC', amount: 3850, price: 600000, usd: 49.99 },
+      { name: '8100 UC', amount: 8100, price: 1200000, usd: 99.99 },
     ];
 
     for (let i = 0; i < pubgAlmazar.length; i++) {
       const pkg = pubgAlmazar[i];
       await client.query(
-        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        ['pubg', 'almazar', pkg.name, pkg.amount, pkg.price, pkg.price, i + 1]
+        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        ['pubg', 'almazar', pkg.name, pkg.amount, pkg.price, pkg.price, pkg.usd, i + 1]
       );
     }
     console.log('[Seed] ✓ PUBG Almazar packages');
 
     // ── PUBG Mobile - Propuski (Passes) ──
     const pubgPropuski = [
-      { name: 'Elite Pass', amount: 1, price: 12000 },
-      { name: 'Elite Pass Plus', amount: 1, price: 28000 },
+      { name: 'Elite Pass', amount: 1, price: 12000, usd: 5.99 },
+      { name: 'Elite Pass Plus', amount: 1, price: 28000, usd: 14.99 },
     ];
 
     for (let i = 0; i < pubgPropuski.length; i++) {
       const pkg = pubgPropuski[i];
       await client.query(
-        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        ['pubg', 'propuski', pkg.name, pkg.amount, pkg.price, pkg.price, i + 1]
+        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        ['pubg', 'propuski', pkg.name, pkg.amount, pkg.price, pkg.price, pkg.usd, i + 1]
       );
     }
     console.log('[Seed] ✓ PUBG Propuski packages');
 
     // ── PUBG Mobile - Level Up ──
     const pubgLevelUp = [
-      { name: '1 Level', amount: 1, price: 5000 },
-      { name: '5 Level', amount: 5, price: 20000 },
-      { name: '10 Level', amount: 10, price: 35000 },
+      { name: '1 Level', amount: 1, price: 5000, usd: 0.40 },
+      { name: '5 Level', amount: 5, price: 20000, usd: 1.60 },
+      { name: '10 Level', amount: 10, price: 35000, usd: 3.00 },
     ];
 
     for (let i = 0; i < pubgLevelUp.length; i++) {
       const pkg = pubgLevelUp[i];
       await client.query(
-        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        ['pubg', 'levelup', pkg.name, pkg.amount, pkg.price, pkg.price, i + 1]
+        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        ['pubg', 'levelup', pkg.name, pkg.amount, pkg.price, pkg.price, pkg.usd, i + 1]
       );
     }
     console.log('[Seed] ✓ PUBG Level Up packages');
 
     // ── Free Fire - Almazar (Diamonds) ──
     const ffAlmazar = [
-      { name: '100 Olmos', amount: 100, price: 11000 },
-      { name: '310 Olmos', amount: 310, price: 33000 },
-      { name: '520 Olmos', amount: 520, price: 55000 },
-      { name: '1060 Olmos', amount: 1060, price: 110000 },
-      { name: '2180 Olmos', amount: 2180, price: 220000 },
-      { name: '5600 Olmos', amount: 5600, price: 550000 },
+      { name: '100 Olmos', amount: 100, price: 11000, usd: 0.99 },
+      { name: '310 Olmos', amount: 310, price: 33000, usd: 2.99 },
+      { name: '520 Olmos', amount: 520, price: 55000, usd: 4.99 },
+      { name: '1060 Olmos', amount: 1060, price: 110000, usd: 9.99 },
+      { name: '2180 Olmos', amount: 2180, price: 220000, usd: 19.99 },
+      { name: '5600 Olmos', amount: 5600, price: 550000, usd: 49.99 },
     ];
 
     for (let i = 0; i < ffAlmazar.length; i++) {
       const pkg = ffAlmazar[i];
       await client.query(
-        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        ['freefire', 'almazar', pkg.name, pkg.amount, pkg.price, pkg.price, i + 1]
+        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        ['freefire', 'almazar', pkg.name, pkg.amount, pkg.price, pkg.price, pkg.usd, i + 1]
       );
     }
     console.log('[Seed] ✓ Free Fire Almazar packages');
 
     // ── Free Fire - Propuski (Passes) ──
     const ffPropuski = [
-      { name: 'Elite Pass', amount: 1, price: 4900 },
-      { name: 'Propuski Bundle', amount: 1, price: 76000 },
+      { name: 'Elite Pass', amount: 1, price: 4900, usd: 1.99 },
+      { name: 'Propuski Bundle', amount: 1, price: 76000, usd: 6.99 },
     ];
 
     for (let i = 0; i < ffPropuski.length; i++) {
       const pkg = ffPropuski[i];
       await client.query(
-        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        ['freefire', 'propuski', pkg.name, pkg.amount, pkg.price, pkg.price, i + 1]
+        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        ['freefire', 'propuski', pkg.name, pkg.amount, pkg.price, pkg.price, pkg.usd, i + 1]
       );
     }
     console.log('[Seed] ✓ Free Fire Propuski packages');
 
     // ── Free Fire - Level Up ──
     const ffLevelUp = [
-      { name: '5 Level', amount: 5, price: 5000 },
-      { name: '10 Level', amount: 10, price: 9000 },
-      { name: '15 Level', amount: 15, price: 9000 },
-      { name: '20 Level', amount: 20, price: 9000 },
+      { name: '5 Level', amount: 5, price: 5000, usd: 0.40 },
+      { name: '10 Level', amount: 10, price: 9000, usd: 0.80 },
+      { name: '15 Level', amount: 15, price: 9000, usd: 0.80 },
+      { name: '20 Level', amount: 20, price: 9000, usd: 0.80 },
     ];
 
     for (let i = 0; i < ffLevelUp.length; i++) {
       const pkg = ffLevelUp[i];
       await client.query(
-        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        ['freefire', 'levelup', pkg.name, pkg.amount, pkg.price, pkg.price, i + 1]
+        `INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        ['freefire', 'levelup', pkg.name, pkg.amount, pkg.price, pkg.price, pkg.usd, i + 1]
       );
     }
     console.log('[Seed] ✓ Free Fire Level Up packages');

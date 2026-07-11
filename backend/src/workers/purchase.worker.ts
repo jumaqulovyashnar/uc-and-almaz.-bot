@@ -2,6 +2,7 @@ import { Worker, Job } from 'bullmq';
 import { redis } from '../config/redis.js';
 import * as orderService from '../services/order.service.js';
 import { sendOrderUpdate, sendAdminAlert } from '../services/notification.service.js';
+import { runGarenaAutomation } from '../services/automation.service.js';
 
 interface PurchaseJobData {
   order_id: number;
@@ -24,15 +25,23 @@ export const purchaseWorker = new Worker(
       // 1. Update order status to 'processing'
       await orderService.updateStatus(order_id, 'processing');
 
-      // 2. Simulate browser automation delays (Midasbuy/Garena)
-      // Step A: Launch browser & navigate (1.5s)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Step B: Enter ID & Verify player (1.5s)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // 2. Execute browser automation (real for Free Fire, simulated for PUBG)
+      if (game === 'freefire') {
+        const result = await runGarenaAutomation(player_id);
+        if (!result.success) {
+          throw new Error(result.error || 'Garena automation failed');
+        }
+      } else {
+        // Simulate browser automation delays for PUBG
+        // Step A: Launch browser & navigate (1.5s)
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+        // Step B: Enter ID & Verify player (1.5s)
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Step C: Execute payment with Razer Gold (2s)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Step C: Execute payment with Razer Gold (2s)
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
 
       // 3. Mark order as completed
       await orderService.updateStatus(order_id, 'completed', {

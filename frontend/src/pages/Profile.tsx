@@ -135,18 +135,25 @@ export default function Profile() {
           label={isUz ? 'Ilova haqida' : 'About App'}
           onClick={() => setIsAboutOpen(true)}
         />
-
-        {/* Admin panel — faqat admin uchun */}
-        {isAdmin && (
-          <SettingRow
-            iconBg="bg-red-500/15 border border-red-500/25"
-            icon={<svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
-            label="Admin Panel"
-            sub="Statistika, buyurtmalar, tizim"
-            onClick={() => navigate('/admin')}
-          />
-        )}
       </div>
+
+      {/* Admin panel — Alohida pastda ko'rinadigan qism (faqat admin uchun) */}
+      {isAdmin && (
+        <div className="px-4 mt-6 animate-fade-in">
+          <div className="border-t border-cyber-border/60 pt-5">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-2 px-1">
+              {isUz ? 'Admin Boshqaruvi' : 'Admin Control'}
+            </p>
+            <SettingRow
+              iconBg="bg-red-500/15 border border-red-500/25"
+              icon={<svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
+              label="Admin Panel"
+              sub={isUz ? "Statistika, buyurtmalar, tizim" : "Stats, orders, system"}
+              onClick={() => navigate('/admin')}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── About Modal ── */}
       <Modal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} title={isUz ? 'Ilova haqida' : 'About App'}>

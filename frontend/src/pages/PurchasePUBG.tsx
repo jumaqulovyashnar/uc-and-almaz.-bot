@@ -210,6 +210,7 @@ const PurchasePUBG: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [tabMode, setTabMode] = useState<TabMode>('avto');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('almazar');
+  const [dynamicPackages, setDynamicPackages] = useState<GamePackage[]>([]);
 
   const {
     selectedPackage,
@@ -225,10 +226,47 @@ const PurchasePUBG: React.FC = () => {
 
   const isUz = language === 'uz';
 
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+        const res = await fetch(`${apiBase}/packages/pubg`);
+        if (res.ok) {
+          const json = await res.json();
+          const pkgGroup = json?.data?.packages;
+          if (pkgGroup) {
+            const flatList: GamePackage[] = [];
+            Object.keys(pkgGroup).forEach((category) => {
+              pkgGroup[category].forEach((p: any) => {
+                flatList.push({
+                  id: String(p.id),
+                  name: p.name,
+                  amount: p.amount,
+                  price: parseFloat(p.sell_price),
+                  game: p.game as any,
+                  category: p.category as any,
+                });
+              });
+            });
+            if (flatList.length > 0) {
+              setDynamicPackages(flatList);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[PurchasePUBG] Error fetching real-time packages:', err);
+      }
+    };
+    fetchPackages();
+  }, []);
+
+  // Use dynamic packages if loaded, otherwise fall back to static
+  const currentPackages = dynamicPackages.length > 0 ? dynamicPackages : pubgPackages;
+
   // UC packages (avto mode)
-  const ucPackages = pubgPackages.filter((p) => p.category === 'almazar');
+  const ucPackages = currentPackages.filter((p) => p.category === 'almazar');
   // To'plamlar packages
-  const toplamlarPackages = pubgPackages.filter((p) => p.category === 'toplamlar');
+  const toplamlarPackages = currentPackages.filter((p) => p.category === 'toplamlar');
 
   const handleVerify = () => {
     if (!playerId) return;

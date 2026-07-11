@@ -6,7 +6,7 @@ import { CategoryTabs } from '../components/shared/CategoryTabs';
 import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
 import { useStore } from '../store/useStore';
-import type { CategoryType } from '../types';
+import type { CategoryType, GamePackage } from '../types';
 
 // ─── Free Fire banner slides ──────────────────────────────────────────────────
 const FF_SLIDES = [
@@ -104,6 +104,7 @@ const PurchaseFreeFire: React.FC = () => {
   const navigate = useNavigate();
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dynamicPackages, setDynamicPackages] = useState<GamePackage[]>([]);
 
   const {
     selectedCategory,
@@ -120,6 +121,40 @@ const PurchaseFreeFire: React.FC = () => {
   } = useStore();
 
   const isUz = language === 'uz';
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+        const res = await fetch(`${apiBase}/packages/freefire`);
+        if (res.ok) {
+          const json = await res.json();
+          const pkgGroup = json?.data?.packages;
+          if (pkgGroup) {
+            const flatList: GamePackage[] = [];
+            Object.keys(pkgGroup).forEach((category) => {
+              pkgGroup[category].forEach((p: any) => {
+                flatList.push({
+                  id: String(p.id),
+                  name: p.name,
+                  amount: p.amount,
+                  price: parseFloat(p.sell_price),
+                  game: p.game as any,
+                  category: p.category as any,
+                });
+              });
+            });
+            if (flatList.length > 0) {
+              setDynamicPackages(flatList);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[PurchaseFreeFire] Error fetching real-time packages:', err);
+      }
+    };
+    fetchPackages();
+  }, []);
 
   const handleVerify = () => {
     if (!playerId) return;
@@ -147,7 +182,10 @@ const PurchaseFreeFire: React.FC = () => {
     setPackage(null);
   };
 
-  const filteredPackages = freeFirePackages.filter(
+  // Use dynamic packages if loaded, otherwise fall back to static
+  const currentPackages = dynamicPackages.length > 0 ? dynamicPackages : freeFirePackages;
+
+  const filteredPackages = currentPackages.filter(
     (p) => p.category === selectedCategory
   );
 

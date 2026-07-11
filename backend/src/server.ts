@@ -40,6 +40,29 @@ async function startServer() {
     console.error('[Server] Bot startup failed:', (error as Error).message);
   }
 
+  // 3.5. Start Price Synchronization (pegged to USD rate)
+  try {
+    const { syncPackagePrices } = await import('./services/priceSync.service.js');
+    // Run sync asynchronously in background on startup
+    syncPackagePrices()
+      .then((res) => {
+        console.log(`[Server] Price synchronization completed on startup. Updated ${res.updatedCount} packages. (1 USD = ${res.rate} UZS)`);
+      })
+      .catch((err) => {
+        console.error('[Server] Price sync on startup failed:', err.message);
+      });
+
+    // Schedule sync every 12 hours
+    setInterval(() => {
+      console.log('[Server] Running scheduled price synchronization...');
+      syncPackagePrices().catch((err) => {
+        console.error('[Server] Scheduled price sync failed:', err.message);
+      });
+    }, 12 * 60 * 60 * 1000);
+  } catch (error) {
+    console.error('[Server] Price sync initialization failed:', (error as Error).message);
+  }
+
   // 4. Start Express HTTP Server
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[Server] Express API server running on port ${PORT} in ${env.NODE_ENV} mode`);
