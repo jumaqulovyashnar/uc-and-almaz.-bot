@@ -221,7 +221,153 @@ export async function runGarenaAutomation(playerId: string): Promise<AutomationR
 
   } catch (error) {
     const errMessage = (error as Error).message;
-    console.error('[Automation] Error during browser automation:', errMessage);
+    console.error('[Automation] Error during Garena browser automation:', errMessage);
+    
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (e) {}
+    }
+    
+    return {
+      success: false,
+      error: errMessage,
+    };
+  }
+}
+
+/**
+ * Automates Midasbuy PUBG Mobile UC topup flow up to the payment screen.
+ */
+export async function runMidasbuyAutomation(
+  playerId: string,
+  packageName: string
+): Promise<AutomationResult> {
+  const midasbuyCookiesPath = path.join(__dirname, '../config/midasbuy_cookies.json');
+  console.log(`[MidasbuyAutomation] Starting automation. Player ID: ${playerId}, Package: ${packageName}`);
+
+  let browser;
+  try {
+    // 1. Load session cookies if they exist
+    let cookies: any[] = [];
+    if (fs.existsSync(midasbuyCookiesPath)) {
+      cookies = loadCookies(midasbuyCookiesPath);
+      console.log(`[MidasbuyAutomation] Loaded ${cookies.length} cookies from ${midasbuyCookiesPath}`);
+    } else {
+      console.log('[MidasbuyAutomation] No cookies found. Continuing as guest (verification only)...');
+    }
+
+    // Find local Google Chrome executable on Windows
+    const chromePath = getChromePath();
+    console.log(`[MidasbuyAutomation] Using local Google Chrome: ${chromePath}`);
+
+    // 2. Launch Puppeteer browser in visible mode (headless: false) using local Chrome
+    browser = await (puppeteer as any).launch({
+      headless: false,
+      executablePath: chromePath,
+      defaultViewport: null,
+      args: [
+        '--start-maximized',
+        '--no-sandbox',
+        '--disable-setuid-sandbox'
+      ],
+    });
+
+    const page = await browser.newPage();
+
+    // 3. Set cookies if available
+    if (cookies.length > 0) {
+      await page.setCookie(...cookies);
+      console.log('[MidasbuyAutomation] Injected session cookies into browser context');
+    }
+
+    // 4. Navigate to Midasbuy PUBG Mobile UZ buy page
+    console.log('[MidasbuyAutomation] Navigating to Midasbuy...');
+    await page.goto('https://www.midasbuy.com/midasbuy/uz/buy/pubgm', {
+      waitUntil: 'networkidle2',
+      timeout: 60000,
+    });
+
+    // 5. Wait for and find the Player ID input field
+    console.log('[MidasbuyAutomation] Entering Player ID...');
+    const inputSelector = 'input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="Идентификатор"], input.input-bar__input, input.id-input';
+    await page.waitForSelector(inputSelector, { timeout: 20000 });
+    
+    await page.click(inputSelector, { clickCount: 3 });
+    await page.keyboard.press('Backspace');
+    await page.type(inputSelector, playerId, { delay: 100 });
+
+    // 6. Click OK/Verify button
+    console.log('[MidasbuyAutomation] Clicking OK/Verify...');
+    await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button, div[role="button"], span, p, a, input[type="button"]'));
+      const found = buttons.find(el => {
+        const text = el.textContent?.trim().toLowerCase() || '';
+        return text === 'ok' || text === 'ввод' || text === 'войти' || text === 'подтвердить' || text === 'check' || text === 'verify';
+      });
+      if (found) {
+        (found as HTMLElement).click();
+      }
+    });
+
+    // Wait for validation to resolve
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // 7. Find and select the package card matching the name
+    console.log(`[MidasbuyAutomation] Selecting package matching "${packageName}"...`);
+    const packageSelected = await page.evaluate((pkgName: string) => {
+      const cards = Array.from(document.querySelectorAll('div, li, button, span'));
+      
+      // Look for a card that contains the exact name, or the numbers (e.g. 300+25 or 60)
+      const cleanPkgName = pkgName.replace(/\s+/g, '').toLowerCase();
+      
+      const found = cards.find(el => {
+        const text = el.textContent?.replace(/\s+/g, '').toLowerCase() || '';
+        return text.includes(cleanPkgName) && text.includes('uc');
+      });
+
+      if (found) {
+        (found as HTMLElement).click();
+        return true;
+      }
+      return false;
+    }, packageName);
+
+    if (packageSelected) {
+      console.log(`[MidasbuyAutomation] Package "${packageName}" card clicked.`);
+    } else {
+      console.log(`[MidasbuyAutomation] Warning: Could not find package card matching "${packageName}" dynamically.`);
+    }
+
+    // 8. Select Payment Method (defaults to Razer Gold or Credit Card if already highlighted)
+    console.log('[MidasbuyAutomation] Checking payment methods...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // 9. Take screenshot at the final payment screen (for confirmation/debugging)
+    console.log('[MidasbuyAutomation] Reached final checkout screen. Capturing screenshot...');
+    const screenshotsDir = path.join(__dirname, '../../screenshots');
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true });
+    }
+    const screenshotPath = path.join(screenshotsDir, `midasbuy_order_${Date.now()}.png`);
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+    console.log(`[MidasbuyAutomation] Screenshot saved to: ${screenshotPath}`);
+
+    // Keep the browser open for 15 seconds so the user can see it on their screen
+    console.log('[MidasbuyAutomation] Keeping browser open for 15 seconds so you can verify the screen...');
+    await new Promise(resolve => setTimeout(resolve, 15000));
+
+    await browser.close();
+    console.log('[MidasbuyAutomation] Browser closed. Midasbuy automation successful.');
+    
+    return {
+      success: true,
+      screenshotPath,
+    };
+
+  } catch (error) {
+    const errMessage = (error as Error).message;
+    console.error('[MidasbuyAutomation] Error during browser automation:', errMessage);
     
     if (browser) {
       try {
