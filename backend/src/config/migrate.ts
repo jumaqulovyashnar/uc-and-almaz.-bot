@@ -141,6 +141,12 @@ async function seed(): Promise<void> {
       { name: '1500 + 300 UC', amount: 1800, price: 287500, usd: 22.73 },
       { name: '3000 + 850 UC', amount: 3850, price: 575000, usd: 45.45 },
       { name: '6000 + 2100 UC', amount: 8100, price: 1150000, usd: 90.91 },
+      { name: '12000 + 4200 UC', amount: 16200, price: 2300000, usd: 181.82 },
+      { name: '18000 + 6300 UC', amount: 24300, price: 3450000, usd: 272.73 },
+      { name: '24000 + 8400 UC', amount: 32400, price: 4600000, usd: 363.64 },
+      { name: '30000 + 10500 UC', amount: 40500, price: 5750000, usd: 454.55 },
+      { name: '36000 + 12600 UC', amount: 48600, price: 6900000, usd: 545.45 },
+      { name: '60000 + 21000 UC', amount: 81000, price: 11500000, usd: 909.09 },
     ];
 
     for (let i = 0; i < pubgAlmazar.length; i++) {
