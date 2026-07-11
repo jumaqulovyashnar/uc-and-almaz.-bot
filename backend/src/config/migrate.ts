@@ -134,12 +134,13 @@ async function seed(): Promise<void> {
 
     // ── PUBG Mobile - Almazar (UC) ──
     const pubgAlmazar = [
-      { name: '60 UC', amount: 60, price: 12000, usd: 0.99 },
-      { name: '325 UC', amount: 325, price: 60000, usd: 4.99 },
-      { name: '660 UC', amount: 660, price: 115000, usd: 9.99 },
-      { name: '1800 UC', amount: 1800, price: 300000, usd: 24.99 },
-      { name: '3850 UC', amount: 3850, price: 600000, usd: 49.99 },
-      { name: '8100 UC', amount: 8100, price: 1200000, usd: 99.99 },
+      { name: '30 UC', amount: 30, price: 5750, usd: 0.45 },
+      { name: '60 UC', amount: 60, price: 11500, usd: 0.91 },
+      { name: '300 + 25 UC', amount: 325, price: 57500, usd: 4.55 },
+      { name: '600 + 60 UC', amount: 660, price: 115000, usd: 9.10 },
+      { name: '1500 + 300 UC', amount: 1800, price: 287500, usd: 22.73 },
+      { name: '3000 + 850 UC', amount: 3850, price: 575000, usd: 45.45 },
+      { name: '6000 + 2100 UC', amount: 8100, price: 1150000, usd: 90.91 },
     ];
 
     for (let i = 0; i < pubgAlmazar.length; i++) {
