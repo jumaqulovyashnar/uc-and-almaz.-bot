@@ -356,7 +356,7 @@ async def run_midasbuy_automation(player_id: str, package_name: str) -> Dict[str
 
 import asyncio
 
-async def verify_freefire_id(player_id: str) -> Optional[str]:
+async def verify_freefire_id(player_id: str) -> Dict[str, Any]:
     logging.info(f"[Automation] Verifying Free Fire Player ID: {player_id}")
     browser = None
     try:
@@ -365,7 +365,11 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
             browser = await p.chromium.launch(
                 headless=True,
                 executable_path=chrome_path,
-                args=["--no-sandbox", "--disable-setuid-sandbox"]
+                args=[
+                    "--no-sandbox", 
+                    "--disable-setuid-sandbox",
+                    "--disable-blink-features=AutomationControlled"
+                ]
             )
             context = await browser.new_context()
             
@@ -374,13 +378,31 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
                 try:
                     cookies = load_cookies(GARENA_COOKIES_PATH)
                     await context.add_cookies(cookies)
-                except Exception:
-                    pass
+                except Exception as ce:
+                    logging.warning(f"[Automation] Failed to load cookies: {ce}")
                     
             page = await context.new_page()
             
             # Go to Garena shop (using kzshop as provided by the user)
-            await page.goto("https://kzshop.garena.com/app?app=100067", wait_until="domcontentloaded", timeout=20000)
+            try:
+                await page.goto("https://kzshop.garena.com/app?app=100067", wait_until="domcontentloaded", timeout=20000)
+            except Exception as te:
+                logging.error(f"[Automation] Navigation timeout/error: {te}")
+                await browser.close()
+                return {"success": False, "error_code": "TIMEOUT", "error": f"Page load timeout: {str(te)}"}
+            
+            # Check if captcha/access restriction page is loaded immediately
+            has_captcha = await page.evaluate("""() => {
+                const text = document.body.textContent || '';
+                const hasSliderText = text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('captcha') || text.includes('geetest');
+                const hasSliderElement = !!document.querySelector('.geetest_holder, .geetest_window, iframe[src*="captcha"], [class*="captcha"], [id*="captcha"]');
+                const hasBlockText = text.includes('Доступ временно ограничен') || text.includes('behavior made us suspicious') || text.includes('поведение браузера нас насторожило');
+                return hasSliderText || hasSliderElement || hasBlockText;
+            }""")
+            if has_captcha:
+                logging.warning(f"[Automation] Captcha or access restriction detected on page load.")
+                await browser.close()
+                return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Geetest/DataDome captcha or block page was triggered by the target website."}
             
             # Input selector
             input_selector = 'input[type="text"], input[type="number"], input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="игрока"]'
@@ -398,6 +420,15 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
                 # Click Player ID login button (in RU: "ID игрока")
                 player_id_button_found = False
                 for _ in range(15):
+                    # Check captcha during loop
+                    captcha_check = await page.evaluate("""() => {
+                        const text = document.body.textContent || '';
+                        return text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('captcha') || text.includes('geetest') || text.includes('Доступ временно ограничен');
+                    }""")
+                    if captcha_check:
+                        await browser.close()
+                        return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Geetest/DataDome captcha triggered while searching for Player ID button."}
+                        
                     found = await page.evaluate("""() => {
                         const elements = Array.from(document.querySelectorAll('div, button, a, p, span'));
                         const target = elements.find(el => {
@@ -416,9 +447,14 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
                     await asyncio.sleep(0.5)
                     
                 if not player_id_button_found:
-                    raise RuntimeError("Garena Player ID button not found")
+                    await browser.close()
+                    return {"success": False, "error_code": "SCRAPER_BLOCKED", "error": "Could not find Player ID login button."}
                 
-                await page.wait_for_selector(input_selector, timeout=5000)
+                try:
+                    await page.wait_for_selector(input_selector, timeout=5000)
+                except Exception as se:
+                    await browser.close()
+                    return {"success": False, "error_code": "TIMEOUT", "error": f"Timeout waiting for Player ID input field: {str(se)}"}
 
             # Input Player ID
             await page.click(input_selector, click_count=3)
@@ -446,11 +482,24 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
                 await asyncio.sleep(0.5)
                 
             if not login_clicked:
-                raise RuntimeError("Garena login button not found")
+                await browser.close()
+                return {"success": False, "error_code": "SCRAPER_BLOCKED", "error": "Could not click Login button."}
                 
             # Wait for user info or error to load
             nickname = None
             for _ in range(20):
+                # Check for captcha slider popup
+                captcha_popup = await page.evaluate("""() => {
+                    const text = document.body.textContent || '';
+                    const hasSliderText = text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('captcha') || text.includes('geetest');
+                    const hasSliderElement = !!document.querySelector('.geetest_holder, .geetest_window, iframe[src*="captcha"]');
+                    return hasSliderText || hasSliderElement;
+                }""")
+                if captcha_popup:
+                    logging.warning("[Automation] Captcha slider triggered after entering ID.")
+                    await browser.close()
+                    return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Verification blocked by Garena Geetest Slider Captcha."}
+
                 has_error = await page.evaluate("""() => {
                     const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
                     return elements.some(el => {
@@ -460,7 +509,8 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
                 }""")
                 if has_error:
                     logging.warning(f"[Automation] Invalid Free Fire player ID: {player_id}")
-                    break
+                    await browser.close()
+                    return {"success": False, "error_code": "INVALID_ID", "error": f"Free Fire Player ID '{player_id}' is invalid or does not exist."}
                     
                 nickname = await page.evaluate("""() => {
                     const loginNameEl = document.querySelector('.login_name, .user-name, .username, .login-name');
@@ -483,17 +533,21 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
                 await asyncio.sleep(0.5)
                 
             await browser.close()
-            return nickname
+            if nickname:
+                return {"success": True, "nickname": nickname}
+            else:
+                return {"success": False, "error_code": "TIMEOUT", "error": "Verification timed out waiting for nickname to load."}
+                
     except Exception as e:
-        logging.error(f"[Automation] Free Fire ID verification failed: {e}")
+        logging.error(f"[Automation] Free Fire ID verification failed: {e}", exc_info=True)
         if browser:
             try:
                 await browser.close()
             except Exception:
                 pass
-        return None
+        return {"success": False, "error_code": "SERVICE_DOWN", "error": f"Internal Playwright/Scraper exception: {str(e)}"}
 
-async def verify_pubg_id(player_id: str) -> Optional[str]:
+async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
     logging.info(f"[Automation] Verifying PUBG Player ID: {player_id}")
     browser = None
     try:
@@ -502,7 +556,11 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
             browser = await p.chromium.launch(
                 headless=True,
                 executable_path=chrome_path,
-                args=["--no-sandbox", "--disable-setuid-sandbox"]
+                args=[
+                    "--no-sandbox", 
+                    "--disable-setuid-sandbox",
+                    "--disable-blink-features=AutomationControlled"
+                ]
             )
             context = await browser.new_context()
             
@@ -510,23 +568,42 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
                 try:
                     cookies = load_cookies(MIDASBUY_COOKIES_PATH)
                     await context.add_cookies(cookies)
-                except Exception:
-                    pass
+                except Exception as ce:
+                    logging.warning(f"[Automation] Failed to load cookies: {ce}")
                     
             page = await context.new_page()
             
             # Go to Midasbuy PUBG Mobile page
-            await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm", wait_until="domcontentloaded", timeout=20000)
+            try:
+                await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm", wait_until="domcontentloaded", timeout=20000)
+            except Exception as te:
+                logging.error(f"[Automation] Navigation timeout/error: {te}")
+                await browser.close()
+                return {"success": False, "error_code": "TIMEOUT", "error": f"Page load timeout: {str(te)}"}
+            
+            # Check for Midasbuy captcha/block page
+            has_captcha = await page.evaluate("""() => {
+                const text = document.body.textContent || '';
+                return text.includes('verify') || text.includes('captcha') || text.includes('security check') || text.includes('робот') || text.includes('подтвердите');
+            }""")
+            if has_captcha:
+                await browser.close()
+                return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Midasbuy security verification/captcha triggered on page load."}
             
             # Type Player ID
             input_selector = 'input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="Идентификатор"], input.input-bar__input, input.id-input'
-            await page.wait_for_selector(input_selector, timeout=10000)
+            try:
+                await page.wait_for_selector(input_selector, timeout=10000)
+            except Exception as se:
+                await browser.close()
+                return {"success": False, "error_code": "TIMEOUT", "error": f"Timeout waiting for PUBG Player ID input: {str(se)}"}
+                
             await page.click(input_selector, click_count=3)
             await page.keyboard.press("Backspace")
             await page.type(input_selector, player_id, delay=50)
             
             # Click Verify OK
-            await page.evaluate("""() => {
+            clicked = await page.evaluate("""() => {
                 const buttons = Array.from(document.querySelectorAll('button, div[role="button"], span, p, a, input[type="button"]'));
                 const target = buttons.find(el => {
                     const text = el.textContent?.trim().toLowerCase() || '';
@@ -534,12 +611,26 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
                 });
                 if (target) {
                     target.click();
+                    return true;
                 }
+                return false;
             }""")
+            if not clicked:
+                await browser.close()
+                return {"success": False, "error_code": "SCRAPER_BLOCKED", "error": "Could not find or click PUBG verification button."}
             
             # Wait for nickname to load
             nickname = None
             for _ in range(15):
+                # Check for captcha or blocker
+                captcha_popup = await page.evaluate("""() => {
+                    const text = document.body.textContent || '';
+                    return text.includes('verify') || text.includes('captcha') || text.includes('security check');
+                }""")
+                if captcha_popup:
+                    await browser.close()
+                    return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Blocked by Midasbuy Security Captcha Verification."}
+
                 has_error = await page.evaluate("""() => {
                     const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
                     return elements.some(el => {
@@ -549,7 +640,8 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
                 }""")
                 if has_error:
                     logging.warning(f"[Automation] Invalid PUBG player ID: {player_id}")
-                    break
+                    await browser.close()
+                    return {"success": False, "error_code": "INVALID_ID", "error": f"PUBG Player ID '{player_id}' is invalid or does not exist."}
                     
                 nickname = await page.evaluate("""() => {
                     const elements = Array.from(document.querySelectorAll('div, span, p'));
@@ -572,14 +664,18 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
                 await asyncio.sleep(0.5)
                 
             await browser.close()
-            return nickname
+            if nickname:
+                return {"success": True, "nickname": nickname}
+            else:
+                return {"success": False, "error_code": "TIMEOUT", "error": "Verification timed out waiting for PUBG character name to load."}
+                
     except Exception as e:
-        logging.error(f"[Automation] PUBG ID verification failed: {e}")
+        logging.error(f"[Automation] PUBG ID verification failed: {e}", exc_info=True)
         if browser:
             try:
                 await browser.close()
             except Exception:
                 pass
-        return None
+        return {"success": False, "error_code": "SERVICE_DOWN", "error": f"Internal Playwright/Scraper exception: {str(e)}"}
 
 
