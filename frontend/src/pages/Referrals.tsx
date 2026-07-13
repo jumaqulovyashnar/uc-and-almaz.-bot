@@ -42,7 +42,7 @@ const Referrals: React.FC = () => {
               <CardDescription className="text-gray-400">Jami a'zolar</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-black text-cyber-purple">12 ta</p>
+              <p className="text-2xl font-black text-cyber-purple">0 ta</p>
             </CardContent>
           </Card>
 
@@ -51,7 +51,7 @@ const Referrals: React.FC = () => {
               <CardDescription className="text-gray-400">Ishlangan mablag'</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-xl font-black text-cyber-cyan">45,000 so'm</p>
+              <p className="text-xl font-black text-cyber-cyan">0 so'm</p>
             </CardContent>
           </Card>
         </div>
