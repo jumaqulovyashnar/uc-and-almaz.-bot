@@ -41,7 +41,7 @@ env = load_env()
 # === SOZLAMALAR (Sizning API ma'lumotlaringiz o'rnatildi) ===
 API_ID = int(env.get("API_ID", 30760403))
 API_HASH = env.get("API_HASH", "6d14c56c787f812e2e08f1d06bbab91a")
-SESSION_NAME = 'userbot'
+SESSION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "userbot")
 API_URL = "https://c578.coresuz.ru"
 
 # === LOG TIZIMI ===
@@ -133,77 +133,49 @@ async def humo_handler(event):
     except Exception as e:
         logging.error(f"HUMOcardbot umumiy xatosi: {e}", exc_info=True)
 
-# === Telegramga ulanish urinishi ===
-async def try_connect(client_instance, retries=5, delay=5):
-    for i in range(retries):
-        try:
-            logging.info(f"Telegramga ulanishga urinish ({i+1}/{retries})...")
-            await client_instance.connect()
-            if client_instance.is_connected():
-                logging.info("Telegramga muvaffaqiyatli ulandi.")
-                return True
-            else:
-                logging.warning("Ulanish muvaffaqiyatsiz bo'ldi. Qayta urinib ko'rilmoqda...")
-        except ConnectionError as e:
-            logging.error(f"Ulanish xatosi: {e}. {delay} soniya kutish...", exc_info=True)
-        except FloodWaitError as e:
-            logging.error(f"Telegram FloodWait: {e}. {e.seconds} soniya kutish...", exc_info=True)
-            await asyncio.sleep(e.seconds + 5)
-        except AuthKeyUnregisteredError:
-            logging.critical("Sessiya fayli yaroqsiz bo'lib qolgan. Sessiya fayli o'chirilmoqda...")
-            session_file = f"{SESSION_NAME}.session"
-            if os.path.exists(session_file):
-                os.remove(session_file)
-            await client_instance.log_out()
-            return False
-        except SessionPasswordNeededError:
-            logging.critical("Ikki bosqichli tasdiqlash paroli talab qilinmoqda.")
-            return False
-        except RPCError as e:
-            logging.error(f"Telegram RPC xatoligi: {e}. {delay} soniya kutish...", exc_info=True)
-        except asyncio.CancelledError:
-            logging.warning("Ulanish urinishi bekor qilindi.")
-            return False
-        except Exception as e:
-            logging.error(f"Kutilmagan xatolik ulanishda: {e}. {delay} soniya kutish...", exc_info=True)
-
-        if i < retries - 1:
-            await asyncio.sleep(delay)
-    return False
-
 # === Asosiy sikl ===
 async def main(client_instance):
     logging.info("🚀 Userbot ishga tushmoqda...")
-    if not await try_connect(client_instance):
-        logging.critical("Userbot ishga tusha olmadi: Telegramga ulanish muvaffaqiyatsiz.")
-        return
-
     try:
-        logging.info("Userbot muvaffaqiyatli ulandi. Xabarlarni kutmoqda...")
+        # start() avtomatik ulash, avtorizatsiyani tekshirish va terminalda interactive login qilishni ta'minlaydi
+        await client_instance.start()
+        logging.info("Userbot muvaffaqiyatli ulandi va avtorizatsiyadan o'tdi. Xabarlarni kutmoqda...")
         await client_instance.run_until_disconnected()
     except FloodWaitError as e:
         logging.error(f"Telegram FloodWaitError: {e}. {e.seconds} soniya kutish...", exc_info=True)
         await asyncio.sleep(e.seconds + 5)
     except AuthKeyUnregisteredError:
         logging.critical("Sessiya yaroqsizlandi. Sessiya fayli o'chirilmoqda...")
-        session_file = f"{SESSION_NAME}.session"
+        session_file = f"{SESSION_PATH}.session"
         if os.path.exists(session_file):
-            os.remove(session_file)
-        await client_instance.log_out()
-        raise
+            try:
+                os.remove(session_file)
+                logging.info(f"Sessiya fayli o'chirildi: {session_file}")
+            except Exception as e:
+                logging.error(f"Sessiya faylini o'chirishda xatolik: {e}")
+        try:
+            await client_instance.disconnect()
+        except Exception:
+            pass
+        logging.info("Iltimos, dasturni qayta ishga tushiring va yangidan tizimga kiring.")
+        await asyncio.sleep(5)
     except Exception as e:
         logging.error(f"Main loopda kutilmagan xato: {e}", exc_info=True)
+        await asyncio.sleep(5)
     finally:
         if client_instance.is_connected():
             logging.info("Client aloqasi uzilmoqda...")
-            await client_instance.disconnect()
+            try:
+                await client_instance.disconnect()
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     while True:
         current_client = None
         try:
-            # Yangi Telegram client yaratish
-            current_client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+            # Yangi Telegram client yaratish (SESSION_PATH bilan)
+            current_client = TelegramClient(SESSION_PATH, API_ID, API_HASH)
             
             # Handlerlarni bog'lash
             current_client.add_event_handler(cardxabar_handler, events.NewMessage(from_users='@CardXabarBot'))
@@ -222,7 +194,6 @@ if __name__ == "__main__":
         finally:
             if current_client and current_client.is_connected():
                 try:
-                    # Echo aloqani uzish
                     current_client.disconnect()
                 except Exception:
                     pass
