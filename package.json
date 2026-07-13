@@ -4,8 +4,8 @@
   "description": "CyberPay fullstack Telegram Mini App",
   "private": true,
   "scripts": {
-    "install:all": "npm install && npm install --prefix frontend && .venv\\Scripts\\pip install -r backend_py/requirements.txt telethon psutil",
-    "dev:backend": ".venv\\Scripts\\python backend_py/app/main.py",
+    "install:all": "npm install && npm install --prefix frontend && .venv\\Scripts\\pip install -r backend/requirements.txt telethon psutil",
+    "dev:backend": ".venv\\Scripts\\python backend/app/main.py",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev": "npx -y concurrently -n \"backend,frontend\" -c \"magenta,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\""
   }
