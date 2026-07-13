@@ -268,7 +268,7 @@ const PurchasePUBG: React.FC = () => {
   // To'plamlar packages
   const toplamlarPackages = currentPackages.filter((p) => p.category === 'toplamlar');
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!playerId) return;
     const pubgRegex = /^\d{5,12}$/;
     if (!pubgRegex.test(playerId)) {
@@ -282,11 +282,40 @@ const PurchasePUBG: React.FC = () => {
     }
     setError(null);
     setVerifyLoading(true);
-    setTimeout(() => {
-      setNickname('ProGamer_' + playerId.slice(-4));
-      setVerified(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+      const res = await fetch(`${apiBase}/player`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          game: 'pubg',
+          player_id: playerId,
+        }),
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setNickname(json.data.nickname);
+        setVerified(true);
+      } else {
+        setError(
+          json.detail || (isUz ? "O'yinchi topilmadi yoki xatolik yuz berdi" : "Player not found or verification error")
+        );
+        setVerified(false);
+      }
+    } catch (err) {
+      console.error('[PurchasePUBG] Verification failed:', err);
+      setError(
+        isUz
+          ? "Tizimga ulanishda xatolik yuz berdi"
+          : "Connection to validation server failed"
+      );
+      setVerified(false);
+    } finally {
       setVerifyLoading(false);
-    }, 1500);
+    }
   };
 
   const handleTabChange = (mode: TabMode) => {
