@@ -284,7 +284,7 @@ const PurchasePUBG: React.FC = () => {
     setVerifyLoading(true);
     try {
       const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
-      const res = await fetch(`${apiBase}/player`, {
+      const res = await fetch(`${apiBase}/verify-player`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
