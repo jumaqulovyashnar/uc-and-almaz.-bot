@@ -44,28 +44,67 @@ async def price_sync_scheduler():
 async def lifespan(app: FastAPI):
     logging.info("[Server] Initializing CyberPay services...")
     
+    bot_task = None
+    worker_task = None
+    sync_task = None
+    db_ok = False
+    redis_ok = False
+
     # 1. Initialize PostgreSQL database
-    await init_db()
-    db_ok = await test_connection()
-    if not db_ok and env.NODE_ENV == "production":
-        logging.critical("[Server] PostgreSQL connection failed in production! Exiting...")
-        raise SystemExit(1)
-        
+    try:
+        await init_db()
+        db_ok = await test_connection()
+        if db_ok:
+            logging.info("[Server] ✅ PostgreSQL connected successfully.")
+        else:
+            logging.warning("[Server] ⚠️ PostgreSQL connection test failed.")
+    except Exception as e:
+        logging.warning(f"[Server] ⚠️ PostgreSQL not available: {e}")
+        if env.NODE_ENV == "production":
+            logging.critical("[Server] PostgreSQL connection failed in production! Exiting...")
+            raise SystemExit(1)
+        logging.info("[Server] Development mode — continuing without PostgreSQL...")
+
     # 2. Initialize Redis
-    await init_redis()
-    redis_ok = await test_redis_connection()
-    if not redis_ok and env.NODE_ENV == "production":
-        logging.critical("[Server] Redis connection failed in production! Exiting...")
-        raise SystemExit(1)
+    try:
+        await init_redis()
+        redis_ok = await test_redis_connection()
+        if redis_ok:
+            logging.info("[Server] ✅ Redis connected successfully.")
+        else:
+            logging.warning("[Server] ⚠️ Redis connection test failed.")
+    except Exception as e:
+        logging.warning(f"[Server] ⚠️ Redis not available: {e}")
+        if env.NODE_ENV == "production":
+            logging.critical("[Server] Redis connection failed in production! Exiting...")
+            raise SystemExit(1)
+        logging.info("[Server] Development mode — continuing without Redis...")
 
     # 3. Start Telegram Bot (aiogram long polling)
-    bot_task = await start_bot()
+    try:
+        bot_task = await start_bot()
+        logging.info("[Server] ✅ Telegram Bot started.")
+    except Exception as e:
+        logging.warning(f"[Server] ⚠️ Telegram Bot failed to start: {e}")
 
     # 4. Start Background Queue Worker
-    worker_task = await start_purchase_worker()
+    if redis_ok:
+        try:
+            worker_task = await start_purchase_worker()
+            logging.info("[Server] ✅ Purchase Worker started.")
+        except Exception as e:
+            logging.warning(f"[Server] ⚠️ Purchase Worker failed to start: {e}")
+    else:
+        logging.info("[Server] ⏭️ Skipping Purchase Worker (Redis not available).")
 
     # 5. Start Price Sync Scheduler task
-    sync_task = asyncio.create_task(price_sync_scheduler())
+    if db_ok:
+        sync_task = asyncio.create_task(price_sync_scheduler())
+        logging.info("[Server] ✅ Price Sync Scheduler started.")
+    else:
+        logging.info("[Server] ⏭️ Skipping Price Sync (PostgreSQL not available).")
+
+    logging.info("[Server] 🚀 CyberPay API server is ready!")
 
     yield
 
@@ -73,16 +112,28 @@ async def lifespan(app: FastAPI):
     logging.info("[Server] Graceful shutdown initiated...")
     
     # Stop background tasks
-    sync_task.cancel()
-    bot_task.cancel()
-    worker_task.cancel()
+    if sync_task:
+        sync_task.cancel()
+    if bot_task:
+        bot_task.cancel()
+    if worker_task:
+        worker_task.cancel()
     
     # Close Bot session
-    await bot.session.close()
+    try:
+        await bot.session.close()
+    except Exception:
+        pass
     
     # Close connection pools
-    await close_redis()
-    await close_db()
+    try:
+        await close_redis()
+    except Exception:
+        pass
+    try:
+        await close_db()
+    except Exception:
+        pass
     
     logging.info("[Server] Graceful shutdown completed. Exiting.")
 
