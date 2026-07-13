@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, Dict, Any
-from app.config.database import query_row, query, db
+from app.config.database import query_row, query, execute
 
 async def find_by_telegram_id(telegram_id: int) -> Optional[Dict[str, Any]]:
     try:
@@ -16,7 +16,7 @@ async def create_or_update(user_data: Dict[str, Any]) -> Dict[str, Any]:
         
         if existing:
             # Update
-            await db.execute("""
+            await execute("""
                 UPDATE users SET
                     first_name = ?,
                     last_name = ?,
@@ -24,28 +24,26 @@ async def create_or_update(user_data: Dict[str, Any]) -> Dict[str, Any]:
                     is_premium = ?,
                     updated_at = datetime('now')
                 WHERE telegram_id = ?
-            """, (
+            """,
                 user_data["first_name"],
                 user_data.get("last_name"),
                 user_data.get("username"),
                 1 if user_data.get("is_premium", False) else 0,
                 user_data["id"]
-            ))
-            await db.commit()
+            )
             return await query_row("SELECT * FROM users WHERE telegram_id = ?", user_data["id"])
         else:
             # Insert
-            await db.execute("""
+            await execute("""
                 INSERT INTO users (telegram_id, first_name, last_name, username, is_premium)
                 VALUES (?, ?, ?, ?, ?)
-            """, (
+            """,
                 user_data["id"],
                 user_data["first_name"],
                 user_data.get("last_name"),
                 user_data.get("username"),
                 1 if user_data.get("is_premium", False) else 0
-            ))
-            await db.commit()
+            )
             return await query_row("SELECT * FROM users WHERE id = last_insert_rowid()")
     except Exception as e:
         logging.error(f"[UserService] create_or_update error: {e}")
@@ -53,14 +51,13 @@ async def create_or_update(user_data: Dict[str, Any]) -> Dict[str, Any]:
 
 async def update_spending(user_id: int, amount: float) -> None:
     try:
-        await db.execute("""
+        await execute("""
             UPDATE users SET
                 total_spent = total_spent + ?,
                 order_count = order_count + 1,
                 updated_at = datetime('now')
             WHERE id = ?
-        """, (amount, user_id))
-        await db.commit()
+        """, amount, user_id)
     except Exception as e:
         logging.error(f"[UserService] update_spending error: {e}")
         raise e

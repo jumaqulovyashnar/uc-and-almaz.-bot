@@ -7,14 +7,14 @@ async def get_by_game(game: str, category: Optional[str] = None) -> List[Dict[st
         if category:
             return await query(
                 """SELECT * FROM game_packages
-                   WHERE game = $1 AND category = $2 AND is_active = TRUE
+                   WHERE game = ? AND category = ? AND is_active = 1
                    ORDER BY sort_order ASC""",
                 game, category
             )
         
         return await query(
             """SELECT * FROM game_packages
-               WHERE game = $1 AND is_active = TRUE
+               WHERE game = ? AND is_active = 1
                ORDER BY category, sort_order ASC""",
             game
         )
@@ -25,7 +25,7 @@ async def get_by_game(game: str, category: Optional[str] = None) -> List[Dict[st
 async def get_by_id(package_id: int) -> Optional[Dict[str, Any]]:
     try:
         return await query_row(
-            "SELECT * FROM game_packages WHERE id = $1 AND is_active = TRUE",
+            "SELECT * FROM game_packages WHERE id = ? AND is_active = 1",
             package_id
         )
     except Exception as e:

@@ -1,7 +1,7 @@
 import logging
 import httpx
 from typing import Dict, Any
-from app.config.database import query
+from app.config.database import query, execute
 
 async def get_usd_exchange_rate() -> float:
     try:
@@ -57,10 +57,10 @@ async def sync_package_prices() -> Dict[str, Any]:
                 rounded_base = round_to_nearest_100(base_price)
                 rounded_sell = round_to_nearest_100(raw_sell_price)
                 
-                await query(
+                await execute(
                     """UPDATE game_packages 
-                       SET base_price = $1, sell_price = $2, updated_at = NOW() 
-                       WHERE id = $3""",
+                       SET base_price = ?, sell_price = ? 
+                       WHERE id = ?""",
                     rounded_base, rounded_sell, pkg["id"]
                 )
                 updated_count += 1

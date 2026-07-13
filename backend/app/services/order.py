@@ -1,14 +1,14 @@
 import logging
 from typing import Dict, Any, Optional, List
-from app.config.database import query, query_row, db
+from app.config.database import query, query_row, execute
 
 async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        await db.execute("""
+        await execute("""
             INSERT INTO orders (user_id, game, category, package_id, package_name, amount, price, player_id, player_nickname, payment_method)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (order_data["user_id"],
+        order_data["user_id"],
         order_data["game"],
         order_data["category"],
         order_data["package_id"],
@@ -17,9 +17,8 @@ async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
         order_data["price"],
         order_data["player_id"],
         order_data.get("player_nickname"),
-        order_data.get("payment_method"))
+        order_data.get("payment_method")
         )
-        await db.commit()
         # Get the last inserted row
         return await query_row("SELECT * FROM orders WHERE id = last_insert_rowid()")
     except Exception as e:
@@ -73,15 +72,14 @@ async def update_status(order_id: int, status: str, extras: Optional[Dict[str, A
             if "screenshot_url" in extras:
                 set_clauses.append("screenshot_url = ?")
                 params.append(extras["screenshot_url"])
-
+ 
         if status == "failed":
             set_clauses.append("retry_count = retry_count + 1")
 
         query_str = f"UPDATE orders SET {', '.join(set_clauses)} WHERE id = ?"
         params.append(order_id)
         
-        await db.execute(query_str, params)
-        await db.commit()
+        await execute(query_str, *params)
         return await query_row("SELECT * FROM orders WHERE id = ?", order_id)
     except Exception as e:
         logging.error(f"[OrderService] update_status error: {e}")

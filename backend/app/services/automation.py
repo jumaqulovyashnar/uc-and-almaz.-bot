@@ -380,34 +380,47 @@ async def verify_freefire_id(player_id: str) -> Optional[str]:
             page = await context.new_page()
             
             # Go to Garena shop (using kzshop as provided by the user)
-            await page.goto("https://kzshop.garena.com/app?app=100067", wait_until="networkidle", timeout=20000)
+            await page.goto("https://kzshop.garena.com/app?app=100067", wait_until="domcontentloaded", timeout=20000)
             
-            # Click Player ID login button (in RU: "ID игрока")
-            player_id_button_found = False
-            for _ in range(15):
-                found = await page.evaluate("""() => {
-                    const elements = Array.from(document.querySelectorAll('div, button, a, p, span'));
-                    const target = elements.find(el => {
-                        const text = el.textContent?.trim().toLowerCase() || '';
-                        return text === 'player id' || text === 'id игрока' || text === 'id o\\'yinchi' || text === 'player_id';
-                    });
-                    if (target) {
-                        target.click();
-                        return true;
-                    }
-                    return false;
-                }""")
-                if found:
-                    player_id_button_found = True
-                    break
-                await asyncio.sleep(0.5)
+            # Input selector
+            input_selector = 'input[type="text"], input[type="number"], input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="игрока"]'
+            
+            # Check if input is already visible
+            input_visible = False
+            try:
+                await page.wait_for_selector(input_selector, timeout=3000)
+                input_visible = True
+                logging.info("[Automation] Login input already visible, skipping click.")
+            except Exception:
+                pass
+
+            if not input_visible:
+                # Click Player ID login button (in RU: "ID игрока")
+                player_id_button_found = False
+                for _ in range(15):
+                    found = await page.evaluate("""() => {
+                        const elements = Array.from(document.querySelectorAll('div, button, a, p, span'));
+                        const target = elements.find(el => {
+                            const text = el.textContent?.trim().toLowerCase() || '';
+                            return text === 'player id' || text === 'id игрока' || text === 'id o\\'yinchi' || text === 'player_id';
+                        });
+                        if (target) {
+                            target.click();
+                            return true;
+                        }
+                        return false;
+                    }""")
+                    if found:
+                        player_id_button_found = True
+                        break
+                    await asyncio.sleep(0.5)
+                    
+                if not player_id_button_found:
+                    raise RuntimeError("Garena Player ID button not found")
                 
-            if not player_id_button_found:
-                raise RuntimeError("Garena Player ID button not found")
-                
+                await page.wait_for_selector(input_selector, timeout=5000)
+
             # Input Player ID
-            input_selector = 'input[type="text"], input[type="number"], input[placeholder*="ID"], input[placeholder*="id"]'
-            await page.wait_for_selector(input_selector, timeout=5000)
             await page.click(input_selector, click_count=3)
             await page.keyboard.press("Backspace")
             await page.type(input_selector, player_id, delay=50)
@@ -503,7 +516,7 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
             page = await context.new_page()
             
             # Go to Midasbuy PUBG Mobile page
-            await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm", wait_until="networkidle", timeout=20000)
+            await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm", wait_until="domcontentloaded", timeout=20000)
             
             # Type Player ID
             input_selector = 'input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="Идентификатор"], input.input-bar__input, input.id-input'
@@ -568,4 +581,5 @@ async def verify_pubg_id(player_id: str) -> Optional[str]:
             except Exception:
                 pass
         return None
+
 

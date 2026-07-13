@@ -387,7 +387,16 @@ const PurchasePUBG: React.FC = () => {
             <p className="text-xs text-green-400 font-semibold">✅ {playerNickname}</p>
           </div>
         )}
-        {!isVerified && playerId && !verifyLoading && (
+        {error && (
+          <div className="mt-2 bg-yellow-950/20 border border-yellow-500/20 rounded-xl px-3 py-2 animate-slide-up">
+            <p className="text-xs text-yellow-400 font-semibold">
+              ⚠️ {isUz 
+                ? "Ismni avtomatik aniqlash imkoni bo'lmadi. ID to'g'riligiga ishonchingiz komil bo'lsa, xaridni davom ettirishingiz mumkin." 
+                : "Unable to retrieve name. If you are sure your ID is correct, you can proceed with the purchase."}
+            </p>
+          </div>
+        )}
+        {!isVerified && !error && playerId && !verifyLoading && (
           <p className="text-[10px] text-gray-500 mt-1.5 px-1">
             {isUz ? 'Tugmani bosib ID ni tekshiring' : 'Click button to verify ID'}
           </p>
@@ -476,7 +485,7 @@ const PurchasePUBG: React.FC = () => {
           <Button
             variant="primary"
             fullWidth
-            disabled={!selectedPackage || !isVerified}
+            disabled={!selectedPackage || !playerId}
             onClick={() => navigate('/checkout')}
             className="font-black text-sm uppercase py-4 rounded-2xl tracking-wider"
           >
