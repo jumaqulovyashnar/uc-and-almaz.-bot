@@ -1,8 +1,7 @@
 import re
-import asyncio
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field, model_validator
-from typing import Optional
+from app.services.automation import verify_freefire_id, verify_pubg_id
 
 router = APIRouter()
 
@@ -22,24 +21,31 @@ class VerifyPlayerInput(BaseModel):
 
 @router.post("")
 async def verify_player(payload: VerifyPlayerInput):
-    # Simulate API delay
-    await asyncio.sleep(0.5)
-
     if len(payload.player_id) < 5:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Player not found. Please check your ID."
         )
 
-    last4 = payload.player_id[-4:]
-    game_name = "PUBG" if payload.game == "pubg" else "FF"
+    # Fetch real nickname using Playwright
+    nickname = None
+    if payload.game == "freefire":
+        nickname = await verify_freefire_id(payload.player_id)
+    elif payload.game == "pubg":
+        nickname = await verify_pubg_id(payload.player_id)
+
+    if not nickname:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Player not found or verification failed. Please verify your ID."
+        )
 
     return {
         "success": True,
         "data": {
             "valid": True,
             "player_id": payload.player_id,
-            "nickname": f"{game_name}Player_{last4}",
+            "nickname": nickname,
             "game": payload.game
         }
     }

@@ -355,3 +355,217 @@ async def run_midasbuy_automation(player_id: str, package_name: str) -> Dict[str
         }
 
 import asyncio
+
+async def verify_freefire_id(player_id: str) -> Optional[str]:
+    logging.info(f"[Automation] Verifying Free Fire Player ID: {player_id}")
+    browser = None
+    try:
+        chrome_path = get_chrome_path()
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                executable_path=chrome_path,
+                args=["--no-sandbox", "--disable-setuid-sandbox"]
+            )
+            context = await browser.new_context()
+            
+            # Load user cookies if they exist
+            if GARENA_COOKIES_PATH.exists():
+                try:
+                    cookies = load_cookies(GARENA_COOKIES_PATH)
+                    await context.add_cookies(cookies)
+                except Exception:
+                    pass
+                    
+            page = await context.new_page()
+            
+            # Go to Garena shop (using kzshop as provided by the user)
+            await page.goto("https://kzshop.garena.com/app?app=100067", wait_until="networkidle", timeout=20000)
+            
+            # Click Player ID login button (in RU: "ID игрока")
+            player_id_button_found = False
+            for _ in range(15):
+                found = await page.evaluate("""() => {
+                    const elements = Array.from(document.querySelectorAll('div, button, a, p, span'));
+                    const target = elements.find(el => {
+                        const text = el.textContent?.trim().toLowerCase() || '';
+                        return text === 'player id' || text === 'id игрока' || text === 'id o\\'yinchi' || text === 'player_id';
+                    });
+                    if (target) {
+                        target.click();
+                        return true;
+                    }
+                    return false;
+                }""")
+                if found:
+                    player_id_button_found = True
+                    break
+                await asyncio.sleep(0.5)
+                
+            if not player_id_button_found:
+                raise RuntimeError("Garena Player ID button not found")
+                
+            # Input Player ID
+            input_selector = 'input[type="text"], input[type="number"], input[placeholder*="ID"], input[placeholder*="id"]'
+            await page.wait_for_selector(input_selector, timeout=5000)
+            await page.click(input_selector, click_count=3)
+            await page.keyboard.press("Backspace")
+            await page.type(input_selector, player_id, delay=50)
+            
+            # Click Login (Войти)
+            login_clicked = False
+            for _ in range(15):
+                clicked = await page.evaluate("""() => {
+                    const buttons = Array.from(document.querySelectorAll('button, input[type="submit"], div[role="button"]'));
+                    const target = buttons.find(el => {
+                        const text = el.textContent?.trim().toLowerCase() || '';
+                        return text === 'login' || text === 'войti' || text === 'войти' || text === 'ok' || text === 'next' || text === 'продолжить';
+                    });
+                    if (target) {
+                        target.click();
+                        return true;
+                    }
+                    return false;
+                }""")
+                if clicked:
+                    login_clicked = True
+                    break
+                await asyncio.sleep(0.5)
+                
+            if not login_clicked:
+                raise RuntimeError("Garena login button not found")
+                
+            # Wait for user info or error to load
+            nickname = None
+            for _ in range(20):
+                has_error = await page.evaluate("""() => {
+                    const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
+                    return elements.some(el => {
+                        const t = el.textContent?.trim().toLowerCase() || '';
+                        return t.includes('неверный id') || t.includes('invalid id') || t.includes('user not found') || t.includes('пользователь не найден');
+                    });
+                }""")
+                if has_error:
+                    logging.warning(f"[Automation] Invalid Free Fire player ID: {player_id}")
+                    break
+                    
+                nickname = await page.evaluate("""() => {
+                    const loginNameEl = document.querySelector('.login_name, .user-name, .username, .login-name');
+                    if (loginNameEl && loginNameEl.textContent.trim()) {
+                        return loginNameEl.textContent.trim();
+                    }
+                    
+                    const elements = Array.from(document.querySelectorAll('div, span, p'));
+                    const logoutEl = elements.find(el => {
+                        const t = el.textContent?.trim().toLowerCase();
+                        return t === 'выйти' || t === 'logout';
+                    });
+                    if (logoutEl && logoutEl.parentElement) {
+                        return logoutEl.parentElement.textContent.replace('Выйти', '').replace('Logout', '').trim();
+                    }
+                    return null;
+                }""")
+                if nickname:
+                    break
+                await asyncio.sleep(0.5)
+                
+            await browser.close()
+            return nickname
+    except Exception as e:
+        logging.error(f"[Automation] Free Fire ID verification failed: {e}")
+        if browser:
+            try:
+                await browser.close()
+            except Exception:
+                pass
+        return None
+
+async def verify_pubg_id(player_id: str) -> Optional[str]:
+    logging.info(f"[Automation] Verifying PUBG Player ID: {player_id}")
+    browser = None
+    try:
+        chrome_path = get_chrome_path()
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                executable_path=chrome_path,
+                args=["--no-sandbox", "--disable-setuid-sandbox"]
+            )
+            context = await browser.new_context()
+            
+            if MIDASBUY_COOKIES_PATH.exists():
+                try:
+                    cookies = load_cookies(MIDASBUY_COOKIES_PATH)
+                    await context.add_cookies(cookies)
+                except Exception:
+                    pass
+                    
+            page = await context.new_page()
+            
+            # Go to Midasbuy PUBG Mobile page
+            await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm", wait_until="networkidle", timeout=20000)
+            
+            # Type Player ID
+            input_selector = 'input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="Идентификатор"], input.input-bar__input, input.id-input'
+            await page.wait_for_selector(input_selector, timeout=10000)
+            await page.click(input_selector, click_count=3)
+            await page.keyboard.press("Backspace")
+            await page.type(input_selector, player_id, delay=50)
+            
+            # Click Verify OK
+            await page.evaluate("""() => {
+                const buttons = Array.from(document.querySelectorAll('button, div[role="button"], span, p, a, input[type="button"]'));
+                const target = buttons.find(el => {
+                    const text = el.textContent?.trim().toLowerCase() || '';
+                    return text === 'ok' || text === 'ввод' || text === 'войти' || text === 'подтвердить' || text === 'check' || text === 'verify';
+                });
+                if (target) {
+                    target.click();
+                }
+            }""")
+            
+            # Wait for nickname to load
+            nickname = None
+            for _ in range(15):
+                has_error = await page.evaluate("""() => {
+                    const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
+                    return elements.some(el => {
+                        const t = el.textContent?.trim().toLowerCase() || '';
+                        return t.includes('error') || t.includes('не найден') || t.includes('invalid') || t.includes('not found') || t.includes('неverny id') || t.includes('неверный id');
+                    });
+                }""")
+                if has_error:
+                    logging.warning(f"[Automation] Invalid PUBG player ID: {player_id}")
+                    break
+                    
+                nickname = await page.evaluate("""() => {
+                    const elements = Array.from(document.querySelectorAll('div, span, p'));
+                    const labelEl = elements.find(el => {
+                        const t = el.textContent?.trim().toLowerCase() || '';
+                        return t.includes('character name') || t.includes('имя персонажа') || t.includes('nickname') || t.includes('taxallus');
+                    });
+                    if (labelEl && labelEl.parentElement) {
+                        return labelEl.parentElement.textContent.replace(labelEl.textContent, '').trim();
+                    }
+                    
+                    const nickEl = document.querySelector('.nickname, .user-name, .character-name, .info-value, .name');
+                    if (nickEl && nickEl.textContent.trim()) {
+                        return nickEl.textContent.trim();
+                    }
+                    return null;
+                }""")
+                if nickname:
+                    break
+                await asyncio.sleep(0.5)
+                
+            await browser.close()
+            return nickname
+    except Exception as e:
+        logging.error(f"[Automation] PUBG ID verification failed: {e}")
+        if browser:
+            try:
+                await browser.close()
+            except Exception:
+                pass
+        return None
+
