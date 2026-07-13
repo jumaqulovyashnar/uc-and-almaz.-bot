@@ -13,3 +13,6 @@ __pycache__/
 *.session-journal
 .venv/
 venv/
+
+cyberpay.db
+*.db-journal

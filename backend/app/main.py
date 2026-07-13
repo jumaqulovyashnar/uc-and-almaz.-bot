@@ -176,4 +176,4 @@ if __name__ == "__main__":
     port = int(env.PORT)
     reload = env.NODE_ENV == "development"
     logging.info(f"[Server] Express API server running on port {port} in {env.NODE_ENV} mode")
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=reload)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=reload, reload_excludes=["*.pyc", ".venv/*", "venv/*", "__pycache__/*"])

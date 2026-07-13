@@ -3,7 +3,7 @@ import json
 import logging
 import datetime
 from typing import Dict, Any, Optional
-from app.config.redis import redis
+from app.config import redis as redis_module
 from app.services import order as order_service
 from app.services import notification as notification_service
 from app.services import automation as automation_service
@@ -11,16 +11,24 @@ from app.services import automation as automation_service
 QUEUE_KEY = "cyberpay:purchase_queue"
 LOCK_PREFIX = "cyberpay:job_lock:"
 
+def _get_redis():
+    """Get the current redis client instance."""
+    return redis_module.redis
+
 async def add_purchase_job(order_id: int, data: Dict[str, Any]) -> bool:
     try:
+        r = _get_redis()
+        if not r:
+            logging.error("[Queue] Redis not available, cannot add job")
+            return False
         lock_key = f"{LOCK_PREFIX}{order_id}"
         # Set lock for 10 minutes, set only if it doesn't exist
-        is_locked = await redis.set(lock_key, "queued", ex=600, nx=True)
+        is_locked = await r.set(lock_key, "queued", ex=600, nx=True)
         if not is_locked:
             logging.info(f"[Queue] Order #{order_id} already locked in queue, skipping enqueue.")
             return False
 
-        await redis.lpush(QUEUE_KEY, json.dumps(data))
+        await r.lpush(QUEUE_KEY, json.dumps(data))
         logging.info(f"[Queue] Added purchase job for order #{order_id}")
         return True
     except Exception as e:
@@ -67,7 +75,9 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
         logging.info(f"[Worker] Successfully completed order #{order_id}")
         
         # Clean up lock key on success
-        await redis.delete(f"{LOCK_PREFIX}{order_id}")
+        r = _get_redis()
+        if r:
+            await r.delete(f"{LOCK_PREFIX}{order_id}")
 
     except Exception as error:
         err_msg = str(error)
@@ -93,7 +103,7 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
                 f"O'yin: {game.upper()}\n"
                 f"Paket: {package_name}\n"
                 f"O'yinchi ID: {player_id}\n"
-                f"Taxallusi: {player_nickname or 'Noma\'lum'}\n"
+                f"Taxallusi: {player_nickname or 'Noma\\'lum'}\n"
                 f"Xatolik: {err_msg}"
             )
             await notification_service.send_admin_alert(alert_text)
@@ -104,7 +114,9 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
                 delay = 2 * (2 ** retry_count) # 2s, 4s, 8s backoff
                 logging.info(f"[Worker] Scheduling retry {retry_count + 1}/3 for order #{order_id} in {delay} seconds...")
                 # Release lock to allow re-queueing
-                await redis.delete(f"{LOCK_PREFIX}{order_id}")
+                r = _get_redis()
+                if r:
+                    await r.delete(f"{LOCK_PREFIX}{order_id}")
                 asyncio.create_task(retry_job_after_delay(order_id, job_data, delay))
             else:
                 logging.error(f"[Worker] Max retries (3) reached for order #{order_id}. Giving up.")
@@ -122,8 +134,12 @@ async def start_purchase_worker() -> asyncio.Task:
     async def worker_loop():
         while True:
             try:
+                r = _get_redis()
+                if not r:
+                    await asyncio.sleep(5.0)
+                    continue
                 # BRPOP blocks until an item is available, returns (list_key, value)
-                res = await redis.brpop(QUEUE_KEY, timeout=5)
+                res = await r.brpop(QUEUE_KEY, timeout=5)
                 if not res:
                     continue
                 

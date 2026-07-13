@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 from app.middleware.auth import get_admin_user
 from app.services import order as order_service
 from app.config.database import query, test_connection
-from app.config.redis import test_redis_connection, redis
+from app.config.redis import test_redis_connection
 from app.workers.purchase_worker import add_purchase_job
 
 router = APIRouter(dependencies=[Depends(get_admin_user)])
@@ -152,10 +152,12 @@ async def update_config(payload: UpdateConfigInput):
             detail=f"Invalid config key. Allowed: {', '.join(allowed_keys)}"
         )
         
-    await query("""
-        INSERT INTO system_config (key, value) VALUES ($1, $2)
-        ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
-    """, payload.key, json.dumps(payload.value))
+    from app.config.database import db
+    await db.execute(
+        "INSERT OR REPLACE INTO system_config (key, value, updated_at) VALUES (?, ?, datetime('now'))",
+        (payload.key, json.dumps(payload.value))
+    )
+    await db.commit()
     
     return {
         "success": True,

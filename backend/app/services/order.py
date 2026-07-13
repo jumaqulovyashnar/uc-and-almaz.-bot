@@ -1,15 +1,14 @@
 import logging
 from typing import Dict, Any, Optional, List
-from app.config.database import query, query_row
+from app.config.database import query, query_row, db
 
 async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        return await query_row("""
+        await db.execute("""
             INSERT INTO orders (user_id, game, category, package_id, package_name, amount, price, player_id, player_nickname, payment_method)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING *
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        order_data["user_id"],
+        (order_data["user_id"],
         order_data["game"],
         order_data["category"],
         order_data["package_id"],
@@ -18,22 +17,25 @@ async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
         order_data["price"],
         order_data["player_id"],
         order_data.get("player_nickname"),
-        order_data.get("payment_method")
+        order_data.get("payment_method"))
         )
+        await db.commit()
+        # Get the last inserted row
+        return await query_row("SELECT * FROM orders WHERE id = last_insert_rowid()")
     except Exception as e:
         logging.error(f"[OrderService] create error: {e}")
         raise e
 
 async def get_by_user_id(user_id: int, limit: int = 20, offset: int = 0) -> Dict[str, Any]:
     try:
-        count_res = await query_row("SELECT COUNT(*) FROM orders WHERE user_id = $1", user_id)
-        total = int(count_res["count"]) if count_res else 0
+        count_res = await query_row("SELECT COUNT(*) as cnt FROM orders WHERE user_id = ?", user_id)
+        total = int(count_res["cnt"]) if count_res else 0
         
         orders = await query("""
             SELECT * FROM orders
-            WHERE user_id = $1
+            WHERE user_id = ?
             ORDER BY created_at DESC
-            LIMIT $2 OFFSET $3
+            LIMIT ? OFFSET ?
         """, user_id, limit, offset)
         
         return {"orders": orders, "total": total}
@@ -47,7 +49,7 @@ async def get_by_id(order_id: int) -> Optional[Dict[str, Any]]:
             SELECT o.*, u.telegram_id 
             FROM orders o
             JOIN users u ON o.user_id = u.id
-            WHERE o.id = $1
+            WHERE o.id = ?
         """, order_id)
     except Exception as e:
         logging.error(f"[OrderService] get_by_id error: {e}")
@@ -55,33 +57,32 @@ async def get_by_id(order_id: int) -> Optional[Dict[str, Any]]:
 
 async def update_status(order_id: int, status: str, extras: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     try:
-        set_clauses = ["status = $2", "updated_at = NOW()"]
-        params = [order_id, status]
-        param_index = 3
+        set_clauses = ["status = ?", "updated_at = datetime('now')"]
+        params = [status]
         
         if extras:
             if "error_message" in extras:
-                set_clauses.append(f"error_message = ${param_index}")
+                set_clauses.append("error_message = ?")
                 params.append(extras["error_message"])
-                param_index += 1
             if "completed_at" in extras:
-                set_clauses.append(f"completed_at = ${param_index}")
-                params.append(extras["completed_at"])
-                param_index += 1
+                set_clauses.append("completed_at = ?")
+                params.append(str(extras["completed_at"]))
             if "payment_id" in extras:
-                set_clauses.append(f"payment_id = ${param_index}")
+                set_clauses.append("payment_id = ?")
                 params.append(extras["payment_id"])
-                param_index += 1
             if "screenshot_url" in extras:
-                set_clauses.append(f"screenshot_url = ${param_index}")
+                set_clauses.append("screenshot_url = ?")
                 params.append(extras["screenshot_url"])
-                param_index += 1
 
         if status == "failed":
             set_clauses.append("retry_count = retry_count + 1")
 
-        query_str = f"UPDATE orders SET {', '.join(set_clauses)} WHERE id = $1 RETURNING *"
-        return await query_row(query_str, *params)
+        query_str = f"UPDATE orders SET {', '.join(set_clauses)} WHERE id = ?"
+        params.append(order_id)
+        
+        await db.execute(query_str, params)
+        await db.commit()
+        return await query_row("SELECT * FROM orders WHERE id = ?", order_id)
     except Exception as e:
         logging.error(f"[OrderService] update_status error: {e}")
         raise e
@@ -90,48 +91,41 @@ async def get_admin_orders(filters: Dict[str, Any]) -> Dict[str, Any]:
     try:
         conditions = []
         params = []
-        param_index = 1
         
         if filters.get("status"):
-            conditions.append(f"status = ${param_index}")
+            conditions.append("o.status = ?")
             params.append(filters["status"])
-            param_index += 1
             
         if filters.get("game"):
-            conditions.append(f"game = ${param_index}")
+            conditions.append("o.game = ?")
             params.append(filters["game"])
-            param_index += 1
             
         if filters.get("user_id"):
-            conditions.append(f"user_id = ${param_index}")
+            conditions.append("o.user_id = ?")
             params.append(filters["user_id"])
-            param_index += 1
             
         if filters.get("date_from"):
-            conditions.append(f"created_at >= ${param_index}")
+            conditions.append("o.created_at >= ?")
             params.append(filters["date_from"])
-            param_index += 1
             
         if filters.get("date_to"):
-            conditions.append(f"created_at <= ${param_index}")
+            conditions.append("o.created_at <= ?")
             params.append(filters["date_to"])
-            param_index += 1
 
         where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
         limit = filters.get("limit", 50)
         offset = filters.get("offset", 0)
 
-        count_res = await query_row(f"SELECT COUNT(*) FROM orders {where_clause}", *params)
-        total = int(count_res["count"]) if count_res else 0
+        count_res = await query_row(f"SELECT COUNT(*) as cnt FROM orders o {where_clause}", *params)
+        total = int(count_res["cnt"]) if count_res else 0
 
-        # Build order retrieval query
         orders_query = f"""
             SELECT o.*, u.telegram_id, u.username as user_username
             FROM orders o
             LEFT JOIN users u ON o.user_id = u.id
             {where_clause}
             ORDER BY o.created_at DESC
-            LIMIT ${param_index} OFFSET ${param_index + 1}
+            LIMIT ? OFFSET ?
         """
         
         orders = await query(orders_query, *params, limit, offset)
@@ -146,14 +140,10 @@ async def get_stats() -> Dict[str, Any]:
             SELECT COALESCE(SUM(price), 0) as total FROM orders WHERE status = 'completed'
         """)
         
-        orders_res = await query_row("""
-            SELECT
-                COUNT(*) as total,
-                COUNT(*) FILTER (WHERE status = 'pending') as pending,
-                COUNT(*) FILTER (WHERE status = 'completed') as completed,
-                COUNT(*) FILTER (WHERE status = 'failed') as failed
-            FROM orders
-        """)
+        total_res = await query_row("SELECT COUNT(*) as total FROM orders")
+        pending_res = await query_row("SELECT COUNT(*) as cnt FROM orders WHERE status = 'pending'")
+        completed_res = await query_row("SELECT COUNT(*) as cnt FROM orders WHERE status = 'completed'")
+        failed_res = await query_row("SELECT COUNT(*) as cnt FROM orders WHERE status = 'failed'")
         
         users_res = await query_row("SELECT COUNT(*) as total FROM users")
         
@@ -162,15 +152,15 @@ async def get_stats() -> Dict[str, Any]:
                 COALESCE(SUM(price), 0) as revenue,
                 COUNT(*) as orders
             FROM orders
-            WHERE created_at >= CURRENT_DATE AND status = 'completed'
+            WHERE date(created_at) = date('now') AND status = 'completed'
         """)
         
         return {
             "total_revenue": float(revenue_res["total"]) if revenue_res else 0.0,
-            "total_orders": int(orders_res["total"]) if orders_res else 0,
-            "pending_orders": int(orders_res["pending"]) if orders_res else 0,
-            "completed_orders": int(orders_res["completed"]) if orders_res else 0,
-            "failed_orders": int(orders_res["failed"]) if orders_res else 0,
+            "total_orders": int(total_res["total"]) if total_res else 0,
+            "pending_orders": int(pending_res["cnt"]) if pending_res else 0,
+            "completed_orders": int(completed_res["cnt"]) if completed_res else 0,
+            "failed_orders": int(failed_res["cnt"]) if failed_res else 0,
             "total_users": int(users_res["total"]) if users_res else 0,
             "today_revenue": float(today_res["revenue"]) if today_res else 0.0,
             "today_orders": int(today_res["orders"]) if today_res else 0,
