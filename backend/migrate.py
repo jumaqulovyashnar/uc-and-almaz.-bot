@@ -7,18 +7,18 @@ import sys
 # Add backend to path so app.config can be found
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.config import database as db_module
-from app.config.database import init_db, close_db, DB_PATH
+from app.config.database import init_db, close_db, get_db, DB_PATH
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 async def migrate() -> None:
     logging.info(f"[Migrate] Initializing SQLite database at {DB_PATH}...")
     await init_db()
+    db = get_db()
     
     try:
         # 1. Users table
-        await db_module.db.execute("""
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 telegram_id INTEGER UNIQUE NOT NULL,
@@ -35,7 +35,7 @@ async def migrate() -> None:
         logging.info("[Migrate] ✓ users table created")
 
         # 2. Game packages table
-        await db_module.db.execute("""
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS game_packages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 game TEXT NOT NULL,
@@ -56,7 +56,7 @@ async def migrate() -> None:
         logging.info("[Migrate] ✓ game_packages table created")
 
         # 3. Orders table
-        await db_module.db.execute("""
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -82,7 +82,7 @@ async def migrate() -> None:
         logging.info("[Migrate] ✓ orders table created")
 
         # 4. Transactions table
-        await db_module.db.execute("""
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -97,7 +97,7 @@ async def migrate() -> None:
         logging.info("[Migrate] ✓ transactions table created")
 
         # 5. System config table
-        await db_module.db.execute("""
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS system_config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 key TEXT UNIQUE NOT NULL,
@@ -108,13 +108,13 @@ async def migrate() -> None:
         logging.info("[Migrate] ✓ system_config table created")
 
         # Indexes
-        await db_module.db.execute("CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);")
-        await db_module.db.execute("CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);")
-        await db_module.db.execute("CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);")
-        await db_module.db.execute("CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);")
-        await db_module.db.execute("CREATE INDEX IF NOT EXISTS idx_game_packages_game ON game_packages(game, category);")
-        await db_module.db.execute("CREATE INDEX IF NOT EXISTS idx_transactions_order_id ON transactions(order_id);")
-        await db_module.db.commit()
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_game_packages_game ON game_packages(game, category);")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_transactions_order_id ON transactions(order_id);")
+        await db.commit()
         logging.info("[Migrate] ✓ indexes created")
         logging.info("[Migrate] ✓ All tables created successfully")
     except Exception as e:
@@ -123,10 +123,11 @@ async def migrate() -> None:
 
 async def seed() -> None:
     logging.info("[Seed] Seeding database...")
+    db = get_db()
     
     try:
         # Check if game packages already exist
-        async with db_module.db.execute("SELECT COUNT(*) FROM game_packages") as cursor:
+        async with db.execute("SELECT COUNT(*) FROM game_packages") as cursor:
             row = await cursor.fetchone()
             count = row[0] if row else 0
         
@@ -151,7 +152,7 @@ async def seed() -> None:
             ("60000 + 21000 UC", 81000, 11500000, 909.09),
         ]
         for idx, (name, amount, price, usd) in enumerate(pubg_almazar):
-            await db_module.db.execute(
+            await db.execute(
                 "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ('pubg', 'almazar', name, amount, price, price, usd, idx + 1)
             )
@@ -163,7 +164,7 @@ async def seed() -> None:
             ("Elite Pass Plus", 1, 28000, 14.99),
         ]
         for idx, (name, amount, price, usd) in enumerate(pubg_propuski):
-            await db_module.db.execute(
+            await db.execute(
                 "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ('pubg', 'propuski', name, amount, price, price, usd, idx + 1)
             )
@@ -176,7 +177,7 @@ async def seed() -> None:
             ("10 Level", 10, 35000, 3.00),
         ]
         for idx, (name, amount, price, usd) in enumerate(pubg_levelup):
-            await db_module.db.execute(
+            await db.execute(
                 "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ('pubg', 'levelup', name, amount, price, price, usd, idx + 1)
             )
@@ -192,7 +193,7 @@ async def seed() -> None:
             ("5600 Olmos", 5600, 550000, 49.99),
         ]
         for idx, (name, amount, price, usd) in enumerate(ff_almazar):
-            await db_module.db.execute(
+            await db.execute(
                 "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ('freefire', 'almazar', name, amount, price, price, usd, idx + 1)
             )
@@ -204,7 +205,7 @@ async def seed() -> None:
             ("Propuski Bundle", 1, 76000, 6.99),
         ]
         for idx, (name, amount, price, usd) in enumerate(ff_propuski):
-            await db_module.db.execute(
+            await db.execute(
                 "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ('freefire', 'propuski', name, amount, price, price, usd, idx + 1)
             )
@@ -218,22 +219,22 @@ async def seed() -> None:
             ("20 Level", 20, 9000, 0.80),
         ]
         for idx, (name, amount, price, usd) in enumerate(ff_levelup):
-            await db_module.db.execute(
+            await db.execute(
                 "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ('freefire', 'levelup', name, amount, price, price, usd, idx + 1)
             )
         logging.info("[Seed] ✓ Free Fire Level Up packages seeded")
 
         # System configs
-        await db_module.db.execute(
+        await db.execute(
             "INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)",
             ('maintenance_pubg', json.dumps(False))
         )
-        await db_module.db.execute(
+        await db.execute(
             "INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)",
             ('maintenance_freefire', json.dumps(False))
         )
-        await db_module.db.commit()
+        await db.commit()
         
         logging.info("[Seed] ✓ System config seeded")
         logging.info("[Seed] ✓ All data seeded successfully")

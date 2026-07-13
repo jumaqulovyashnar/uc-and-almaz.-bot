@@ -8,6 +8,12 @@ from app.config.env import env
 # Global connection instance
 db: Optional[aiosqlite.Connection] = None
 
+def get_db() -> aiosqlite.Connection:
+    global db
+    if db is None:
+        raise RuntimeError("Database connection has not been initialized. Call init_db() first.")
+    return db
+
 # SQLite database path (stored next to backend/)
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cyberpay.db")
 

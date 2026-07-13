@@ -3,7 +3,7 @@ import logging
 import json
 import psutil
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from app.middleware.auth import get_admin_user
 from app.services import order as order_service
@@ -112,7 +112,6 @@ async def get_bot_status():
     try:
         config_rows = await query("SELECT key, value FROM system_config")
         for row in config_rows:
-            # asyncpg parses JSONB to Python structures natively
             val = row["value"]
             if isinstance(val, str):
                 try:
@@ -152,12 +151,10 @@ async def update_config(payload: UpdateConfigInput):
             detail=f"Invalid config key. Allowed: {', '.join(allowed_keys)}"
         )
         
-    from app.config.database import db
-    await db.execute(
-        "INSERT OR REPLACE INTO system_config (key, value, updated_at) VALUES (?, ?, datetime('now'))",
-        (payload.key, json.dumps(payload.value))
-    )
-    await db.commit()
+    await query("""
+        INSERT OR REPLACE INTO system_config (key, value, updated_at)
+        VALUES (?, ?, datetime('now'))
+    """, payload.key, json.dumps(payload.value))
     
     return {
         "success": True,

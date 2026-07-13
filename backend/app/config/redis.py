@@ -8,6 +8,12 @@ from app.config.env import env
 redis: Optional[Union[aioredis.Redis, fakeredis_aio.FakeRedis]] = None
 _using_fake = False
 
+def get_redis() -> Union[aioredis.Redis, fakeredis_aio.FakeRedis]:
+    global redis
+    if redis is None:
+        raise RuntimeError("Redis connection has not been initialized. Call init_redis() first.")
+    return redis
+
 async def init_redis() -> None:
     global redis, _using_fake
     
