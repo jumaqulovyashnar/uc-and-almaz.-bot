@@ -7,3 +7,7 @@ Thumbs.db
 cookies.json
 *cookies.json
 screenshots/
+__pycache__/
+*.pyc
+*.session
+*.session-journal
