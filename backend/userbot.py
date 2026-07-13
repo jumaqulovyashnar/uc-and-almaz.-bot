@@ -14,19 +14,26 @@ except ImportError:
     import requests
     HAS_HTTPX = False
 
-# .env faylidan o'qish (agar mavjud bo'lsa)
+# .env faylidan o'qish (loyihaning bosh jildidan ham, joriy jildidan ham qidiradi)
 def load_env():
     env_vars = {}
-    if os.path.exists(".env"):
-        try:
-            with open(".env", "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#") and "=" in line:
-                        k, v = line.split("=", 1)
-                        env_vars[k.strip()] = v.strip()
-        except Exception:
-            pass
+    # Parent folder (root) va current folder (.env) yo'llari
+    env_paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    ]
+    for path in env_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            env_vars[k.strip()] = v.strip()
+                break # Agar topilsa va o'qilsa, to'xtaydi
+            except Exception:
+                pass
     return env_vars
 
 env = load_env()
@@ -215,7 +222,7 @@ if __name__ == "__main__":
         finally:
             if current_client and current_client.is_connected():
                 try:
-                    # Aloqani uzish
+                    # Echo aloqani uzish
                     current_client.disconnect()
                 except Exception:
                     pass
