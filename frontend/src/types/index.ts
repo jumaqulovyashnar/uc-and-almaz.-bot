@@ -1,7 +1,7 @@
 export type GameType = 'pubg' | 'freefire';
 export type CategoryType = 'almazar' | 'propuski' | 'levelup' | 'toplamlar';
 export type PaymentMethodType = 'uzcard' | 'humo' | 'visa';
-export type OrderStatusType = 'pending' | 'processing' | 'completed' | 'failed';
+export type OrderStatusType = 'pending' | 'processing' | 'completed' | 'failed' | 'pending_payment' | 'awaiting_admin_review';
 
 export interface GamePackage {
   id: string;
