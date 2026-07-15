@@ -1,5 +1,6 @@
 import React from 'react';
 import py12Img from '../../assets/py12.jpg';
+import fr12Img from '../../assets/fr12.jpg';
 
 interface GameCardProps {
   game: 'pubg' | 'freefire';
@@ -10,7 +11,7 @@ interface GameCardProps {
 export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick }) => {
   const isPubg = game === 'pubg';
 
-  const bgImage = isPubg ? py12Img : '/images/free.jpg';
+  const bgImage = isPubg ? py12Img : fr12Img;
 
   return (
     <div
