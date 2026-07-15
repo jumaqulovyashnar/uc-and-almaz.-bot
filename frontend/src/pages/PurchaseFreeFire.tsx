@@ -7,11 +7,12 @@ import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
+import frrrImg from '../assets/frrr.jpg';
 
 // ─── Free Fire banner slides ──────────────────────────────────────────────────
 const FF_SLIDES = [
   { id: 1, imageUrl: '/images/free.jpg' },
-  { id: 2, imageUrl: '/images/free1.webp' },
+  { id: 2, imageUrl: frrrImg },
 ];
 
 // ─── Banner Slider ────────────────────────────────────────────────────────────
