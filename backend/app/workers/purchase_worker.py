@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import datetime
+import time
 from typing import Dict, Any, Optional
 from app.config.redis import get_redis
 from app.services import order as order_service
@@ -9,6 +10,7 @@ from app.services import notification as notification_service
 from app.services import automation as automation_service
 
 QUEUE_KEY = "cyberpay:purchase_queue"
+DELAYED_QUEUE_KEY = "cyberpay:delayed_purchase_queue"
 LOCK_PREFIX = "cyberpay:job_lock:"
 
 async def add_purchase_job(order_id: int, data: Dict[str, Any]) -> bool:
@@ -43,20 +45,45 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
         # 2. Run browser automation
         if game == "freefire":
             result = await automation_service.run_garena_automation(player_id)
-            if not result.get("success"):
-                raise RuntimeError(result.get("error") or "Garena automation failed")
         elif game == "pubg":
             result = await automation_service.run_midasbuy_automation(player_id, package_name)
-            if not result.get("success"):
-                raise RuntimeError(result.get("error") or "Midasbuy automation failed")
         else:
             raise ValueError(f"Unsupported game: {game}")
+
+        if not result.get("success"):
+            error_code = result.get("error_code")
+            screenshot_url = result.get("screenshot_url")
+            err_msg = result.get("error") or "Automation failed"
+
+            if error_code == "NEEDS_MANUAL_REVIEW":
+                # Manual review required
+                await order_service.update_status(
+                    order_id, 
+                    "awaiting_admin_review", 
+                    {"screenshot_url": screenshot_url, "error_message": err_msg}
+                )
+                
+                full_order = await order_service.get_by_id(order_id)
+                if full_order:
+                    # Notify admin
+                    alert_text = (
+                        f"⚠️ <b>Qo'lda tekshirish talab etiladi!</b> \n"
+                        f"Buyurtma ID: #{order_id}\n"
+                        f"O'yin: {game.upper()}\n"
+                        f"Xatolik: {err_msg}"
+                    )
+                    await notification_service.send_admin_alert(alert_text)
+                
+                await get_redis().delete(f"{LOCK_PREFIX}{order_id}")
+                return # Stop processing
+            else:
+                raise RuntimeError(err_msg)
 
         # 3. Mark order as completed
         await order_service.update_status(
             order_id, 
             "completed", 
-            {"completed_at": datetime.datetime.now()}
+            {"completed_at": datetime.datetime.now(), "screenshot_url": result.get("screenshot_url")}
         )
 
         # 4. Fetch updated order and notify user
@@ -105,20 +132,34 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
                 logging.info(f"[Worker] Scheduling retry {retry_count + 1}/3 for order #{order_id} in {delay} seconds...")
                 # Release lock to allow re-queueing
                 await get_redis().delete(f"{LOCK_PREFIX}{order_id}")
-                asyncio.create_task(retry_job_after_delay(order_id, job_data, delay))
+                score = int(time.time()) + delay
+                # Reset order status to pending for retry
+                await order_service.update_status(order_id, "pending")
+                await get_redis().zadd(DELAYED_QUEUE_KEY, {json.dumps(job_data): score})
             else:
                 logging.error(f"[Worker] Max retries (3) reached for order #{order_id}. Giving up.")
-
-async def retry_job_after_delay(order_id: int, job_data: Dict[str, Any], delay: int) -> None:
-    await asyncio.sleep(delay)
-    # Reset order status to pending for retry
-    await order_service.update_status(order_id, "pending")
-    # Add back to queue
-    await add_purchase_job(order_id, job_data)
 
 async def start_purchase_worker() -> asyncio.Task:
     logging.info("[Worker] Starting background purchase worker loop...")
     
+    async def delayed_jobs_loop():
+        while True:
+            try:
+                now = int(time.time())
+                # Get jobs with score <= now
+                jobs = await get_redis().zrangebyscore(DELAYED_QUEUE_KEY, 0, now)
+                if jobs:
+                    for job_str in jobs:
+                        removed = await get_redis().zrem(DELAYED_QUEUE_KEY, job_str)
+                        if removed:
+                            await get_redis().lpush(QUEUE_KEY, job_str)
+                            logging.info("[Queue] Moved delayed job to main queue")
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logging.error(f"[Worker] Delayed job processing error: {e}")
+            await asyncio.sleep(1.0)
+
     async def worker_loop():
         while True:
             try:
@@ -139,6 +180,7 @@ async def start_purchase_worker() -> asyncio.Task:
                 logging.error(f"[Worker] Exception in worker loop: {e}")
                 await asyncio.sleep(2.0)
                 
+    asyncio.create_task(delayed_jobs_loop())
     task = asyncio.create_task(worker_loop())
     logging.info("[Worker] Background worker task created successfully")
     return task

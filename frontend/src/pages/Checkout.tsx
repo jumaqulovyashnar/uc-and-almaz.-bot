@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { LoadingOverlay } from '../components/ui/LoadingOverlay';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
+import { createOrder, getOrders } from '../services/api';
+import type { Order } from '../types';
 
 function formatPrice(price: number): string {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
+
+const PAYMENT_CARDS: Record<string, string> = {
+  uzcard: '8600 0000 0000 0000',
+  humo: '9860 0000 0000 0000',
+};
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -21,150 +26,153 @@ export default function Checkout() {
     paymentMethod,
     language,
     setPaymentMethod,
-    addOrder,
     clearCart,
   } = useStore();
 
   const isUz = language === 'uz';
 
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
   const [agreed, setAgreed] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [errors, setErrors] = useState<{ cardNumber?: string; expiry?: string; cvv?: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
 
-  const overlaySteps = [
-    isUz ? "To'lov tekshirilmoqda..." : "Verifying payment...",
-    isUz ? "Buyurtma yaratilmoqda..." : "Creating order...",
-    isUz ? "Muvaffaqiyatli! ✅" : "Successful! ✅",
-  ];
-
+  // Timer logic
   useEffect(() => {
-    if (!showOverlay) return;
+    if (!createdOrder) return;
+    if (timeLeft <= 0) return;
 
-    if (currentStep === 0) {
-      const t = setTimeout(() => setCurrentStep(1), 2000);
-      return () => clearTimeout(t);
-    }
-    if (currentStep === 1) {
-      const t = setTimeout(() => setCurrentStep(2), 1500);
-      return () => clearTimeout(t);
-    }
-    if (currentStep === 2) {
-      const t = setTimeout(() => {
-        addOrder({
-          id: Date.now().toString(),
-          game: selectedGame || 'pubg',
-          packageName: selectedPackage?.name || '',
-          amount: selectedPackage?.amount || 0,
-          price: selectedPackage?.price || 0,
-          playerId: playerId,
-          playerNickname: playerNickname,
-          status: 'completed',
-          paymentMethod: paymentMethod || 'uzcard',
-          createdAt: 'Hozir',
-        });
+    const t = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(t);
+  }, [createdOrder, timeLeft]);
+
+  // Polling logic
+  useEffect(() => {
+    if (!createdOrder) return;
+
+    const poll = async () => {
+      const orders = await getOrders();
+      const current = orders.find(o => String(o.id) === String(createdOrder.id));
+      if (current && current.status !== 'pending_payment') {
+        // Status changed!
         clearCart();
         navigate('/orders');
-      }, 1000);
-      return () => clearTimeout(t);
-    }
-  }, [showOverlay, currentStep]);
+      }
+    };
 
-  const handleCardNumberChange = (val: string) => {
-    const digits = val.replace(/\D/g, '');
-    const limited = digits.substring(0, 16);
-    const formatted = limited.replace(/(\d{4})(?=\d)/g, '$1 ');
-    setCardNumber(formatted);
-    if (errors.cardNumber) {
-      setErrors((prev) => ({ ...prev, cardNumber: undefined }));
+    const intervalId = setInterval(poll, 5000); // Poll every 5s
+    return () => clearInterval(intervalId);
+  }, [createdOrder, clearCart, navigate]);
+
+  const handleSubmit = async () => {
+    if (!paymentMethod || !agreed || !selectedPackage || !selectedGame) return;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const order = await createOrder({
+        game: selectedGame,
+        packageId: selectedPackage.id,
+        packageName: selectedPackage.name,
+        amount: selectedPackage.amount,
+        price: selectedPackage.price,
+        playerId,
+        playerNickname,
+        paymentMethod
+      });
+      setCreatedOrder(order);
+    } catch (err: any) {
+      setError(err.message || 'Xatolik yuz berdi');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleExpiryChange = (val: string) => {
-    const digits = val.replace(/[^\d/]/g, '');
-    let formatted = digits.substring(0, 5);
-    if (formatted.length === 2 && !formatted.includes('/') && val.length > expiry.length) {
-      formatted = formatted + '/';
-    }
-    setExpiry(formatted);
-    if (errors.expiry) {
-      setErrors((prev) => ({ ...prev, expiry: undefined }));
-    }
-  };
-
-  const handleCvvChange = (val: string) => {
-    const digits = val.replace(/\D/g, '').substring(0, 4);
-    setCvv(digits);
-    if (errors.cvv) {
-      setErrors((prev) => ({ ...prev, cvv: undefined }));
-    }
-  };
-
-  const validateInputs = () => {
-    const newErrors: typeof errors = {};
-    const cleanCard = cardNumber.replace(/\s/g, '');
-
-    if (paymentMethod === 'uzcard') {
-      if (!/^8600\d{12}$/.test(cleanCard)) {
-        newErrors.cardNumber = isUz 
-          ? "Uzcard karta raqami noto'g'ri (8600 bilan boshlanishi va 16 raqam bo'lishi kerak)"
-          : "Invalid Uzcard card number (must start with 8600 and be 16 digits)";
-      }
-    } else if (paymentMethod === 'humo') {
-      if (!/^9860\d{12}$/.test(cleanCard)) {
-        newErrors.cardNumber = isUz
-          ? "Humo karta raqami noto'g'ri (9860 bilan boshlanishi va 16 raqam bo'lishi kerak)"
-          : "Invalid Humo card number (must start with 9860 and be 16 digits)";
-      }
-    } else if (paymentMethod === 'visa') {
-      if (!/^4\d{15}$/.test(cleanCard)) {
-        newErrors.cardNumber = isUz
-          ? "Visa karta raqami noto'g'ri (4 bilan boshlanishi va 16 raqam bo'lishi kerak)"
-          : "Invalid Visa card number (must start with 4 and be 16 digits)";
-      }
-    }
-
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-      newErrors.expiry = isUz ? "Muddat noto'g'ri (MM/YY)" : "Invalid expiry format (MM/YY)";
-    } else {
-      const [mStr, yStr] = expiry.split('/');
-      const m = parseInt(mStr, 10);
-      const y = parseInt(yStr, 10);
-      if (m < 1 || m > 12) {
-        newErrors.expiry = isUz ? "Oy noto'g'ri (01-12)" : "Invalid month (01-12)";
-      } else {
-        const now = new Date();
-        const curYear = now.getFullYear() % 100;
-        const curMonth = now.getMonth() + 1;
-        if (y < curYear || (y === curYear && m < curMonth)) {
-          newErrors.expiry = isUz ? "Karta muddati tugagan" : "Card has expired";
-        }
-      }
-    }
-
-    if (paymentMethod === 'visa') {
-      if (!/^\d{3,4}$/.test(cvv)) {
-        newErrors.cvv = isUz ? "CVV noto'g'ri (3 yoki 4 raqam)" : "Invalid CVV (3 or 4 digits)";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!paymentMethod || !agreed || !cardNumber) return;
-    if (!validateInputs()) return;
-    setShowOverlay(true);
-    setCurrentStep(0);
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You could show a toast here if you have a toast system
   };
 
   const price = selectedPackage?.price || 0;
   const gameIcon = selectedGame === 'freefire' ? '💎' : '🎮';
   const gameName = selectedGame === 'freefire' ? 'FREE FIRE' : 'PUBG MOBILE';
+
+  if (createdOrder) {
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    
+    return (
+      <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8 animate-fade-in">
+        <h1 className="text-xl font-black text-white mt-4 tracking-wide uppercase text-center">
+          {isUz ? "To'lov ko'rsatmasi" : 'Payment Instructions'}
+        </h1>
+        
+        <div className="mt-6 text-center">
+          <p className="text-gray-400 text-sm">{isUz ? "To'lov qilish uchun vaqt:" : "Time left to pay:"}</p>
+          <p className={`text-4xl font-black mt-2 ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-cyber-cyan'}`}>
+            {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}
+          </p>
+        </div>
+
+        <Card className="mt-6">
+          <p className="text-xs text-gray-400 font-semibold mb-2 uppercase tracking-wide">
+            {isUz ? "Karta raqami (nusxa oling):" : "Card number (copy):"}
+          </p>
+          <div 
+            className="bg-black/30 p-4 rounded-xl flex justify-between items-center cursor-pointer border border-white/5 hover:border-white/20 transition-all"
+            onClick={() => copyToClipboard(PAYMENT_CARDS[paymentMethod || 'uzcard'])}
+          >
+            <span className="text-xl font-mono font-bold tracking-widest text-white">
+              {PAYMENT_CARDS[paymentMethod || 'uzcard']}
+            </span>
+            <span className="text-xl">📋</span>
+          </div>
+
+          <div className="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
+            <p className="text-xs text-red-400 font-bold mb-2 uppercase tracking-wide flex items-center gap-2">
+              <span className="animate-pulse">⚠️</span> {isUz ? "Muhim!" : "Important!"}
+            </p>
+            <p className="text-sm text-white/90">
+              {isUz ? "Ilovadan (Click, Payme, Uzum) to'lov qilayotganda izoh (kommentariya) qismiga faqatgina quydagini yozing:" : "When paying via your app (Click, Payme, Uzum) write exactly this in the comment:"}
+            </p>
+            <div 
+              className="bg-red-500/20 p-3 rounded-lg mt-3 flex justify-between items-center cursor-pointer hover:bg-red-500/30 transition-all"
+              onClick={() => copyToClipboard(`#${createdOrder.id}`)}
+            >
+              <span className="text-2xl font-black text-red-400 font-mono tracking-widest">
+                #{createdOrder.id}
+              </span>
+              <span className="text-xl">📋</span>
+            </div>
+            <p className="text-[10px] text-red-400 mt-2 font-semibold">
+              {isUz ? "Aks holda to'lov avtomatik qabul qilinmaydi va pulingiz qaytarilmaydi!" : "Otherwise your payment will not be processed automatically and money will not be refunded!"}
+            </p>
+          </div>
+        </Card>
+
+        <div className="mt-6">
+          <Button
+            variant="primary"
+            fullWidth
+            size="lg"
+            onClick={() => {
+              clearCart();
+              navigate('/orders');
+            }}
+            className="font-black text-sm py-3.5 tracking-wider"
+          >
+            {isUz ? "Men to'lov qildim ✅" : 'I have paid ✅'}
+          </Button>
+        </div>
+        <p className="text-center text-xs text-gray-500 mt-4">
+          {isUz ? "To'lov qilganingizdan so'ng order avtomatik yangilanadi." : "Your order will be automatically updated after payment."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8">
@@ -194,6 +202,13 @@ export default function Checkout() {
       <h1 className="text-xl font-black text-white mt-4 tracking-wide uppercase">
         {isUz ? 'Buyurtma' : 'Checkout'}
       </h1>
+
+      {/* Error */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold">
+          {error}
+        </div>
+      )}
 
       {/* Order summary */}
       <Card className="mt-4">
@@ -240,82 +255,8 @@ export default function Checkout() {
             selected={paymentMethod === 'humo'}
             onSelect={() => setPaymentMethod('humo')}
           />
-          <PaymentMethodCard
-            method="visa"
-            selected={paymentMethod === 'visa'}
-            onSelect={() => setPaymentMethod('visa')}
-          />
         </div>
       </div>
-
-      {/* Card input section */}
-      {paymentMethod && (
-        <div className="mt-4 animate-slide-up">
-          {paymentMethod === 'visa' ? (
-            <>
-              <Input
-                label={isUz ? "Karta raqami" : "Card Number"}
-                placeholder="0000 0000 0000 0000"
-                value={cardNumber}
-                error={errors.cardNumber}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={19}
-                onChange={(e) => handleCardNumberChange(e.target.value)}
-              />
-              <div className="flex gap-3 mt-3">
-                <Input
-                  label={isUz ? "Amal qilish" : "Expiry"}
-                  placeholder="MM/YY"
-                  value={expiry}
-                  error={errors.expiry}
-                  inputMode="numeric"
-                  maxLength={5}
-                  onChange={(e) => handleExpiryChange(e.target.value)}
-                />
-                <Input
-                  label="CVV"
-                  placeholder="***"
-                  type="password"
-                  value={cvv}
-                  error={errors.cvv}
-                  inputMode="numeric"
-                  maxLength={4}
-                  onChange={(e) => handleCvvChange(e.target.value)}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <Input
-                label={isUz ? "Karta raqami" : "Card Number"}
-                placeholder={
-                  paymentMethod === 'uzcard'
-                    ? '8600 0000 0000 0000'
-                    : '9860 0000 0000 0000'
-                }
-                value={cardNumber}
-                error={errors.cardNumber}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={19}
-                onChange={(e) => handleCardNumberChange(e.target.value)}
-              />
-              <div className="mt-3">
-                <Input
-                  label={isUz ? "Amal qilish muddati" : "Expiry Date"}
-                  placeholder="MM/YY"
-                  value={expiry}
-                  error={errors.expiry}
-                  inputMode="numeric"
-                  maxLength={5}
-                  onChange={(e) => handleExpiryChange(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Terms checkbox */}
       <div className="mt-5 flex items-center gap-3 animate-fade-in">
@@ -362,16 +303,14 @@ export default function Checkout() {
           variant="primary"
           fullWidth
           size="lg"
-          disabled={!paymentMethod || !agreed || !cardNumber}
+          disabled={!paymentMethod || !agreed || loading || !selectedPackage}
           onClick={handleSubmit}
-          className="font-black text-sm uppercase py-3.5 tracking-wider"
+          className="font-black text-sm uppercase py-3.5 tracking-wider flex justify-center items-center gap-2"
         >
-          {isUz ? "TO'LOV QILISH 💳" : 'PAY NOW 💳'}
+          {loading && <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
+          {isUz ? "BUYURTMA BERISH" : 'PLACE ORDER'}
         </Button>
       </div>
-
-      {/* Loading overlay */}
-      <LoadingOverlay isVisible={showOverlay} steps={overlaySteps} currentStep={currentStep} />
     </div>
   );
 }

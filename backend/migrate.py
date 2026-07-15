@@ -69,6 +69,7 @@ async def migrate() -> None:
                 player_id TEXT NOT NULL,
                 player_nickname TEXT,
                 status TEXT DEFAULT 'pending',
+                payment_status TEXT DEFAULT 'pending_payment',
                 payment_method TEXT,
                 payment_id TEXT,
                 screenshot_url TEXT,

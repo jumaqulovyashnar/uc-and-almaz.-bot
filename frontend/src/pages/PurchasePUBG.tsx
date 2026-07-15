@@ -300,17 +300,38 @@ const PurchasePUBG: React.FC = () => {
         setNickname(json.data.nickname);
         setVerified(true);
       } else {
-        setError(
-          json.detail || (isUz ? "O'yinchi topilmadi yoki xatolik yuz berdi" : "Player not found or verification error")
-        );
+        const detail = json.detail;
+        let errMsg = isUz ? "O'yinchi topilmadi yoki xatolik yuz berdi" : "Player not found or verification error";
+        
+        if (detail && typeof detail === 'object') {
+          if (detail.error_code === 'CAPTCHA_TRIGGERED') {
+            errMsg = isUz 
+              ? "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering."
+              : "Due to security check (Captcha), name could not be resolved. If ID is correct, feel free to proceed.";
+          } else if (detail.error_code === 'INVALID_ID') {
+            errMsg = isUz 
+              ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
+              : "Player not found. Please verify your ID.";
+          } else if (detail.error_code === 'TIMEOUT') {
+            errMsg = isUz 
+              ? "Kutish vaqti tugadi (Tizim band). Qaytadan urining yoki to'g'ridan-to'g'ri xarid qiling."
+              : "Request timed out. Please try again or proceed with the purchase directly.";
+          } else {
+            errMsg = detail.message || errMsg;
+          }
+        } else if (typeof detail === 'string') {
+          errMsg = detail;
+        }
+
+        setError(errMsg);
         setVerified(false);
       }
     } catch (err) {
       console.error('[PurchasePUBG] Verification failed:', err);
       setError(
         isUz
-          ? "Tizimga ulanishda xatolik yuz berdi"
-          : "Connection to validation server failed"
+          ? "Tizimga ulanishda xatolik yuz berdi (Tarmoq yoki CORS xatosi)"
+          : "Connection error to the system (Network or CORS error)"
       );
       setVerified(false);
     } finally {

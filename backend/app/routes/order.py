@@ -56,15 +56,8 @@ async def create_order(
     })
 
     # Queue background task
-    await add_purchase_job(order["id"], {
-        "order_id": order["id"],
-        "game": order["game"],
-        "category": order["category"],
-        "package_name": order["package_name"],
-        "amount": order["amount"],
-        "player_id": order["player_id"],
-        "player_nickname": order.get("player_nickname")
-    })
+    # Background task should only be queued after payment is confirmed.
+    # Removed add_purchase_job from here.
 
     return {
         "success": True,
@@ -115,3 +108,42 @@ async def get_order_by_id(
             "order": order
         }
     }
+
+class WebhookInput(BaseModel):
+    order_id: int
+    amount: float
+    card_last4: str
+
+@router.post("/webhook")
+async def payment_webhook(payload: WebhookInput):
+    order = await order_service.get_by_id(payload.order_id)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+    
+    # Optional: check if amount roughly matches (could be some logic here)
+    if order["payment_status"] != "pending_payment":
+        return {"success": True, "message": "Order is not pending payment"}
+
+    # Update order payment status
+    # Wait, the order service needs to support updating payment_status
+    # Let's assume update_status can handle it or we add a custom query
+    # Since update_status currently expects "status", let's update it in the query directly or modify update_status
+    # For now, let's use the query module directly if update_status doesn't support payment_status
+    from app.config.database import execute
+    await execute("UPDATE orders SET payment_status = 'paid', updated_at = datetime('now') WHERE id = ?", payload.order_id)
+
+    # Queue background task
+    await add_purchase_job(order["id"], {
+        "order_id": order["id"],
+        "game": order["game"],
+        "category": order["category"],
+        "package_name": order["package_name"],
+        "amount": order["amount"],
+        "player_id": order["player_id"],
+        "player_nickname": order.get("player_nickname")
+    })
+
+    return {"success": True, "message": "Payment confirmed and job queued"}

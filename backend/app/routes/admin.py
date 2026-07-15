@@ -97,6 +97,36 @@ async def retry_order(id: int):
         }
     }
 
+class ReviewInput(BaseModel):
+    reason: Optional[str] = None
+
+@router.post("/orders/{id}/approve")
+async def approve_order(id: int):
+    order = await order_service.get_by_id(id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    if order["status"] != "awaiting_admin_review":
+        raise HTTPException(status_code=400, detail="Order is not awaiting review")
+        
+    import datetime
+    await order_service.update_status(id, "completed", {"completed_at": datetime.datetime.now()})
+    
+    return {"success": True, "data": {"message": "Order approved and marked as completed"}}
+
+@router.post("/orders/{id}/reject")
+async def reject_order(id: int, payload: ReviewInput):
+    order = await order_service.get_by_id(id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    if order["status"] != "awaiting_admin_review":
+        raise HTTPException(status_code=400, detail="Order is not awaiting review")
+        
+    await order_service.update_status(id, "failed", {"error_message": payload.reason or "Admin rejected"})
+    
+    return {"success": True, "data": {"message": "Order rejected and marked as failed"}}
+
 @router.get("/bot-status")
 async def get_bot_status():
     # Database health

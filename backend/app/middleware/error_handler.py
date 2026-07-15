@@ -1,5 +1,5 @@
 import logging
-import asyncpg
+import sqlite3
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -33,12 +33,12 @@ def register_error_handlers(app: FastAPI) -> None:
             }
         )
 
-    @app.exception_handler(asyncpg.exceptions.UniqueViolationError)
-    async def unique_violation_handler(request: Request, exc: asyncpg.exceptions.UniqueViolationError):
-        logging.error(f"[DatabaseError] Unique constraint violation: {exc}")
+    @app.exception_handler(sqlite3.IntegrityError)
+    async def unique_violation_handler(request: Request, exc: sqlite3.IntegrityError):
+        logging.error(f"[DatabaseError] Integrity constraint violation: {exc}")
         return JSONResponse(
             status_code=409,
-            content={"success": False, "error": "Resource already exists"}
+            content={"success": False, "error": "Resource already exists or constraint violation"}
         )
 
     @app.exception_handler(Exception)

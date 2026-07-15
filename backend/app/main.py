@@ -40,6 +40,20 @@ async def price_sync_scheduler():
         except Exception as err:
             logging.error(f"[Server] Scheduled price sync failed: {err}")
 
+async def expire_orders_scheduler():
+    from app.config.database import execute
+    while True:
+        try:
+            # Expire orders older than 30 minutes
+            await execute("""
+                UPDATE orders 
+                SET payment_status = 'expired', status = 'failed', error_message = 'To''lov vaqti tugadi', updated_at = datetime('now')
+                WHERE payment_status = 'pending_payment' AND created_at <= datetime('now', '-30 minutes')
+            """)
+        except Exception as err:
+            logging.error(f"[Server] Expire orders task failed: {err}")
+        await asyncio.sleep(60) # check every minute
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging.info("[Server] Initializing CyberPay services...")
@@ -101,6 +115,8 @@ async def lifespan(app: FastAPI):
     if db_ok:
         sync_task = asyncio.create_task(price_sync_scheduler())
         logging.info("[Server] ✅ Price Sync Scheduler started.")
+        expire_task = asyncio.create_task(expire_orders_scheduler())
+        logging.info("[Server] ✅ Expire Orders Scheduler started.")
     else:
         logging.info("[Server] ⏭️ Skipping Price Sync (PostgreSQL not available).")
 
@@ -114,6 +130,10 @@ async def lifespan(app: FastAPI):
     # Stop background tasks
     if sync_task:
         sync_task.cancel()
+    try:
+        expire_task.cancel()
+    except UnboundLocalError:
+        pass
     if bot_task:
         bot_task.cancel()
     if worker_task:

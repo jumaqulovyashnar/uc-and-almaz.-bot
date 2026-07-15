@@ -28,6 +28,8 @@ interface Order {
   status: string;
   payment_method: string | null;
   created_at: string;
+  screenshot_url?: string | null;
+  error_message?: string | null;
 }
 
 interface BotStatus {
@@ -47,6 +49,7 @@ const statusColor = (s: string) => {
     case 'pending':   return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     case 'processing':return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
     case 'failed':    return 'bg-red-500/20 text-red-400 border-red-500/30';
+    case 'awaiting_admin_review': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
     default:          return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   }
 };
@@ -57,6 +60,7 @@ const statusLabel = (s: string) => {
     case 'pending':    return "Kutilmoqda ⏳";
     case 'processing': return "Jarayonda 🔄";
     case 'failed':     return "Xato ✗";
+    case 'awaiting_admin_review': return "Tekshiruv 🔍";
     default:           return s;
   }
 };
@@ -166,6 +170,37 @@ const AdminPanel: React.FC = () => {
       setError('Retry amalga oshmadi');
     } finally {
       setRetryingId(null);
+    }
+  };
+
+  const approveOrder = async (orderId: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/admin/orders/${orderId}/approve`, {
+        method: 'POST',
+        headers: getHeaders(),
+      });
+      const json = await res.json();
+      if (json.success) await loadOrders();
+      else setError(json.error ?? 'Approve xato');
+    } catch {
+      setError('Approve amalga oshmadi');
+    }
+  };
+
+  const rejectOrder = async (orderId: number) => {
+    const reason = window.prompt("Rad etish sababini kiriting:");
+    if (reason === null) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/orders/${orderId}/reject`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ reason })
+      });
+      const json = await res.json();
+      if (json.success) await loadOrders();
+      else setError(json.error ?? 'Reject xato');
+    } catch {
+      setError('Reject amalga oshmadi');
     }
   };
 
@@ -313,7 +348,7 @@ const AdminPanel: React.FC = () => {
           <div className="space-y-3">
             {/* Filter */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {['', 'pending', 'processing', 'completed', 'failed'].map((s) => (
+              {['', 'awaiting_admin_review', 'pending', 'processing', 'completed', 'failed'].map((s) => (
                 <button
                   key={s || 'all'}
                   onClick={() => setStatusFilter(s)}
@@ -324,6 +359,7 @@ const AdminPanel: React.FC = () => {
                   }`}
                 >
                   {s === ''           ? '📋 Barchasi' : ''}
+                  {s === 'awaiting_admin_review' ? '🔍 Tekshiruv' : ''}
                   {s === 'pending'    ? '⏳ Kutilmoqda' : ''}
                   {s === 'processing' ? '🔄 Jarayonda' : ''}
                   {s === 'completed'  ? '✅ Bajarildi' : ''}
@@ -362,16 +398,48 @@ const AdminPanel: React.FC = () => {
                   <p className="text-[10px] text-gray-600">
                     {new Date(order.created_at).toLocaleString('uz-UZ')}
                   </p>
-                  {order.status === 'failed' && (
-                    <button
-                      onClick={() => retryOrder(order.id)}
-                      disabled={retryingId === order.id}
-                      className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
-                    >
-                      {retryingId === order.id ? '...' : '🔄 Retry'}
-                    </button>
-                  )}
+                  <div className="flex gap-2">
+                    {order.status === 'awaiting_admin_review' && (
+                      <>
+                        <button
+                          onClick={() => approveOrder(order.id)}
+                          className="px-3 py-1 bg-green-500/20 border border-green-500/30 text-green-400 text-[11px] font-bold rounded-lg hover:bg-green-500/30 transition-all"
+                        >
+                          ✅ Tasdiqlash
+                        </button>
+                        <button
+                          onClick={() => rejectOrder(order.id)}
+                          className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all"
+                        >
+                          ❌ Rad etish
+                        </button>
+                      </>
+                    )}
+                    {order.status === 'failed' && (
+                      <button
+                        onClick={() => retryOrder(order.id)}
+                        disabled={retryingId === order.id}
+                        className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
+                      >
+                        {retryingId === order.id ? '...' : '🔄 Retry'}
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {order.screenshot_url && (
+                  <div className="mt-3">
+                    <p className="text-[10px] text-gray-500 mb-1">Skrinshot:</p>
+                    <a href={`${API_BASE.replace('/api', '')}/screenshots/${order.screenshot_url.split('/').pop()}`} target="_blank" rel="noreferrer">
+                      <img src={`${API_BASE.replace('/api', '')}/screenshots/${order.screenshot_url.split('/').pop()}`} alt="Screenshot" className="h-32 object-cover rounded-lg border border-white/10" />
+                    </a>
+                  </div>
+                )}
+                {order.error_message && (
+                  <p className="mt-2 text-[10px] text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+                    {order.error_message}
+                  </p>
+                )}
               </div>
             ))}
 

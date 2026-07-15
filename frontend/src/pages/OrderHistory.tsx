@@ -1,65 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { BottomNav } from '../components/layout/BottomNav';
 import { OrderCard } from '../components/shared/OrderCard';
 import type { Order } from '../types';
 import useStore from '../store/useStore';
+import { getOrders } from '../services/api';
 
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    game: 'pubg',
-    packageName: '660 UC',
-    amount: 660,
-    price: 115000,
-    playerId: '5847291036',
-    playerNickname: 'ProGamer_036',
-    status: 'completed' as const,
-    paymentMethod: 'uzcard',
-    createdAt: '2 soat oldin',
-  },
-  {
-    id: '2',
-    game: 'freefire',
-    packageName: '520 Olmos',
-    amount: 520,
-    price: 55000,
-    playerId: '9182736450',
-    playerNickname: 'DiamondKing',
-    status: 'processing' as const,
-    paymentMethod: 'humo',
-    createdAt: '5 soat oldin',
-  },
-  {
-    id: '3',
-    game: 'pubg',
-    packageName: '1800 UC',
-    amount: 1800,
-    price: 300000,
-    playerId: '3847562910',
-    playerNickname: 'UCMaster',
-    status: 'failed' as const,
-    paymentMethod: 'visa',
-    createdAt: '1 kun oldin',
-  },
-  {
-    id: '4',
-    game: 'freefire',
-    packageName: '100 Olmos',
-    amount: 100,
-    price: 11000,
-    playerId: '7463829150',
-    playerNickname: 'FireStarter',
-    status: 'completed' as const,
-    paymentMethod: 'uzcard',
-    createdAt: '2 kun oldin',
-  },
-];
-
-type FilterType = 'all' | 'completed' | 'processing' | 'failed';
+type FilterType = 'all' | 'completed' | 'processing' | 'failed' | 'pending';
 
 export default function OrderHistory() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const { language } = useStore();
 
   const isUz = language === 'uz';
@@ -68,13 +20,25 @@ export default function OrderHistory() {
     { label: isUz ? 'Barchasi' : 'All', value: 'all' },
     { label: isUz ? 'Bajarildi' : 'Completed', value: 'completed' },
     { label: isUz ? 'Jarayonda' : 'Processing', value: 'processing' },
+    { label: isUz ? 'Kutilmoqda' : 'Pending', value: 'pending' },
     { label: isUz ? 'Xatolik' : 'Failed', value: 'failed' },
   ];
 
+  useEffect(() => {
+    let mounted = true;
+    getOrders().then(data => {
+      if (mounted) {
+        setOrders(data);
+        setLoading(false);
+      }
+    });
+    return () => { mounted = false; };
+  }, []);
+
   const filteredOrders =
     activeFilter === 'all'
-      ? mockOrders
-      : mockOrders.filter((order) => order.status === activeFilter);
+      ? orders
+      : orders.filter((order) => order.status === activeFilter);
 
   return (
     <div className="pt-20 pb-24 px-4 bg-cyber-bg min-h-screen">
@@ -102,7 +66,11 @@ export default function OrderHistory() {
       </div>
 
       {/* Order list */}
-      {filteredOrders.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <div className="w-6 h-6 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filteredOrders.length > 0 ? (
         <div className="mt-5 flex flex-col gap-3">
           {filteredOrders.map((order, index) => (
             <div

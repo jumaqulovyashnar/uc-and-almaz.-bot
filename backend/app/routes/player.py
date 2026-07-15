@@ -24,20 +24,30 @@ async def verify_player(payload: VerifyPlayerInput):
     if len(payload.player_id) < 5:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Player not found. Please check your ID."
+            detail={
+                "error_code": "INVALID_ID",
+                "message": "Player ID is too short."
+            }
         )
 
     # Fetch real nickname using Playwright
-    nickname = None
+    res = None
     if payload.game == "freefire":
-        nickname = await verify_freefire_id(payload.player_id)
+        res = await verify_freefire_id(payload.player_id)
     elif payload.game == "pubg":
-        nickname = await verify_pubg_id(payload.player_id)
+        res = await verify_pubg_id(payload.player_id)
 
-    if not nickname:
+    if not res or not res.get("success"):
+        error_code = res.get("error_code") if res else "SERVICE_DOWN"
+        error_msg = res.get("error") if res else "Verification failed."
+        
+        status_code = status.HTTP_404_NOT_FOUND if error_code == "INVALID_ID" else status.HTTP_400_BAD_REQUEST
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Player not found or verification failed. Please verify your ID."
+            status_code=status_code,
+            detail={
+                "error_code": error_code,
+                "message": error_msg
+            }
         )
 
     return {
@@ -45,7 +55,7 @@ async def verify_player(payload: VerifyPlayerInput):
         "data": {
             "valid": True,
             "player_id": payload.player_id,
-            "nickname": nickname,
+            "nickname": res.get("nickname"),
             "game": payload.game
         }
     }

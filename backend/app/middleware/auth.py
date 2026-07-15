@@ -29,6 +29,19 @@ def validate_telegram_data(init_data: str) -> Optional[Dict[str, Any]]:
         if computed_hash != hash_val:
             return None
 
+        # Check auth_date for replay attack prevention
+        auth_date_str = params_dict.get("auth_date")
+        if not auth_date_str:
+            return None
+        import time
+        try:
+            auth_date = int(auth_date_str)
+            if int(time.time()) - auth_date > 86400: # 24 hours
+                logging.warning("[TelegramAuth] Token expired")
+                return None
+        except ValueError:
+            return None
+
         # Extract user JSON data
         user_str = params_dict.get("user")
         if not user_str:

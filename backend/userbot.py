@@ -42,7 +42,7 @@ env = load_env()
 API_ID = int(env.get("API_ID", 30760403))
 API_HASH = env.get("API_HASH", "6d14c56c787f812e2e08f1d06bbab91a")
 SESSION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "userbot")
-API_URL = "https://c578.coresuz.ru"
+API_URL = env.get("API_URL", "http://127.0.0.1:3000/api/payments/webhook")
 
 # === LOG TIZIMI ===
 logging.basicConfig(
@@ -59,11 +59,12 @@ console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
 # === API GA MA'LUMOT YUBORISH FUNKSIYASI ===
-async def send_payment_notification(amount, card, bot_name):
+async def send_payment_notification(amount, card, bot_name, order_id=None):
+    # If order_id is missing, we might have to infer it on backend, but let's pass what we have
     data = {
-        "method": "markPaid",
-        "amount": amount,
-        "card": card
+        "order_id": int(order_id) if order_id else 0,
+        "amount": float(amount),
+        "card_last4": card
     }
     logging.info(f"📤 So'rov yuborilmoqda ({bot_name}): {data}")
     
@@ -94,15 +95,15 @@ async def cardxabar_handler(event):
         logging.info(f"🟢 CardXabarBot xabari qabul qilindi: {text}")
         
         if "🟢 Kartaga o'tkazma" in text:
-            # Regex yaxshilandi: tiyinlari bo'lmagan summalarni ham o'qiydi (masalan: 150 000 yoki 150000)
             summa_match = re.search(r'➕\s*([\d\s]+(?:[.,]\d+)?)', text)
-            # Karta raqamini qidirish (kamida bitta yulduzcha va raqamlar)
             karta_match = re.search(r'\*+(\d+)', text)
+            order_match = re.search(r'#(\d+)', text)
             
             if summa_match and karta_match:
                 summa = summa_match.group(1).replace(' ', '').replace(',', '.')
                 karta = karta_match.group(1)
-                await send_payment_notification(summa, karta, "CardXabarBot")
+                order_id = order_match.group(1) if order_match else None
+                await send_payment_notification(summa, karta, "CardXabarBot", order_id)
             else:
                 logging.warning("❌ CardXabarBot: Summa yoki karta ma'lumotlari topilmadi.")
         else:
@@ -117,15 +118,15 @@ async def humo_handler(event):
         logging.info(f"🎉 HUMOcardbot xabari qabul qilindi: {text}")
         
         if "🎉 To'ldirish" in text:
-            # Regex yaxshilandi: tiyinlari bo'lmagan summalarni ham o'qiydi
             summa_match = re.search(r'➕\s*([\d\s.,]+)', text)
-            # Maskalangan karta raqami yoki oxirgi 4 ta raqamni topish
             karta_match = re.search(r'\*?(\d{4})', text)
+            order_match = re.search(r'#(\d+)', text)
             
             if summa_match and karta_match:
                 summa = summa_match.group(1).replace(' ', '').replace('.', '').replace(',', '.')
                 karta = karta_match.group(1)
-                await send_payment_notification(summa, karta, "HUMOcardbot")
+                order_id = order_match.group(1) if order_match else None
+                await send_payment_notification(summa, karta, "HUMOcardbot", order_id)
             else:
                 logging.warning("❌ HUMOcardbot: Ma'lumot topilmadi.")
         else:

@@ -18,16 +18,20 @@ SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
 GARENA_COOKIES_PATH = COOKIES_DIR / "garena_sg_cookies.json"
 MIDASBUY_COOKIES_PATH = COOKIES_DIR / "midasbuy_cookies.json"
 
-def get_chrome_path() -> str:
+def get_chrome_path() -> Optional[str]:
     possible_paths = [
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expanduser(r"~\AppData\Local\Google\Chrome\Application\chrome.exe")
+        os.path.expanduser(r"~\AppData\Local\Google\Chrome\Application\chrome.exe"),
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium-browser"
     ]
     for p in possible_paths:
         if os.path.exists(p):
             return p
-    raise RuntimeError("Google Chrome was not found on your system. Please install Google Chrome to run this bot.")
+    logging.warning("Google Chrome was not found on your system. Falling back to Playwright's built-in Chromium.")
+    return None
 
 def load_cookies(file_path: Path) -> List[Dict[str, Any]]:
     if not file_path.exists():
@@ -81,15 +85,18 @@ async def run_garena_automation(player_id: str) -> Dict[str, Any]:
 
         async with async_playwright() as p:
             # 3. Launch browser in visible mode
-            browser = await p.chromium.launch(
-                headless=False,
-                executable_path=chrome_path,
-                args=[
+            launch_args = {
+                "headless": False,
+                "args": [
                     "--start-maximized",
                     "--no-sandbox",
                     "--disable-setuid-sandbox"
                 ]
-            )
+            }
+            if chrome_path:
+                launch_args["executable_path"] = chrome_path
+                
+            browser = await p.chromium.launch(**launch_args)
 
             # Create context with maximized viewport
             context = await browser.new_context(no_viewport=True)
@@ -206,20 +213,60 @@ async def run_garena_automation(player_id: str) -> Dict[str, Any]:
             if is_login_screen:
                 raise RuntimeError("Garena session cookie is expired or invalid. Please update the cookies in garena_sg_cookies.json")
 
+            # Proceed to confirm payment and wait for success screen
+            # Clicking the payment button (which uses Shells)
+            logging.info("[Automation] Waiting for payment confirmation button...")
+            payment_confirmed = False
+            for _ in range(30):
+                confirmed = await page.evaluate("""() => {
+                    const buttons = Array.from(document.querySelectorAll('button, div[role="button"], a, span'));
+                    const target = buttons.find(el => {
+                        const text = el.textContent?.trim().toLowerCase() || '';
+                        return text === 'confirm' || text === 'pay' || text === 'оплатить' || text === 'tasdiqlash';
+                    });
+                    if (target) {
+                        target.click();
+                        return true;
+                    }
+                    return false;
+                }""")
+                if confirmed:
+                    payment_confirmed = True
+                    break
+                await asyncio.sleep(0.5)
+
+            # Wait for success message
+            is_success = False
+            for _ in range(40):
+                success_text = await page.evaluate("""() => {
+                    const text = document.body.textContent || '';
+                    return text.includes('successful') || text.includes('успешно') || text.includes('success');
+                }""")
+                if success_text:
+                    is_success = True
+                    break
+                await asyncio.sleep(0.5)
+
             # 11. Take screenshot
-            logging.info("[Automation] Reached payment screen. Capturing screenshot...")
+            logging.info("[Automation] Reached final screen. Capturing screenshot...")
             screenshot_path = SCREENSHOTS_DIR / f"order_{int(time.time() * 1000)}.png"
             await page.screenshot(path=str(screenshot_path), full_page=True)
             logging.info(f"[Automation] Screenshot saved to: {screenshot_path}")
 
-            # 12. Visual wait
-            logging.info("[Automation] Keeping browser open for 15 seconds for verification...")
-            await asyncio.sleep(15.0)
-            
             await browser.close()
+            
+            if not is_success:
+                logging.warning("[Automation] Could not definitively verify payment success. Manual review needed.")
+                return {
+                    "success": False,
+                    "error_code": "NEEDS_MANUAL_REVIEW",
+                    "error": "Payment confirmation screen not found. Please review screenshot manually.",
+                    "screenshot_url": str(screenshot_path)
+                }
+
             return {
                 "success": True,
-                "screenshotPath": str(screenshot_path)
+                "screenshot_url": str(screenshot_path)
             }
             
     except Exception as e:
@@ -254,15 +301,18 @@ async def run_midasbuy_automation(player_id: str, package_name: str) -> Dict[str
 
         async with async_playwright() as p:
             # 3. Launch browser in visible mode
-            browser = await p.chromium.launch(
-                headless=False,
-                executable_path=chrome_path,
-                args=[
+            launch_args = {
+                "headless": False,
+                "args": [
                     "--start-maximized",
                     "--no-sandbox",
                     "--disable-setuid-sandbox"
                 ]
-            )
+            }
+            if chrome_path:
+                launch_args["executable_path"] = chrome_path
+                
+            browser = await p.chromium.launch(**launch_args)
 
             context = await browser.new_context(no_viewport=True)
             if cookies:
@@ -322,8 +372,38 @@ async def run_midasbuy_automation(player_id: str, package_name: str) -> Dict[str
             else:
                 logging.warning(f"[MidasbuyAutomation] Could not click package matching '{package_name}' dynamically.")
 
-            # Check payment options
-            await asyncio.sleep(2.0)
+            # Proceed to confirm payment and wait for success screen
+            logging.info("[MidasbuyAutomation] Waiting for payment confirmation button...")
+            payment_confirmed = False
+            for _ in range(30):
+                confirmed = await page.evaluate("""() => {
+                    const buttons = Array.from(document.querySelectorAll('button, div[role="button"], a, span'));
+                    const target = buttons.find(el => {
+                        const text = el.textContent?.trim().toLowerCase() || '';
+                        return text === 'pay now' || text === 'оплатить' || text === 'pay' || text === 'confirm';
+                    });
+                    if (target) {
+                        target.click();
+                        return true;
+                    }
+                    return false;
+                }""")
+                if confirmed:
+                    payment_confirmed = True
+                    break
+                await asyncio.sleep(0.5)
+
+            # Wait for success message
+            is_success = False
+            for _ in range(40):
+                success_text = await page.evaluate("""() => {
+                    const text = document.body.textContent || '';
+                    return text.includes('successful') || text.includes('успешно') || text.includes('success');
+                }""")
+                if success_text:
+                    is_success = True
+                    break
+                await asyncio.sleep(0.5)
 
             # 8. Capture screenshot
             logging.info("[MidasbuyAutomation] Capturing final checkout screenshot...")
@@ -331,14 +411,20 @@ async def run_midasbuy_automation(player_id: str, package_name: str) -> Dict[str
             await page.screenshot(path=str(screenshot_path), full_page=True)
             logging.info(f"[MidasbuyAutomation] Screenshot saved to: {screenshot_path}")
 
-            # 9. Visual wait
-            logging.info("[MidasbuyAutomation] Keeping browser open for 15 seconds for verification...")
-            await asyncio.sleep(15.0)
-
             await browser.close()
+            
+            if not is_success:
+                logging.warning("[MidasbuyAutomation] Could not definitively verify payment success. Manual review needed.")
+                return {
+                    "success": False,
+                    "error_code": "NEEDS_MANUAL_REVIEW",
+                    "error": "Payment confirmation screen not found. Please review screenshot manually.",
+                    "screenshot_url": str(screenshot_path)
+                }
+
             return {
                 "success": True,
-                "screenshotPath": str(screenshot_path)
+                "screenshot_url": str(screenshot_path)
             }
 
     except Exception as e:
@@ -362,15 +448,18 @@ async def verify_freefire_id(player_id: str) -> Dict[str, Any]:
     try:
         chrome_path = get_chrome_path()
         async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                executable_path=chrome_path,
-                args=[
+            launch_args = {
+                "headless": True,
+                "args": [
                     "--no-sandbox", 
                     "--disable-setuid-sandbox",
                     "--disable-blink-features=AutomationControlled"
                 ]
-            )
+            }
+            if chrome_path:
+                launch_args["executable_path"] = chrome_path
+                
+            browser = await p.chromium.launch(**launch_args)
             context = await browser.new_context()
             
             # Load user cookies if they exist
@@ -385,7 +474,7 @@ async def verify_freefire_id(player_id: str) -> Dict[str, Any]:
             
             # Go to Garena shop (using kzshop as provided by the user)
             try:
-                await page.goto("https://kzshop.garena.com/app?app=100067", wait_until="domcontentloaded", timeout=20000)
+                await page.goto("https://kzshop.garena.com/app?app=100067&lang=ru", wait_until="domcontentloaded", timeout=20000)
             except Exception as te:
                 logging.error(f"[Automation] Navigation timeout/error: {te}")
                 await browser.close()
@@ -394,7 +483,7 @@ async def verify_freefire_id(player_id: str) -> Dict[str, Any]:
             # Check if captcha/access restriction page is loaded immediately
             has_captcha = await page.evaluate("""() => {
                 const text = document.body.textContent || '';
-                const hasSliderText = text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('captcha') || text.includes('geetest');
+                const hasSliderText = text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('geetest');
                 const hasSliderElement = !!document.querySelector('.geetest_holder, .geetest_window, iframe[src*="captcha"], [class*="captcha"], [id*="captcha"]');
                 const hasBlockText = text.includes('Доступ временно ограничен') || text.includes('behavior made us suspicious') || text.includes('поведение браузера нас насторожило');
                 return hasSliderText || hasSliderElement || hasBlockText;
@@ -491,7 +580,7 @@ async def verify_freefire_id(player_id: str) -> Dict[str, Any]:
                 # Check for captcha slider popup
                 captcha_popup = await page.evaluate("""() => {
                     const text = document.body.textContent || '';
-                    const hasSliderText = text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('captcha') || text.includes('geetest');
+                    const hasSliderText = text.includes('Проведите вправо') || text.includes('подтвердить доступ') || text.includes('geetest');
                     const hasSliderElement = !!document.querySelector('.geetest_holder, .geetest_window, iframe[src*="captcha"]');
                     return hasSliderText || hasSliderElement;
                 }""")
@@ -553,15 +642,18 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
     try:
         chrome_path = get_chrome_path()
         async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                executable_path=chrome_path,
-                args=[
+            launch_args = {
+                "headless": True,
+                "args": [
                     "--no-sandbox", 
                     "--disable-setuid-sandbox",
                     "--disable-blink-features=AutomationControlled"
                 ]
-            )
+            }
+            if chrome_path:
+                launch_args["executable_path"] = chrome_path
+                
+            browser = await p.chromium.launch(**launch_args)
             context = await browser.new_context()
             
             if MIDASBUY_COOKIES_PATH.exists():
@@ -575,7 +667,7 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
             
             # Go to Midasbuy PUBG Mobile page
             try:
-                await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm", wait_until="domcontentloaded", timeout=20000)
+                await page.goto("https://www.midasbuy.com/midasbuy/uz/buy/pubgm?lang=ru", wait_until="domcontentloaded", timeout=20000)
             except Exception as te:
                 logging.error(f"[Automation] Navigation timeout/error: {te}")
                 await browser.close()
@@ -584,7 +676,7 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
             # Check for Midasbuy captcha/block page
             has_captcha = await page.evaluate("""() => {
                 const text = document.body.textContent || '';
-                return text.includes('verify') || text.includes('captcha') || text.includes('security check') || text.includes('робот') || text.includes('подтвердите');
+                return text.includes('security check') || text.includes('робот') || text.includes('подтвердите') || !!document.querySelector('iframe[src*="captcha"], .geetest_holder');
             }""")
             if has_captcha:
                 await browser.close()
@@ -625,7 +717,7 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
                 # Check for captcha or blocker
                 captcha_popup = await page.evaluate("""() => {
                     const text = document.body.textContent || '';
-                    return text.includes('verify') || text.includes('captcha') || text.includes('security check');
+                    return text.includes('security check') || !!document.querySelector('iframe[src*="captcha"], .geetest_holder');
                 }""")
                 if captcha_popup:
                     await browser.close()
