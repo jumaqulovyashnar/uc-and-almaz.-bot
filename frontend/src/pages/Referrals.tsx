@@ -15,7 +15,7 @@ const Referrals: React.FC = () => {
   const { telegramUser } = useStore();
   
   const fallbackLink = telegramUser 
-    ? `https://t.me/top_DonateUzbot?start=${telegramUser.id}`
+    ? `https://t.me/top_DonateUzbot?startapp=${telegramUser.id}`
     : 'https://t.me/top_DonateUzbot';
 
   const referralLink = data?.referralLink || fallbackLink;
