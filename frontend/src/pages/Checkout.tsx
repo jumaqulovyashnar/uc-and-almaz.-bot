@@ -12,8 +12,13 @@ function formatPrice(price: number): string {
 }
 
 const PAYMENT_CARDS: Record<string, string> = {
-  uzcard: '8600 0000 0000 0000',
-  humo: '9860 0000 0000 0000',
+  uzcard: '8600 1204 5678 9012',
+  humo: '9860 1801 0950 0686',
+};
+
+const CARD_HOLDERS: Record<string, string> = {
+  uzcard: 'Jumaqulov Y',
+  humo: 'Jumaqulov Y',
 };
 
 export default function Checkout() {
@@ -130,6 +135,10 @@ export default function Checkout() {
             </span>
             <span className="text-xl">📋</span>
           </div>
+          
+          <p className="text-xs text-gray-400 mt-3 font-semibold">
+            {isUz ? "Karta egasi:" : "Card holder:"} <span className="text-white font-bold">{CARD_HOLDERS[paymentMethod || 'uzcard']}</span>
+          </p>
 
           <div className="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
             <p className="text-xs text-red-400 font-bold mb-2 uppercase tracking-wide flex items-center gap-2">
