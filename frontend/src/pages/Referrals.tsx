@@ -64,7 +64,7 @@ const Referrals: React.FC = () => {
 
         {/* Stats Grid using Shadcn Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card hover>
+          <Card hover className="min-h-[130px]">
             <CardHeader>
               <CardDescription className="text-gray-400">Jami a'zolar</CardDescription>
             </CardHeader>
@@ -79,7 +79,7 @@ const Referrals: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card hover>
+          <Card hover className="min-h-[130px]">
             <CardHeader>
               <CardDescription className="text-gray-400">Ishlangan mablag'</CardDescription>
             </CardHeader>

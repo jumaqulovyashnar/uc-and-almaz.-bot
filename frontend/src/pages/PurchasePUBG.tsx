@@ -51,7 +51,7 @@ const PubgBannerSlider: React.FC = () => {
               src={slide.imageUrl}
               alt="PUBG"
               className="w-full h-full"
-              style={{ objectFit: 'cover', objectPosition: 'center' }}
+              style={{ objectFit: 'cover', objectPosition: 'center center' }}
               draggable={false}
             />
             {/* dark gradient bottom */}
