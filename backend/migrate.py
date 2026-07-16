@@ -50,6 +50,7 @@ async def migrate() -> None:
                 is_active INTEGER DEFAULT 1,
                 discount INTEGER DEFAULT 0,
                 sort_order INTEGER DEFAULT 0,
+                provider_service_id TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
         """)
@@ -75,6 +76,7 @@ async def migrate() -> None:
                 screenshot_url TEXT,
                 error_message TEXT,
                 retry_count INTEGER DEFAULT 0,
+                provider_order_id TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 completed_at TEXT,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -108,6 +110,16 @@ async def migrate() -> None:
         """)
         logging.info("[Migrate] ✓ system_config table created")
 
+        # Column Altering fallback (in case DB already exists without these columns)
+        try:
+            await db.execute("ALTER TABLE game_packages ADD COLUMN provider_service_id TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN provider_order_id TEXT;")
+        except Exception:
+            pass
+
         # Indexes
         await db.execute("CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);")
@@ -127,102 +139,118 @@ async def seed() -> None:
     db = get_db()
     
     try:
-        # Check if game packages already exist
-        async with db.execute("SELECT COUNT(*) FROM game_packages") as cursor:
-            row = await cursor.fetchone()
-            count = row[0] if row else 0
-        
-        if count > 0:
-            logging.info("[Seed] Game packages already seeded, skipping...")
-            return
+        # Turn off foreign key checking temporarily
+        await db.execute("PRAGMA foreign_keys = OFF;")
+        # Clear existing packages to refresh
+        await db.execute("DELETE FROM game_packages")
+        await db.commit()
 
         # PUBG Mobile - Almazar (UC)
+        # (name, amount, price, provider_service_id)
         pubg_almazar = [
-            ("30 UC", 30, 5750, 0.45),
-            ("60 UC", 60, 11500, 0.91),
-            ("300 + 25 UC", 325, 57500, 4.55),
-            ("600 + 60 UC", 660, 115000, 9.10),
-            ("1500 + 300 UC", 1800, 287500, 22.73),
-            ("3000 + 850 UC", 3850, 575000, 45.45),
-            ("6000 + 2100 UC", 8100, 1150000, 90.91),
-            ("12000 + 4200 UC", 16200, 2300000, 181.82),
-            ("18000 + 6300 UC", 24300, 3450000, 272.73),
-            ("24000 + 8400 UC", 32400, 4600000, 363.64),
-            ("30000 + 10500 UC", 40500, 5750000, 454.55),
-            ("36000 + 12600 UC", 48600, 6900000, 545.45),
-            ("60000 + 21000 UC", 81000, 11500000, 909.09),
+            ("60 UC", 60, 14000, "pubg_60"),
+            ("120 UC", 120, 28000, "pubg_120"),
+            ("180 UC", 180, 42000, "pubg_180"),
+            ("325 UC", 325, 65000, "pubg_325"),
+            ("385 UC", 385, 79000, "pubg_385"),
+            ("445 UC", 445, 93000, "pubg_445"),
+            ("505 UC", 505, 107000, "pubg_505"),
+            ("660 UC", 660, 125000, "pubg_660"),
+            ("720 UC", 720, 139000, "pubg_720"),
+            ("780 UC", 780, 153000, "pubg_780"),
+            ("985 UC", 985, 190000, "pubg_985"),
+            ("1320 UC", 1320, 250000, "pubg_1320"),
+            ("1800 UC", 1800, 320000, "pubg_1800"),
+            ("2125 UC", 2125, 385000, "pubg_2125"),
+            ("2460 UC", 2460, 445000, "pubg_2460"),
+            ("3850 UC", 3850, 590000, "pubg_3850"),
+            ("4510 UC", 4510, 715000, "pubg_4510"),
+            ("5650 UC", 5650, 910000, "pubg_5650"),
+            ("8100 UC", 8100, 1250000, "pubg_8100"),
+            ("11950 UC", 11950, 1840000, "pubg_11950"),
+            ("24300 UC", 24300, 3750000, "pubg_24300"),
+            ("81000 UC", 81000, 12500000, "pubg_81000"),
         ]
-        for idx, (name, amount, price, usd) in enumerate(pubg_almazar):
+        for idx, (name, amount, price, s_id) in enumerate(pubg_almazar):
             await db.execute(
-                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ('pubg', 'almazar', name, amount, price, price, usd, idx + 1)
+                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, provider_service_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ('pubg', 'almazar', name, amount, price, price, 0.0, s_id, idx + 1)
             )
         logging.info("[Seed] ✓ PUBG Almazar packages seeded")
 
         # PUBG Mobile - Propuski
         pubg_propuski = [
-            ("Elite Pass", 1, 12000, 5.99),
-            ("Elite Pass Plus", 1, 28000, 14.99),
+            ("Elite Pass", 1, 12000, "pubg_elite"),
+            ("Elite Pass Plus", 1, 28000, "pubg_elite_plus"),
         ]
-        for idx, (name, amount, price, usd) in enumerate(pubg_propuski):
+        for idx, (name, amount, price, s_id) in enumerate(pubg_propuski):
             await db.execute(
-                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ('pubg', 'propuski', name, amount, price, price, usd, idx + 1)
+                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, provider_service_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ('pubg', 'propuski', name, amount, price, price, 0.0, s_id, idx + 1)
             )
         logging.info("[Seed] ✓ PUBG Propuski packages seeded")
 
         # PUBG Mobile - Level Up
         pubg_levelup = [
-            ("1 Level", 1, 5000, 0.40),
-            ("5 Level", 5, 20000, 1.60),
-            ("10 Level", 10, 35000, 3.00),
+            ("1 Level", 1, 5000, "pubg_lvl_1"),
+            ("5 Level", 5, 20000, "pubg_lvl_5"),
+            ("10 Level", 10, 35000, "pubg_lvl_10"),
         ]
-        for idx, (name, amount, price, usd) in enumerate(pubg_levelup):
+        for idx, (name, amount, price, s_id) in enumerate(pubg_levelup):
             await db.execute(
-                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ('pubg', 'levelup', name, amount, price, price, usd, idx + 1)
+                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, provider_service_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ('pubg', 'levelup', name, amount, price, price, 0.0, s_id, idx + 1)
             )
         logging.info("[Seed] ✓ PUBG Level Up packages seeded")
 
-        # Free Fire - Almazar
+        # Mobile Legends / Free Fire - Almazar
+        # Format: (name, amount, price, provider_service_id)
         ff_almazar = [
-            ("100 Olmos", 100, 11000, 0.99),
-            ("310 Olmos", 310, 33000, 2.99),
-            ("520 Olmos", 520, 55000, 4.99),
-            ("1060 Olmos", 1060, 110000, 9.99),
-            ("2180 Olmos", 2180, 220000, 19.99),
-            ("5600 Olmos", 5600, 550000, 49.99),
+            ("105 [🎁180] Olmos", 180, 11000, "ml_180"),
+            ("210 [🎁285] Olmos", 285, 22000, "ml_285"),
+            ("326 [🎁559] Olmos", 559, 32000, "ml_559"),
+            ("431 [🎁664] Olmos", 664, 43000, "ml_664"),
+            ("546 [🎁936] Olmos", 936, 52000, "ml_936"),
+            ("651 [🎁1041] Olmos", 1041, 63000, "ml_1041"),
+            ("872 [🎁1262] Olmos", 1262, 84000, "ml_1262"),
+            ("1113 [🎁1908] Olmos", 1908, 105000, "ml_1908"),
+            ("1659 [🎁2528] Olmos", 2528, 157000, "ml_2528"),
+            ("1985 [🎁2854] Olmos", 2854, 189000, "ml_2854"),
+            ("2398 [🎁4033] Olmos", 4033, 210000, "ml_4033"),
+            ("2944 [🎁4579] Olmos", 4579, 263000, "ml_4579"),
+            ("6160 [🎁10360] Olmos", 10360, 520000, "ml_10360"),
+            ("12320 [🎁16520] Olmos", 16520, 1040000, "ml_16520"),
         ]
-        for idx, (name, amount, price, usd) in enumerate(ff_almazar):
+        for idx, (name, amount, price, s_id) in enumerate(ff_almazar):
             await db.execute(
-                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ('freefire', 'almazar', name, amount, price, price, usd, idx + 1)
+                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, provider_service_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ('freefire', 'almazar', name, amount, price, price, 0.0, s_id, idx + 1)
             )
         logging.info("[Seed] ✓ Free Fire Almazar packages seeded")
 
         # Free Fire - Propuski
         ff_propuski = [
-            ("Elite Pass", 1, 4900, 1.99),
-            ("Propuski Bundle", 1, 76000, 6.99),
+            ("Elite Pass", 1, 4900, "ff_elite"),
+            ("Propuski Bundle", 1, 76000, "ff_bundle"),
         ]
-        for idx, (name, amount, price, usd) in enumerate(ff_propuski):
+        for idx, (name, amount, price, s_id) in enumerate(ff_propuski):
             await db.execute(
-                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ('freefire', 'propuski', name, amount, price, price, usd, idx + 1)
+                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, provider_service_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ('freefire', 'propuski', name, amount, price, price, 0.0, s_id, idx + 1)
             )
         logging.info("[Seed] ✓ Free Fire Propuski packages seeded")
 
         # Free Fire - Level Up
         ff_levelup = [
-            ("5 Level", 5, 5000, 0.40),
-            ("10 Level", 10, 9000, 0.80),
-            ("15 Level", 15, 9000, 0.80),
-            ("20 Level", 20, 9000, 0.80),
+            ("5 Level", 5, 5000, "ff_lvl_5"),
+            ("10 Level", 10, 9000, "ff_lvl_10"),
+            ("15 Level", 15, 9000, "ff_lvl_15"),
+            ("20 Level", 20, 9000, "ff_lvl_20"),
         ]
-        for idx, (name, amount, price, usd) in enumerate(ff_levelup):
+        for idx, (name, amount, price, s_id) in enumerate(ff_levelup):
             await db.execute(
-                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ('freefire', 'levelup', name, amount, price, price, usd, idx + 1)
+                "INSERT INTO game_packages (game, category, name, amount, base_price, sell_price, usd_price, provider_service_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ('freefire', 'levelup', name, amount, price, price, 0.0, s_id, idx + 1)
             )
         logging.info("[Seed] ✓ Free Fire Level Up packages seeded")
 
@@ -235,6 +263,7 @@ async def seed() -> None:
             "INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)",
             ('maintenance_freefire', json.dumps(False))
         )
+        await db.execute("PRAGMA foreign_keys = ON;")
         await db.commit()
         
         logging.info("[Seed] ✓ System config seeded")

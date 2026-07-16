@@ -15,6 +15,18 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     PORT: str = "3000"
     NODE_ENV: str = "development"
+    
+    # Click.uz
+    CLICK_MERCHANT_ID: str = ""
+    CLICK_SERVICE_ID: str = ""
+    CLICK_SECRET_KEY: str = ""
+    
+    # Payme.uz
+    PAYME_MERCHANT_ID: str = ""
+    PAYME_MERCHANT_KEY: str = ""
+    
+    # Provider Reseller API
+    PROVIDER_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(BASE_DIR, ".env"),

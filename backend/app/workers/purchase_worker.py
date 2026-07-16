@@ -29,6 +29,52 @@ async def add_purchase_job(order_id: int, data: Dict[str, Any]) -> bool:
         logging.error(f"[Queue] Failed to add purchase job: {e}")
         return False
 
+import httpx
+import os
+from app.config.env import env
+
+async def call_provider_api(game: str, player_id: str, provider_service_id: str, order_id: int) -> Dict[str, Any]:
+    api_key = env.PROVIDER_API_KEY
+    if not api_key:
+        return {"success": False, "error": "PROVIDER_API_KEY is not configured"}
+        
+    url = os.getenv("PROVIDER_API_URL", "https://api.provider.com/v1/orders")
+    
+    # We send standard SMM Reseller Panel params (key, action, service, link, quantity)
+    payload = {
+        "key": api_key,
+        "action": "add",
+        "service": provider_service_id,
+        "link": player_id,
+        "quantity": 1,
+        "custom_id": str(order_id)
+    }
+    
+    try:
+        async def make_request():
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, data=payload, timeout=20.0)
+                if response.status_code == 200:
+                    res_data = response.json()
+                    if "order" in res_data or res_data.get("status") == "success" or "order_id" in res_data:
+                        order_id_val = res_data.get("order") or res_data.get("order_id") or "12345"
+                        return {"success": True, "provider_order_id": str(order_id_val)}
+                    else:
+                        return {"success": False, "error": res_data.get("error") or "Unknown API response format"}
+                else:
+                    return {"success": False, "error": f"API returned status code {response.status_code}"}
+        
+        # Try 3 times with 2 seconds delay if API fails
+        for attempt in range(3):
+            res = await make_request()
+            if res["success"]:
+                return res
+            if attempt < 2:
+                await asyncio.sleep(2.0)
+        return {"success": False, "error": "API failed after 3 attempts"}
+    except Exception as e:
+        return {"success": False, "error": f"API request failed: {str(e)}"}
+
 async def process_purchase_job(job_data: Dict[str, Any]) -> None:
     order_id = job_data["order_id"]
     game = job_data["game"]
@@ -42,42 +88,44 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
         # 1. Update order status to 'processing'
         await order_service.update_status(order_id, "processing")
 
-        # 2. Run browser automation
-        if game == "freefire":
-            result = await automation_service.run_garena_automation(player_id)
-        elif game == "pubg":
-            result = await automation_service.run_midasbuy_automation(player_id, package_name)
-        else:
-            raise ValueError(f"Unsupported game: {game}")
+        # 2. Fetch package details to get provider_service_id
+        from app.config.database import query_row, execute
+        order_db = await query_row("SELECT package_id FROM orders WHERE id = ?", order_id)
+        provider_service_id = None
+        if order_db and order_db["package_id"]:
+            pkg = await query_row("SELECT provider_service_id FROM game_packages WHERE id = ?", order_db["package_id"])
+            if pkg:
+                provider_service_id = pkg["provider_service_id"]
+                
+        if not provider_service_id:
+            provider_service_id = f"{game}_{package_name.lower().replace(' ', '_')}"
+
+        # 3. Call Provider API instead of browser automation
+        result = await call_provider_api(game, player_id, provider_service_id, order_id)
 
         if not result.get("success"):
-            error_code = result.get("error_code")
-            screenshot_url = result.get("screenshot_url")
-            err_msg = result.get("error") or "Automation failed"
+            err_msg = result.get("error") or "Provider API failed"
+            # Update status to awaiting_admin_review on final failure
+            await order_service.update_status(
+                order_id, 
+                "awaiting_admin_review", 
+                {"error_message": err_msg}
+            )
+            
+            # Notify admin
+            alert_text = (
+                f"⚠️ <b>Qo'lda tekshirish talab etiladi (API Xatoligi)!</b> \n"
+                f"Buyurtma ID: #{order_id}\n"
+                f"O'yin: {game.upper()}\n"
+                f"Xatolik: {err_msg}"
+            )
+            await notification_service.send_admin_alert(alert_text)
+            
+            await get_redis().delete(f"{LOCK_PREFIX}{order_id}")
+            return # Stop processing
 
-            if error_code == "NEEDS_MANUAL_REVIEW":
-                # Manual review required
-                await order_service.update_status(
-                    order_id, 
-                    "awaiting_admin_review", 
-                    {"screenshot_url": screenshot_url, "error_message": err_msg}
-                )
-                
-                full_order = await order_service.get_by_id(order_id)
-                if full_order:
-                    # Notify admin
-                    alert_text = (
-                        f"⚠️ <b>Qo'lda tekshirish talab etiladi!</b> \n"
-                        f"Buyurtma ID: #{order_id}\n"
-                        f"O'yin: {game.upper()}\n"
-                        f"Xatolik: {err_msg}"
-                    )
-                    await notification_service.send_admin_alert(alert_text)
-                
-                await get_redis().delete(f"{LOCK_PREFIX}{order_id}")
-                return # Stop processing
-            else:
-                raise RuntimeError(err_msg)
+        # Save provider_order_id to DB
+        await execute("UPDATE orders SET provider_order_id = ? WHERE id = ?", result["provider_order_id"], order_id)
 
         # 3. Mark order as completed
         await order_service.update_status(
