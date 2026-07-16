@@ -88,7 +88,7 @@ const StatCard: React.FC<{ label: string; value: string | number; sub?: string; 
 // ─── Main Component ──────────────────────────────────────────────────────────
 const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
-  const { telegramUser } = useStore();
+  const { telegramUser, language } = useStore();
 
   const [tab, setTab] = useState<'stats' | 'orders' | 'system'>('stats');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -101,6 +101,7 @@ const AdminPanel: React.FC = () => {
 
   // Admin tekshiruv
   const isAdmin = telegramUser?.id === ADMIN_ID;
+  const isUz = language === 'uz';
 
   const getHeaders = useCallback(() => {
     const tg = (window as any)?.Telegram?.WebApp;
@@ -378,7 +379,12 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {orders.length === 0 && (
-              <div className="text-center py-10 text-gray-500 text-sm">Buyurtmalar topilmadi</div>
+              <div className="flex flex-col items-center justify-center py-16">
+                <span className="text-4xl mb-3 select-none">😔</span>
+                <span className="text-gray-500 text-sm font-medium">
+                  {isUz ? 'Buyurtmalar topilmadi' : 'No orders found'}
+                </span>
+              </div>
             )}
 
             {orders.map((order) => (
