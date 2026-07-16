@@ -28,6 +28,9 @@ async def migrate() -> None:
                 is_premium INTEGER DEFAULT 0,
                 total_spent REAL DEFAULT 0,
                 order_count INTEGER DEFAULT 0,
+                referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                referral_balance REAL NOT NULL DEFAULT 0.0,
+                referrals_count INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
@@ -110,6 +113,19 @@ async def migrate() -> None:
         """)
         logging.info("[Migrate] ✓ system_config table created")
 
+        # 6. Referral earnings table
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS referral_earnings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                referrer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                referred_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                amount REAL NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        logging.info("[Migrate] ✓ referral_earnings table created")
+
         # Column Altering fallback (in case DB already exists without these columns)
         try:
             await db.execute("ALTER TABLE game_packages ADD COLUMN provider_service_id TEXT;")
@@ -117,6 +133,46 @@ async def migrate() -> None:
             pass
         try:
             await db.execute("ALTER TABLE orders ADD COLUMN provider_order_id TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN payment_status TEXT DEFAULT 'pending_payment';")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN payment_method TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN payment_id TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN screenshot_url TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN error_message TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN retry_count INTEGER DEFAULT 0;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN completed_at TEXT;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN referral_balance REAL DEFAULT 0.0;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN referrals_count INTEGER DEFAULT 0;")
         except Exception:
             pass
 
@@ -127,6 +183,7 @@ async def migrate() -> None:
         await db.execute("CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_game_packages_game ON game_packages(game, category);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_transactions_order_id ON transactions(order_id);")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_referral_earnings_referrer_id ON referral_earnings(referrer_id);")
         await db.commit()
         logging.info("[Migrate] ✓ indexes created")
         logging.info("[Migrate] ✓ All tables created successfully")

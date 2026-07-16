@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     PORT: str = "3000"
     NODE_ENV: str = "development"
+    REFERRAL_CASHBACK_PERCENT: float = 0.05
     
     # Click.uz
     CLICK_MERCHANT_ID: str = ""

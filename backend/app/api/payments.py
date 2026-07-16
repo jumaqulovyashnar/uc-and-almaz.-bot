@@ -110,6 +110,13 @@ async def click_webhook(
             # Update order payment status
             await execute("UPDATE orders SET payment_status = 'paid', payment_method = 'click', payment_id = ?, updated_at = datetime('now') WHERE id = ?", str(click_trans_id), order_id)
 
+            # Process referral cashback
+            try:
+                from app.services.referral import process_referral_cashback
+                await process_referral_cashback(order_id)
+            except Exception as e:
+                logging.error(f"[ClickWeb] Referral cashback failed for order {order_id}: {e}")
+
             # Trigger automatic purchase worker
             await add_purchase_job(order_id, {
                 "order_id": order_id,
@@ -278,6 +285,13 @@ async def payme_webhook(request: Request, authorization: Optional[str] = Header(
             perform_time = int(time.time() * 1000)
             await execute("UPDATE transactions SET status = 'complete' WHERE id = ?", tx["id"])
             await execute("UPDATE orders SET payment_status = 'paid', payment_method = 'payme', payment_id = ?, updated_at = datetime('now') WHERE id = ?", payme_trans_id, order_id)
+
+            # Process referral cashback
+            try:
+                from app.services.referral import process_referral_cashback
+                await process_referral_cashback(order_id)
+            except Exception as e:
+                logging.error(f"[PaymeWeb] Referral cashback failed for order {order_id}: {e}")
 
             # Trigger automatic purchase worker
             await add_purchase_job(order_id, {

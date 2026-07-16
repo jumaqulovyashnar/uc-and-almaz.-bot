@@ -189,3 +189,33 @@ export async function getPublicStats(): Promise<{ total_uc: number; total_diamon
     return { total_uc: 0, total_diamonds: 0 };
   }
 }
+
+export interface ReferralEarning {
+  fromUser: string;
+  amount: number;
+  date: string;
+}
+
+export interface ReferralData {
+  referralLink: string;
+  referralsCount: number;
+  referralBalance: number;
+  recentEarnings: ReferralEarning[];
+}
+
+export async function getReferralData(): Promise<ReferralData | null> {
+  try {
+    const res = await fetch(`${API_BASE}/referrals/me`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to fetch referral data');
+    const json = await res.json();
+    if (json.success && json.data) {
+      return json.data;
+    }
+    return null;
+  } catch (error) {
+    console.error('[API] getReferralData error:', error);
+    return null;
+  }
+}

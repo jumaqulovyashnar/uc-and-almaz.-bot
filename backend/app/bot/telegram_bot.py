@@ -1,6 +1,6 @@
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 from aiogram.enums import ParseMode
 from app.core.env import env
 
@@ -13,9 +13,50 @@ dp = Dispatcher()
 
 # /start command
 @dp.message(Command("start"))
-async def cmd_start(message: types.Message):
+async def cmd_start(message: types.Message, command: CommandObject):
     first_name = message.from_user.first_name if message.from_user else "Foydalanuvchi"
+    telegram_id = message.from_user.id if message.from_user else None
     
+    # Process referral deep-link
+    if telegram_id and command.args:
+        ref_arg = command.args.strip()
+        if ref_arg.isdigit():
+            referrer_tg_id = int(ref_arg)
+            if referrer_tg_id != telegram_id:
+                try:
+                    from app.core.database import query_row, get_db
+                    # 1. Check if referrer exists
+                    referrer = await query_row("SELECT id FROM users WHERE telegram_id = ?", referrer_tg_id)
+                    if referrer:
+                        # 2. Check if current user already exists
+                        current_user = await query_row("SELECT id FROM users WHERE telegram_id = ?", telegram_id)
+                        if not current_user:
+                            db = get_db()
+                            async with db.execute("BEGIN TRANSACTION"):
+                                try:
+                                    # Create the referred user
+                                    await db.execute(
+                                        "INSERT INTO users (telegram_id, first_name, last_name, username, referred_by) VALUES (?, ?, ?, ?, ?)",
+                                        telegram_id,
+                                        message.from_user.first_name or "Foydalanuvchi",
+                                        message.from_user.last_name,
+                                        message.from_user.username,
+                                        referrer["id"]
+                                    )
+                                    # Increment referrer's count
+                                    await db.execute(
+                                        "UPDATE users SET referrals_count = referrals_count + 1 WHERE id = ?",
+                                        referrer["id"]
+                                    )
+                                    await db.commit()
+                                    logging.info(f"[Bot] Registered referred user {telegram_id} under referrer {referrer_tg_id}")
+                                except Exception as inner_e:
+                                    await db.rollback()
+                                    logging.error(f"[Bot] Failed transaction during referral start: {inner_e}")
+                                    raise inner_e
+                except Exception as e:
+                    logging.error(f"[Bot] Referral processing failed: {e}")
+
     welcome_message = (
         f"Salom, <b>{first_name}</b>! 👋\n\n"
         f"🎮 <b>CyberPay</b> botiga xush kelibsiz!\n\n"

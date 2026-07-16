@@ -1,19 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Check, Copy } from 'lucide-react';
+import { getReferralData, type ReferralData } from '../services/api';
 
 import useStore from '../store/useStore';
 
 const Referrals: React.FC = () => {
   const [copied, setCopied] = useState(false);
+  const [data, setData] = useState<ReferralData | null>(null);
+  const [loading, setLoading] = useState(true);
   const { telegramUser } = useStore();
   
-  const referralLink = telegramUser 
+  const fallbackLink = telegramUser 
     ? `https://t.me/top_DonateUzbot?start=${telegramUser.id}`
     : 'https://t.me/top_DonateUzbot';
+
+  const referralLink = data?.referralLink || fallbackLink;
+
+  useEffect(() => {
+    let mounted = true;
+    getReferralData().then((res) => {
+      if (mounted && res) {
+        setData(res);
+      }
+      if (mounted) {
+        setLoading(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -49,7 +69,13 @@ const Referrals: React.FC = () => {
               <CardDescription className="text-gray-400">Jami a'zolar</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-black text-cyber-purple">0 ta</p>
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin mt-1" />
+              ) : (
+                <p className="text-2xl font-black text-cyber-purple">
+                  {data?.referralsCount ?? 0} ta
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -58,7 +84,13 @@ const Referrals: React.FC = () => {
               <CardDescription className="text-gray-400">Ishlangan mablag'</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-xl font-black text-cyber-cyan">0 so'm</p>
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-cyber-cyan border-t-transparent rounded-full animate-spin mt-1" />
+              ) : (
+                <p className="text-xl font-black text-cyber-cyan">
+                  {(data?.referralBalance ?? 0).toLocaleString('uz-UZ')} so'm
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -87,6 +119,35 @@ const Referrals: React.FC = () => {
               </Button>
 
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Earnings */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>So'nggi keshbeklar</CardTitle>
+            <CardDescription>Do'stlaringiz xaridlaridan tushgan daromadlar:</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-5 h-5 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : data && data.recentEarnings.length > 0 ? (
+              <div className="space-y-3">
+                {data.recentEarnings.map((earning, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-xs border-b border-cyber-border/40 pb-2 last:border-b-0 last:pb-0">
+                    <div>
+                      <p className="text-white font-bold">{earning.fromUser}</p>
+                      <p className="text-gray-500 text-[10px] mt-0.5">{new Date(earning.date).toLocaleString('uz-UZ')}</p>
+                    </div>
+                    <span className="text-cyber-cyan font-bold font-mono">+{earning.amount.toLocaleString('uz-UZ')} so'm</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 text-center py-4">Hozircha keshbeklar mavjud emas</p>
+            )}
           </CardContent>
         </Card>
 
