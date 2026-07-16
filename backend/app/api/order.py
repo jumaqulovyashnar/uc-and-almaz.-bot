@@ -137,3 +137,26 @@ async def get_public_stats():
             "total_diamonds": int(ff_res["total"]) if ff_res else 0
         }
     }
+
+
+@router.get("/stats/user")
+async def get_user_stats(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Return order count and total spent for the current user."""
+    from app.core.database import query_row
+    row = await query_row(
+        """
+        SELECT
+            COUNT(*) as order_count,
+            COALESCE(SUM(CASE WHEN status = 'completed' THEN price ELSE 0 END), 0) as total_spent
+        FROM orders
+        WHERE user_id = ?
+        """,
+        current_user["id"]
+    )
+    return {
+        "success": True,
+        "data": {
+            "order_count": row["order_count"] if row else 0,
+            "total_spent": float(row["total_spent"]) if row else 0.0,
+        }
+    }

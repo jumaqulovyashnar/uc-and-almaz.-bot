@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { BottomNav } from '../components/layout/BottomNav';
@@ -7,6 +7,37 @@ import { Crown, Check } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 
 const ADMIN_ID = 6709001451;
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
+
+const getHeaders = () => {
+  const tg = (window as any)?.Telegram?.WebApp;
+  return {
+    'Content-Type': 'application/json',
+    'x-telegram-init-data': tg?.initData ?? '',
+  };
+};
+
+interface UserStats {
+  order_count: number;
+  total_spent: number;
+}
+
+async function fetchUserStats(): Promise<UserStats> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/stats/user`, { headers: getHeaders() });
+    if (!res.ok) return { order_count: 0, total_spent: 0 };
+    const json = await res.json();
+    if (json.success && json.data) {
+      return {
+        order_count: json.data.order_count ?? 0,
+        total_spent: json.data.total_spent ?? 0,
+      };
+    }
+    return { order_count: 0, total_spent: 0 };
+  } catch {
+    return { order_count: 0, total_spent: 0 };
+  }
+}
 
 // ─── Setting row ─────────────────────────────────────────────────────────────
 interface SettingRowProps {
@@ -50,14 +81,18 @@ export default function Profile() {
   const navigate = useNavigate();
   const { language, telegramUser, setLanguage } = useStore();
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [userStats, setUserStats] = useState<UserStats>({ order_count: 0, total_spent: 0 });
 
   const isUz = language === 'uz';
   const isAdmin = telegramUser?.id === ADMIN_ID;
 
-  // Real user info
   const firstName   = telegramUser?.first_name ?? (isUz ? 'Foydalanuvchi' : 'User');
   const username    = telegramUser?.username ? `@${telegramUser.username}` : null;
   const avatarLetter = firstName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    fetchUserStats().then(s => setUserStats(s)).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-cyber-bg pb-24 pt-16">
@@ -84,14 +119,14 @@ export default function Profile() {
         )}
       </div>
 
-      {/* ── Stats ── */}
+      {/* ── Stats — real data ── */}
       <div className="grid grid-cols-2 gap-3 px-4 mt-2">
         <div className="bg-cyber-card border border-cyber-border rounded-2xl p-4 text-center">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
             {isUz ? 'Buyurtmalar' : 'Orders'}
           </p>
           <p className="text-3xl font-black text-cyber-purple mt-1">
-            {telegramUser?.order_count ?? 0}
+            {userStats.order_count}
           </p>
         </div>
         <div className="bg-cyber-card border border-cyber-border rounded-2xl p-4 text-center">
@@ -99,7 +134,7 @@ export default function Profile() {
             {isUz ? 'Sarflangan' : 'Spent'}
           </p>
           <p className="text-xl font-black text-cyber-cyan mt-1">
-            {telegramUser?.total_spent ? telegramUser.total_spent.toLocaleString('uz-UZ') : '0'}
+            {userStats.total_spent > 0 ? userStats.total_spent.toLocaleString('uz-UZ') : '0'}
           </p>
           <p className="text-[10px] text-gray-500 font-semibold">so'm</p>
         </div>
