@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
+import Button from '../components/ui/Button';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 const ADMIN_ID = 6709001451;
@@ -222,12 +223,12 @@ const AdminPanel: React.FC = () => {
         <span className="text-5xl mb-4">🚫</span>
         <h2 className="text-xl font-black text-white mb-2">Ruxsat yo'q</h2>
         <p className="text-sm text-gray-400 mb-6">Bu sahifaga faqat admin kirishi mumkin</p>
-        <button
+        <Button
           onClick={() => navigate('/home')}
           className="px-6 py-3 bg-gradient-to-r from-cyber-purple to-cyber-cyan rounded-xl text-white font-bold text-sm"
         >
           Bosh sahifaga qaytish
-        </button>
+        </Button>
       </div>
     );
   }
@@ -236,14 +237,16 @@ const AdminPanel: React.FC = () => {
     <div className="min-h-screen bg-[#0d0d1a] pb-8">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#0d0d1a]/95 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center gap-3">
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={() => navigate('/home')}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
         >
           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-        </button>
+        </Button>
         <div>
           <h1 className="text-base font-black text-white tracking-wide">Admin Panel</h1>
           <p className="text-[10px] text-gray-500">ID: {telegramUser?.id}</p>
@@ -257,19 +260,21 @@ const AdminPanel: React.FC = () => {
       {/* Tab bar */}
       <div className="flex gap-1 px-4 mt-4 bg-white/5 mx-4 rounded-xl p-1">
         {(['stats', 'orders', 'system'] as const).map((t) => (
-          <button
+          <Button
             key={t}
+            variant={tab === t ? 'primary' : 'ghost'}
+            size="none"
             onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-xs font-black tracking-wide transition-all duration-200 ${
-              tab === t
-                ? 'bg-gradient-to-r from-cyber-purple to-cyber-cyan text-white'
-                : 'text-gray-400 hover:text-white'
+              tab !== t
+                ? 'text-gray-400 hover:text-white'
+                : ''
             }`}
           >
             {t === 'stats'  ? '📊 Stats'  : ''}
             {t === 'orders' ? '📋 Buyurtmalar' : ''}
             {t === 'system' ? '⚙️ Tizim' : ''}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -334,12 +339,14 @@ const AdminPanel: React.FC = () => {
               })}
             </div>
 
-            <button
+            <Button
+              variant="ghost"
+              size="none"
               onClick={loadStats}
               className="w-full py-2.5 rounded-xl border border-white/10 text-gray-400 text-xs font-bold hover:text-white hover:border-white/20 transition-all"
             >
               🔄 Yangilash
-            </button>
+            </Button>
           </div>
         )}
 
@@ -347,14 +354,16 @@ const AdminPanel: React.FC = () => {
         {!loading && tab === 'orders' && (
           <div className="space-y-3">
             {/* Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
               {['', 'awaiting_admin_review', 'pending', 'processing', 'completed', 'failed'].map((s) => (
-                <button
+                <Button
                   key={s || 'all'}
+                  variant={statusFilter === s ? 'primary' : 'ghost'}
+                  size="none"
                   onClick={() => setStatusFilter(s)}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
                     statusFilter === s
-                      ? 'bg-cyber-purple border-cyber-purple text-white'
+                      ? 'border-cyber-purple text-white'
                       : 'border-white/10 text-gray-400 hover:text-white'
                   }`}
                 >
@@ -364,7 +373,7 @@ const AdminPanel: React.FC = () => {
                   {s === 'processing' ? '🔄 Jarayonda' : ''}
                   {s === 'completed'  ? '✅ Bajarildi' : ''}
                   {s === 'failed'     ? '❌ Xato' : ''}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -401,28 +410,34 @@ const AdminPanel: React.FC = () => {
                   <div className="flex gap-2">
                     {order.status === 'awaiting_admin_review' && (
                       <>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="none"
                           onClick={() => approveOrder(order.id)}
                           className="px-3 py-1 bg-green-500/20 border border-green-500/30 text-green-400 text-[11px] font-bold rounded-lg hover:bg-green-500/30 transition-all"
                         >
                           ✅ Tasdiqlash
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="none"
                           onClick={() => rejectOrder(order.id)}
                           className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all"
                         >
                           ❌ Rad etish
-                        </button>
+                        </Button>
                       </>
                     )}
                     {order.status === 'failed' && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="none"
                         onClick={() => retryOrder(order.id)}
                         disabled={retryingId === order.id}
                         className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
                       >
                         {retryingId === order.id ? '...' : '🔄 Retry'}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -443,12 +458,14 @@ const AdminPanel: React.FC = () => {
               </div>
             ))}
 
-            <button
+            <Button
+              variant="ghost"
+              size="none"
               onClick={loadOrders}
               className="w-full py-2.5 rounded-xl border border-white/10 text-gray-400 text-xs font-bold hover:text-white hover:border-white/20 transition-all"
             >
               🔄 Yangilash
-            </button>
+            </Button>
           </div>
         )}
 
@@ -498,12 +515,14 @@ const AdminPanel: React.FC = () => {
               <p className="text-xs text-white font-mono">{new Date(botStatus.timestamp).toLocaleString('uz-UZ')}</p>
             </div>
 
-            <button
+            <Button
+              variant="ghost"
+              size="none"
               onClick={loadBotStatus}
               className="w-full py-2.5 rounded-xl border border-white/10 text-gray-400 text-xs font-bold hover:text-white hover:border-white/20 transition-all"
             >
               🔄 Yangilash
-            </button>
+            </Button>
           </div>
         )}
       </div>

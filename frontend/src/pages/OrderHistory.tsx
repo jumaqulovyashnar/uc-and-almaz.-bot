@@ -5,6 +5,7 @@ import { OrderCard } from '../components/shared/OrderCard';
 import type { Order } from '../types';
 import useStore from '../store/useStore';
 import { getOrders } from '../services/api';
+import Button from '../components/ui/Button';
 
 type FilterType = 'all' | 'completed' | 'processing' | 'failed' | 'pending';
 
@@ -49,20 +50,25 @@ export default function OrderHistory() {
       </h1>
 
       {/* Filter tabs */}
-      <div className="mt-5 flex gap-2 overflow-x-auto scrollbar-hide">
-        {filters.map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => setActiveFilter(filter.value)}
-            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ${
-              activeFilter === filter.value
-                ? 'bg-gradient-to-r from-cyber-purple to-cyber-cyan text-white shadow-lg'
-                : 'bg-cyber-card text-gray-400 border border-cyber-border hover:text-gray-300'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
+      <div className="mt-5 flex gap-2 overflow-x-auto no-scrollbar">
+        {filters.map((filter) => {
+          const active = activeFilter === filter.value;
+          return (
+            <Button
+              key={filter.value}
+              variant={active ? 'primary' : 'ghost'}
+              size="none"
+              onClick={() => setActiveFilter(filter.value)}
+              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ${
+                active
+                  ? 'shadow-lg text-white'
+                  : 'bg-cyber-card text-gray-400 border border-cyber-border hover:text-gray-300'
+              }`}
+            >
+              {filter.label}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Order list */}

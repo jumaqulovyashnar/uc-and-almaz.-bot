@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -34,7 +35,9 @@ const Modal: React.FC<ModalProps> = ({
         <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
 
         {/* Close button */}
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
         >
@@ -52,7 +55,7 @@ const Modal: React.FC<ModalProps> = ({
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
+        </Button>
 
         {/* Title */}
         {title && (

@@ -72,8 +72,10 @@ const FFBannerSlider: React.FC = () => {
         {/* Dot indicators */}
         <div className="flex gap-1.5 items-center mb-1">
           {FF_SLIDES.map((_, i) => (
-            <button
+            <Button
               key={i}
+              variant="ghost"
+              size="none"
               onClick={() => goTo(i)}
               className={`transition-all duration-300 rounded-full ${
                 i === current ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
@@ -249,14 +251,16 @@ const PurchaseFreeFire: React.FC = () => {
     <div className="min-h-screen bg-cyber-bg pb-36">
       {/* ── Banner Slider ── */}
       <div className="relative">
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={() => navigate('/home')}
           className="absolute top-3 left-3 z-20 bg-black/50 backdrop-blur-sm rounded-full p-2 hover:bg-black/70 transition-colors"
         >
           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-        </button>
+        </Button>
         <FFBannerSlider />
       </div>
 

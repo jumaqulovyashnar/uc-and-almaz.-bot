@@ -1,5 +1,6 @@
 import React from 'react';
 import useStore from '../../store/useStore';
+import Button from '../ui/Button';
 
 export const Header: React.FC = () => {
   const { theme, language, setTheme, setLanguage } = useStore();
@@ -24,16 +25,20 @@ export const Header: React.FC = () => {
       {/* Control panel (Theme & Language) */}
       <div className="flex items-center gap-2">
         {/* Language selector toggle */}
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={toggleLanguage}
           className="h-8 px-3 flex items-center justify-center rounded-full bg-cyber-card border border-cyber-border text-xs font-black tracking-wider text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
           title={language === 'uz' ? "Switch to English" : "O'zbek tiliga o'tish"}
         >
           {language === 'uz' ? 'UZ' : 'EN'}
-        </button>
+        </Button>
 
         {/* Theme switcher toggle */}
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={toggleTheme}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-card border border-cyber-border text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
           title={theme === 'dark' ? "Kunduzgi rejim" : "Tungi rejim"}
@@ -50,7 +55,7 @@ export const Header: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           )}
-        </button>
+        </Button>
       </div>
     </header>
   );

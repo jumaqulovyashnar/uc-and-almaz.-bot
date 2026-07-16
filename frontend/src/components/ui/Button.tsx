@@ -1,14 +1,17 @@
 import React from 'react';
 
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
+  size?: 'sm' | 'md' | 'lg' | 'none';
   loading?: boolean;
   disabled?: boolean;
-  children: React.ReactNode;
-  onClick?: () => void;
+  children?: React.ReactNode;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   fullWidth?: boolean;
+  icon?: React.ReactNode;
+  type?: 'button' | 'submit' | 'reset';
+  title?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,6 +23,9 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = '',
   fullWidth = false,
+  icon,
+  type = 'button',
+  title,
 }) => {
   const baseClasses =
     'rounded-xl font-semibold transition-all duration-200 inline-flex items-center justify-center gap-2';
@@ -31,20 +37,24 @@ const Button: React.FC<ButtonProps> = ({
     outline:
       'bg-transparent border border-cyber-purple text-cyber-purple hover:bg-cyber-purple/10',
     danger: 'bg-red-500 text-white hover:bg-red-600',
+    ghost: 'bg-transparent text-gray-400 hover:text-white',
   };
 
   const sizeClasses: Record<string, string> = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-5 py-2.5 text-base',
     lg: 'px-7 py-3.5 text-lg',
+    none: '',
   };
 
   const isDisabled = disabled || loading;
 
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={isDisabled}
+      title={title}
       className={`
         ${baseClasses}
         ${variantClasses[variant]}
@@ -76,6 +86,7 @@ const Button: React.FC<ButtonProps> = ({
           />
         </svg>
       )}
+      {!loading && icon && <span className="inline-flex items-center">{icon}</span>}
       {children}
     </button>
   );
@@ -83,4 +94,3 @@ const Button: React.FC<ButtonProps> = ({
 
 export { Button };
 export default Button;
-

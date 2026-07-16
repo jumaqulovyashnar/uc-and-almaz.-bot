@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useStore from '../../store/useStore';
+import Button from '../ui/Button';
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
@@ -60,8 +61,10 @@ export const BottomNav: React.FC = () => {
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
-            <button
+            <Button
               key={item.id}
+              variant="ghost"
+              size="none"
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center justify-center flex-1 py-1.5 transition-all duration-300 ${
                 active
@@ -76,7 +79,7 @@ export const BottomNav: React.FC = () => {
               {active && (
                 <span className="w-4 h-0.5 rounded-full bg-gradient-to-r from-cyber-purple to-cyber-cyan mt-0.5" />
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

@@ -185,8 +185,9 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8">
-      {/* Back button */}
-      <button
+      <Button
+        variant="ghost"
+        size="none"
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
       >
@@ -205,55 +206,49 @@ export default function Checkout() {
           <path d="m12 19-7-7 7-7" />
         </svg>
         <span className="text-sm font-semibold">{isUz ? 'Ortga' : 'Back'}</span>
-      </button>
+      </Button>
 
-      {/* Title */}
-      <h1 className="text-xl font-black text-white mt-4 tracking-wide uppercase">
-        {isUz ? 'Buyurtma' : 'Checkout'}
+      <h1 className="text-2xl font-black text-white mt-4 tracking-wide uppercase animate-fade-in">
+        {isUz ? "To'lov" : 'Checkout'}
       </h1>
 
-      {/* Error */}
       {error && (
         <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold">
           {error}
         </div>
       )}
 
-      {/* Order summary */}
-      <Card className="mt-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{gameIcon}</span>
-          <span className="text-white font-black tracking-wide">{gameName}</span>
-        </div>
+      <div className="mt-5 animate-fade-in">
+        <Card className="p-4 border-cyber-purple/30 bg-cyber-card/60">
+          <div className="flex justify-between items-start">
+            <div>
+              <span className="text-[10px] text-cyber-purple uppercase tracking-widest font-black">
+                {gameName}
+              </span>
+              <h3 className="text-base font-black text-white mt-0.5">
+                {selectedPackage?.name || '—'}
+              </h3>
+              <p className="text-xs text-gray-500 font-mono mt-1">
+                ID: {playerId || '—'}
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-lg font-black text-cyber-cyan">
+                {formatPrice(price)} so'm
+              </span>
+              <p className="text-[10px] text-gray-500 font-bold mt-1">
+                {isUz ? 'Avtomatik yetkazish' : 'Auto Delivery'}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-        <div className="h-px bg-cyber-border my-3" />
-
-        <div className="flex justify-between text-xs py-1.5 font-medium">
-          <span className="text-gray-400">{isUz ? 'Paket:' : 'Package:'}</span>
-          <span className="text-white font-bold">{selectedPackage?.name || '—'}</span>
-        </div>
-        <div className="flex justify-between text-xs py-1.5 font-medium">
-          <span className="text-gray-400">{isUz ? "O'yinchi ID:" : 'Player ID:'}</span>
-          <span className="text-white font-mono font-bold">{playerId || '—'}</span>
-        </div>
-        <div className="flex justify-between text-xs py-1.5 font-medium">
-          <span className="text-gray-400">Nickname:</span>
-          <span className="text-white font-bold">{playerNickname || '—'}</span>
-        </div>
-        <div className="flex justify-between text-xs py-1.5 font-medium">
-          <span className="text-gray-400">{isUz ? 'Narxi:' : 'Price:'}</span>
-          <span className="text-cyber-cyan font-bold">
-            {formatPrice(price)} so'm
-          </span>
-        </div>
-      </Card>
-
-      {/* Payment method selection */}
       <div className="mt-6 animate-fade-in">
-        <h2 className="text-md font-black text-white mb-3 tracking-wide uppercase">
-          {isUz ? "To'lov usulini tanlang" : 'Choose payment method'}
+        <h2 className="text-xs font-black text-white uppercase tracking-widest mb-3">
+          {isUz ? "To'lov usuli" : 'Payment Method'}
         </h2>
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <PaymentMethodCard
             method="uzcard"
             selected={paymentMethod === 'uzcard'}
@@ -267,9 +262,10 @@ export default function Checkout() {
         </div>
       </div>
 
-      {/* Terms checkbox */}
       <div className="mt-5 flex items-center gap-3 animate-fade-in">
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={() => setAgreed(!agreed)}
           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
             agreed
@@ -292,7 +288,7 @@ export default function Checkout() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
-        </button>
+        </Button>
         <span className="text-xs text-gray-400 font-medium">
           {isUz ? "Xizmat shartlariga roziman" : "I agree to the terms of service"}
         </span>

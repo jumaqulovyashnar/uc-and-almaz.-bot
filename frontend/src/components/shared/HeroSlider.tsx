@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Button from '../ui/Button';
 
 interface Slide {
   id: number;
@@ -77,8 +78,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({
       {/* Dot indicators */}
       <div className="absolute bottom-3 right-4 flex gap-1.5 items-center">
         {slides.map((_, i) => (
-          <button
+          <Button
             key={i}
+            variant="ghost"
+            size="none"
             onClick={() => handleDotClick(i)}
             className={`transition-all duration-300 rounded-full ${
               i === current ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'

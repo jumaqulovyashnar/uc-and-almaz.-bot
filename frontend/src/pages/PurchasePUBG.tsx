@@ -69,8 +69,10 @@ const PubgBannerSlider: React.FC = () => {
         {/* dot indicators */}
         <div className="flex gap-1.5 items-center mb-1">
           {PUBG_SLIDES.map((_, i) => (
-            <button
+            <Button
               key={i}
+              variant="ghost"
+              size="none"
               onClick={() => goTo(i)}
               className={`transition-all duration-300 rounded-full ${
                 i === current ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
@@ -352,14 +354,16 @@ const PurchasePUBG: React.FC = () => {
       {/* ── Banner Slider ─────────────────────────────────── */}
       <div className="relative">
         {/* Back button */}
-        <button
+        <Button
+          variant="ghost"
+          size="none"
           onClick={() => navigate('/home')}
           className="absolute top-3 left-3 z-20 bg-black/50 backdrop-blur-sm rounded-full p-2 hover:bg-black/70 transition-colors"
         >
           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-        </button>
+        </Button>
 
         <PubgBannerSlider />
       </div>
@@ -432,27 +436,29 @@ const PurchasePUBG: React.FC = () => {
 
         {/* Tab switcher: AVTO 24/7 | To'plamlar */}
         <div className="flex gap-2 mb-4">
-          <button
+          <Button
+            variant="ghost"
+            size="none"
             onClick={() => handleTabChange('avto')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 ${
               tabMode === 'avto'
-                ? 'bg-cyber-card border border-cyber-border text-yellow-400'
+                ? 'bg-cyber-card border border-cyber-border text-yellow-400 font-bold'
                 : 'bg-transparent border border-cyber-border/50 text-gray-500 hover:text-gray-300'
             }`}
           >
             <span className="text-yellow-400">✦</span>
             {isUz ? 'AVTO 24/7' : 'AUTO 24/7'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={tabMode === 'toplamlar' ? 'primary' : 'ghost'}
+            size="none"
             onClick={() => handleTabChange('toplamlar')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 ${
-              tabMode === 'toplamlar'
-                ? 'bg-gradient-to-r from-cyber-purple to-cyber-cyan text-white shadow-[0_0_12px_rgba(124,58,237,0.4)]'
-                : 'bg-transparent border border-cyber-border/50 text-gray-500 hover:text-gray-300'
+              tabMode !== 'toplamlar' ? 'border border-cyber-border/50 text-gray-500 hover:text-gray-300' : 'shadow-[0_0_12px_rgba(124,58,237,0.4)]'
             }`}
           >
             📦 {isUz ? "To'plamlar" : 'Bundles'}
-          </button>
+          </Button>
         </div>
 
         {/* ── AVTO mode: UC packages in 2-col grid ── */}

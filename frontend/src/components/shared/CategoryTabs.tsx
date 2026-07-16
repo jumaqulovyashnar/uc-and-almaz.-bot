@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CategoryType } from '../../types';
+import Button from '../ui/Button';
 
 interface Tab {
   id: CategoryType;
@@ -19,19 +20,18 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({ activeCategory, onCh
       {tabs.map((tab) => {
         const active = activeCategory === tab.id;
         return (
-          <button
+          <Button
             key={tab.id}
+            variant={active ? 'primary' : 'ghost'}
+            size="none"
             onClick={() => onChange(tab.id)}
             className={`
               flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300
-              ${active
-                ? 'bg-gradient-to-r from-cyber-purple to-cyber-cyan text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-              }
+              ${!active ? 'text-gray-400 hover:text-white' : 'shadow-md'}
             `}
           >
             {tab.label}
-          </button>
+          </Button>
         );
       })}
     </div>
