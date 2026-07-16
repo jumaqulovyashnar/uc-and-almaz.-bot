@@ -1,32 +1,12 @@
-import re
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field, model_validator
 from typing import Optional, Dict, Any
 from app.middleware.auth import get_current_user
 from app.services import order as order_service
 from app.services import package as package_service
 from app.workers.purchase_worker import add_purchase_job
+from app.models.order import CreateOrderInput, WebhookInput
 
 router = APIRouter()
-
-# Input validation schema
-class CreateOrderInput(BaseModel):
-    game: str = Field(..., pattern="^(pubg|freefire)$")
-    category: str = Field(..., min_length=1)
-    package_id: int = Field(..., gt=0)
-    player_id: str = Field(..., min_length=1, max_length=50)
-    player_nickname: Optional[str] = Field(None, max_length=100)
-    payment_method: str = Field(..., pattern="^(uzcard|humo|visa)$")
-
-    @model_validator(mode="after")
-    def validate_player_id(self) -> 'CreateOrderInput':
-        if self.game == "pubg":
-            if not re.match(r"^\d{5,12}$", self.player_id):
-                raise ValueError("PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak (M-n: 5123456789)")
-        elif self.game == "freefire":
-            if not re.match(r"^\d{8,12}$", self.player_id):
-                raise ValueError("Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak (M-n: 1234567890)")
-        return self
 
 @router.post("")
 async def create_order(
@@ -109,10 +89,7 @@ async def get_order_by_id(
         }
     }
 
-class WebhookInput(BaseModel):
-    order_id: int
-    amount: float
-    card_last4: str
+
 
 @router.post("/webhook")
 async def payment_webhook(payload: WebhookInput):
@@ -132,7 +109,7 @@ async def payment_webhook(payload: WebhookInput):
     # Let's assume update_status can handle it or we add a custom query
     # Since update_status currently expects "status", let's update it in the query directly or modify update_status
     # For now, let's use the query module directly if update_status doesn't support payment_status
-    from app.config.database import execute
+    from app.core.database import execute
     await execute("UPDATE orders SET payment_status = 'paid', updated_at = datetime('now') WHERE id = ?", payload.order_id)
 
     # Queue background task
@@ -147,3 +124,16 @@ async def payment_webhook(payload: WebhookInput):
     })
 
     return {"success": True, "message": "Payment confirmed and job queued"}
+
+@router.get("/stats/public")
+async def get_public_stats():
+    from app.core.database import query_row
+    pubg_res = await query_row("SELECT COALESCE(SUM(amount), 0) as total FROM orders WHERE status = 'completed' AND game = 'pubg'")
+    ff_res = await query_row("SELECT COALESCE(SUM(amount), 0) as total FROM orders WHERE status = 'completed' AND game = 'freefire'")
+    return {
+        "success": True,
+        "data": {
+            "total_uc": int(pubg_res["total"]) if pubg_res else 0,
+            "total_diamonds": int(ff_res["total"]) if ff_res else 0
+        }
+    }

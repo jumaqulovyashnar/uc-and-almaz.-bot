@@ -3,7 +3,7 @@ import logging
 import aiosqlite
 import os
 from typing import List, Dict, Any, Optional
-from app.config.env import env
+from app.core.env import env
 
 # Global connection instance
 db: Optional[aiosqlite.Connection] = None

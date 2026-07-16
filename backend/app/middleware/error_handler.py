@@ -3,7 +3,7 @@ import sqlite3
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from app.config.env import env
+from app.core.env import env
 
 class AppError(Exception):
     def __init__(self, message: str, status_code: int = 500):

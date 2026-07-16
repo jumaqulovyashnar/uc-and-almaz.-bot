@@ -1,6 +1,6 @@
 import logging
 from typing import List, Dict, Any, Optional
-from app.config.database import query, query_row
+from app.core.database import query, query_row
 
 async def get_by_game(game: str, category: Optional[str] = None) -> List[Dict[str, Any]]:
     try:

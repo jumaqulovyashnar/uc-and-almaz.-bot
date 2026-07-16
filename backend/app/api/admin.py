@@ -7,17 +7,14 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from app.middleware.auth import get_admin_user
 from app.services import order as order_service
-from app.config.database import query, test_connection
-from app.config.redis import test_redis_connection
+from app.core.database import query, test_connection
+from app.core.redis import test_redis_connection
 from app.workers.purchase_worker import add_purchase_job
+from app.models.admin import UpdateConfigInput, ReviewInput
 
 router = APIRouter(dependencies=[Depends(get_admin_user)])
 
 START_TIME = time.time()
-
-class UpdateConfigInput(BaseModel):
-    key: str
-    value: Any
 
 @router.get("/stats")
 async def get_stats():
@@ -97,8 +94,7 @@ async def retry_order(id: int):
         }
     }
 
-class ReviewInput(BaseModel):
-    reason: Optional[str] = None
+
 
 @router.post("/orders/{id}/approve")
 async def approve_order(id: int):

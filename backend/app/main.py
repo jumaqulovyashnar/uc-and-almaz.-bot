@@ -3,21 +3,21 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.config.env import env
-from app.config.database import init_db, close_db, test_connection
-from app.config.redis import init_redis, close_redis, test_redis_connection
+from app.core.env import env
+from app.core.database import init_db, close_db, test_connection
+from app.core.redis import init_redis, close_redis, test_redis_connection
 from app.services.price_sync import sync_package_prices
 from app.bot.telegram_bot import start_bot, bot, dp
 from app.workers.purchase_worker import start_purchase_worker
 from app.middleware.error_handler import register_error_handlers
 
 # Include routers
-from app.routes.auth import router as auth_router
-from app.routes.package import router as package_router
-from app.routes.order import router as order_router
-from app.routes.player import router as player_router
-from app.routes.admin import router as admin_router
-from app.routes.payments import router as payments_router
+from app.api.auth import router as auth_router
+from app.api.package import router as package_router
+from app.api.order import router as order_router
+from app.api.player import router as player_router
+from app.api.admin import router as admin_router
+from app.api.payments import router as payments_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -42,7 +42,7 @@ async def price_sync_scheduler():
             logging.error(f"[Server] Scheduled price sync failed: {err}")
 
 async def expire_orders_scheduler():
-    from app.config.database import execute
+    from app.core.database import execute
     while True:
         try:
             # Expire orders older than 30 minutes

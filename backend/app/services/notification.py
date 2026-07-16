@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any, Optional
 from aiogram.types import FSInputFile
-from app.config.env import env
+from app.core.env import env
 
 # We import the bot client from the bot module
 # Note: we need to make sure to avoid circular imports.

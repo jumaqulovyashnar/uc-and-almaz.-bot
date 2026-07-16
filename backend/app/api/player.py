@@ -1,23 +1,8 @@
-import re
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field, model_validator
 from app.services.automation import verify_freefire_id, verify_pubg_id
+from app.models.player import VerifyPlayerInput
 
 router = APIRouter()
-
-class VerifyPlayerInput(BaseModel):
-    game: str = Field(..., pattern="^(pubg|freefire)$")
-    player_id: str = Field(..., min_length=1, max_length=50)
-
-    @model_validator(mode="after")
-    def validate_player_id(self) -> 'VerifyPlayerInput':
-        if self.game == "pubg":
-            if not re.match(r"^\d{5,12}$", self.player_id):
-                raise ValueError("PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak")
-        elif self.game == "freefire":
-            if not re.match(r"^\d{8,12}$", self.player_id):
-                raise ValueError("Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak")
-        return self
 
 @router.post("")
 async def verify_player(payload: VerifyPlayerInput):

@@ -171,3 +171,21 @@ export async function getOrders(): Promise<Order[]> {
     return [];
   }
 }
+
+/**
+ * Get public stats for total UC and Diamonds sold
+ */
+export async function getPublicStats(): Promise<{ total_uc: number; total_diamonds: number }> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/stats/public`);
+    if (!res.ok) throw new Error('Failed to fetch public stats');
+    const json = await res.json();
+    if (json.success && json.data) {
+      return json.data;
+    }
+    return { total_uc: 0, total_diamonds: 0 };
+  } catch (error) {
+    console.error('[API] getPublicStats error:', error);
+    return { total_uc: 0, total_diamonds: 0 };
+  }
+}

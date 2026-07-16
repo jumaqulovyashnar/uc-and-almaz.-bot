@@ -12,6 +12,8 @@ interface TelegramUser {
   first_name: string;
   last_name?: string;
   username?: string;
+  total_spent?: number;
+  order_count?: number;
 }
 
 interface StoreState {

@@ -15,4 +15,6 @@ __pycache__/
 venv/
 
 cyberpay.db
+cyberpay.db-shm
+cyberpay.db-wal
 *.db-journal

@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.enums import ParseMode
-from app.config.env import env
+from app.core.env import env
 
 if not env.BOT_TOKEN:
     raise ValueError("BOT_TOKEN is not defined in environment variables")

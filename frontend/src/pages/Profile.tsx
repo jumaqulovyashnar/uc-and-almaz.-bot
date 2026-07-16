@@ -89,13 +89,17 @@ export default function Profile() {
           <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
             {isUz ? 'Buyurtmalar' : 'Orders'}
           </p>
-          <p className="text-3xl font-black text-cyber-purple mt-1">0</p>
+          <p className="text-3xl font-black text-cyber-purple mt-1">
+            {telegramUser?.order_count ?? 0}
+          </p>
         </div>
         <div className="bg-cyber-card border border-cyber-border rounded-2xl p-4 text-center">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
             {isUz ? 'Sarflangan' : 'Spent'}
           </p>
-          <p className="text-xl font-black text-cyber-cyan mt-1">0</p>
+          <p className="text-xl font-black text-cyber-cyan mt-1">
+            {telegramUser?.total_spent ? telegramUser.total_spent.toLocaleString('uz-UZ') : '0'}
+          </p>
           <p className="text-[10px] text-gray-500 font-semibold">so'm</p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Any, Optional, List
-from app.config.database import query, query_row, execute
+from app.core.database import query, query_row, execute
 
 async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
     try:

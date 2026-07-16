@@ -4,7 +4,7 @@ import logging
 import datetime
 import time
 from typing import Dict, Any, Optional
-from app.config.redis import get_redis
+from app.core.redis import get_redis
 from app.services import order as order_service
 from app.services import notification as notification_service
 from app.services import automation as automation_service
@@ -31,7 +31,7 @@ async def add_purchase_job(order_id: int, data: Dict[str, Any]) -> bool:
 
 import httpx
 import os
-from app.config.env import env
+from app.core.env import env
 
 async def call_provider_api(game: str, player_id: str, provider_service_id: str, order_id: int) -> Dict[str, Any]:
     api_key = env.PROVIDER_API_KEY
@@ -89,7 +89,7 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
         await order_service.update_status(order_id, "processing")
 
         # 2. Fetch package details to get provider_service_id
-        from app.config.database import query_row, execute
+        from app.core.database import query_row, execute
         order_db = await query_row("SELECT package_id FROM orders WHERE id = ?", order_id)
         provider_service_id = None
         if order_db and order_db["package_id"]:

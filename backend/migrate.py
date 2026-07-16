@@ -4,10 +4,10 @@ import logging
 import os
 import sys
 
-# Add backend to path so app.config can be found
+# Add backend to path so app.core can be found
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.config.database import init_db, close_db, get_db, DB_PATH
+from app.core.database import init_db, close_db, get_db, DB_PATH
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 

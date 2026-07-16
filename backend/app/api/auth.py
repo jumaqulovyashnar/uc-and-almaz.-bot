@@ -2,12 +2,10 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from app.middleware.auth import validate_telegram_data
 from app.services import user as user_service
-from app.config.env import env
+from app.core.env import env
+from app.models.auth import TelegramAuthInput
 
 router = APIRouter()
-
-class TelegramAuthInput(BaseModel):
-    initData: str
 
 @router.post("/telegram")
 async def telegram_auth(payload: TelegramAuthInput):

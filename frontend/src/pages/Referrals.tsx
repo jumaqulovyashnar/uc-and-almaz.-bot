@@ -4,9 +4,15 @@ import BottomNav from '../components/layout/BottomNav';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
+import useStore from '../store/useStore';
+
 const Referrals: React.FC = () => {
   const [copied, setCopied] = useState(false);
-  const referralLink = 'https://t.me/top_DonateUzbot?start=6709001451';
+  const { telegramUser } = useStore();
+  
+  const referralLink = telegramUser 
+    ? `https://t.me/top_DonateUzbot?start=${telegramUser.id}`
+    : 'https://t.me/top_DonateUzbot';
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);

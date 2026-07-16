@@ -80,6 +80,8 @@ function AppContent() {
                 first_name: user.first_name,
                 last_name: user.last_name,
                 username: user.username,
+                total_spent: user.total_spent,
+                order_count: user.order_count,
               });
               return;
             }

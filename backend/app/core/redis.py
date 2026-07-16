@@ -2,7 +2,7 @@ import logging
 import fakeredis.aioredis as fakeredis_aio
 import redis.asyncio as aioredis
 from typing import Optional, Union
-from app.config.env import env
+from app.core.env import env
 
 # Global Redis client
 redis: Optional[Union[aioredis.Redis, fakeredis_aio.FakeRedis]] = None

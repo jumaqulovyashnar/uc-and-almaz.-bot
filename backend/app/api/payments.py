@@ -5,8 +5,8 @@ import logging
 from fastapi import APIRouter, Request, Header, HTTPException, Form
 from fastapi.responses import JSONResponse
 from typing import Optional, Dict, Any
-from app.config.env import env
-from app.config.database import query_row, execute
+from app.core.env import env
+from app.core.database import query_row, execute
 from app.workers.purchase_worker import add_purchase_job
 
 router = APIRouter()

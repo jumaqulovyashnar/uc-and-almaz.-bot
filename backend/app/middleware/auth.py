@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Optional, Dict, Any
 from fastapi import Header, Depends, HTTPException, status
-from app.config.env import env
+from app.core.env import env
 from app.services import user as user_service
 
 def validate_telegram_data(init_data: str) -> Optional[Dict[str, Any]]:

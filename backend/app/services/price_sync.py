@@ -1,7 +1,7 @@
 import logging
 import httpx
 from typing import Dict, Any
-from app.config.database import query, execute
+from app.core.database import query, execute
 
 async def get_usd_exchange_rate() -> float:
     try:

@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, Dict, Any
-from app.config.database import query_row, query, execute
+from app.core.database import query_row, query, execute
 
 async def find_by_telegram_id(telegram_id: int) -> Optional[Dict[str, Any]]:
     try:
