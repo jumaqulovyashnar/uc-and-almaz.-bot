@@ -119,7 +119,7 @@ async def migrate() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 referrer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 referred_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                order_id INTEGER UNIQUE NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
                 amount REAL NOT NULL,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
