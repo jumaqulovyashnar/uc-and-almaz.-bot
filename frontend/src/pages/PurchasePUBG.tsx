@@ -192,7 +192,7 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
   return (
     <div
       onClick={() => onClick(pkg)}
-      className={`relative overflow-hidden rounded-2xl p-3.5 cursor-pointer border transition-all duration-200 active:scale-95 select-none flex flex-col justify-between h-[88px] ${
+      className={`relative overflow-hidden rounded-2xl p-3.5 cursor-pointer border transition-all duration-200 active:scale-95 select-none flex flex-col justify-between h-[113px] ${
         isSelected
           ? 'bg-cyber-purple/15 border-cyber-purple shadow-[0_0_14px_rgba(124,58,237,0.3)]'
           : 'bg-cyber-card border-cyber-border hover:border-cyber-purple/40'
