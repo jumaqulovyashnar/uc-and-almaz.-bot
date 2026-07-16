@@ -14,6 +14,15 @@ async def get_my_referrals(current_user: Dict[str, Any] = Depends(get_current_us
     # Generate referral link
     referral_link = f"https://t.me/{env.BOT_USERNAME}?start={telegram_id}"
     
+    # Query all referred users
+    referred_users = await query("""
+        SELECT u.id, u.first_name, u.telegram_id, u.created_at as joinedAt
+        FROM users u
+        WHERE u.referred_by = ?
+        ORDER BY u.created_at DESC
+        LIMIT 20
+    """, user_db_id)
+    
     # Query recent earnings
     recent_earnings = await query("""
         SELECT re.amount, re.created_at as date, u.first_name as fromUser
@@ -30,6 +39,15 @@ async def get_my_referrals(current_user: Dict[str, Any] = Depends(get_current_us
             "referralLink": referral_link,
             "referralsCount": current_user.get("referrals_count", 0),
             "referralBalance": current_user.get("referral_balance", 0.0),
+            "referredUsers": [
+                {
+                    "id": row["id"],
+                    "firstName": row["first_name"],
+                    "telegramId": row["telegram_id"],
+                    "joinedAt": row["joinedAt"]
+                }
+                for row in referred_users
+            ],
             "recentEarnings": [
                 {
                     "fromUser": row["fromUser"],

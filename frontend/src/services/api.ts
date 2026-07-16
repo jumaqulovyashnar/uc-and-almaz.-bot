@@ -204,10 +204,18 @@ export interface ReferralEarning {
   date: string;
 }
 
+export interface ReferredUser {
+  id: number;
+  firstName: string;
+  telegramId: number;
+  joinedAt: string;
+}
+
 export interface ReferralData {
   referralLink: string;
   referralsCount: number;
   referralBalance: number;
+  referredUsers: ReferredUser[];
   recentEarnings: ReferralEarning[];
 }
 

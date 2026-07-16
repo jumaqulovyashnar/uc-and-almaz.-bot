@@ -122,6 +122,35 @@ const Referrals: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Referred Users */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Taklif qilgan odamlar</CardTitle>
+            <CardDescription>Sizning havolangiz orqali qo'shilgan foydalanuvchilar:</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-5 h-5 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : data && data.referredUsers && data.referredUsers.length > 0 ? (
+              <div className="space-y-3">
+                {data.referredUsers.map((user) => (
+                  <div key={user.id} className="flex justify-between items-center text-xs border-b border-cyber-border/40 pb-2 last:border-b-0 last:pb-0">
+                    <div>
+                      <p className="text-white font-bold">{user.firstName || 'Foydalanuvchi'}</p>
+                      <p className="text-gray-500 text-[10px] mt-0.5">ID: {user.telegramId}</p>
+                    </div>
+                    <span className="text-gray-400 text-[10px]">{new Date(user.joinedAt).toLocaleDateString('uz-UZ')}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 text-center py-4">Hozircha taklif qilgan odamlar yo'q</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Recent Earnings */}
         <Card className="mb-6">
           <CardHeader>
