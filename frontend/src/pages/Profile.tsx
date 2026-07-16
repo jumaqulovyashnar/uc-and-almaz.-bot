@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { BottomNav } from '../components/layout/BottomNav';
 import useStore from '../store/useStore';
+import { Crown, Check } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 
 const ADMIN_ID = 6709001451;
@@ -77,8 +78,8 @@ export default function Profile() {
         <h2 className="text-xl font-black text-white mt-3 tracking-wide">{firstName}</h2>
         {username && <p className="text-xs text-gray-400 font-mono mt-0.5">{username}</p>}
         {isAdmin && (
-          <span className="mt-2 text-[10px] font-black px-3 py-1 rounded-full bg-cyber-purple/20 border border-cyber-purple/40 text-cyber-purple tracking-widest uppercase">
-            👑 Admin
+          <span className="mt-2 text-[10px] font-black px-3 py-1 rounded-full bg-cyber-purple/20 border border-cyber-purple/40 text-cyber-purple tracking-widest uppercase inline-flex items-center gap-1">
+            <Crown className="w-3 h-3 text-cyber-purple" /> Admin
           </span>
         )}
       </div>
@@ -174,7 +175,7 @@ export default function Profile() {
                 isUz ? 'Eng arzon va kafolatlangan narxlar' : 'Cheapest guaranteed prices',
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2">
-                  <span className="text-cyber-cyan">✓</span> {item}
+                  <Check className="w-3.5 h-3.5 text-cyber-cyan flex-shrink-0" /> {item}
                 </li>
               ))}
             </ul>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import Button from '../components/ui/Button';
+import { Gamepad2, Flame, Ban, BarChart3, ClipboardList, Settings, AlertTriangle, Frown, CheckCircle2, XCircle, RotateCw, Search } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 const ADMIN_ID = 6709001451;
@@ -57,16 +58,16 @@ const statusColor = (s: string) => {
 
 const statusLabel = (s: string) => {
   switch (s) {
-    case 'completed':  return "Bajarildi ✓";
-    case 'pending':    return "Kutilmoqda ⏳";
-    case 'processing': return "Jarayonda 🔄";
-    case 'failed':     return "Xato ✗";
-    case 'awaiting_admin_review': return "Tekshiruv 🔍";
+    case 'completed':  return "Bajarildi";
+    case 'pending':    return "Kutilmoqda";
+    case 'processing': return "Jarayonda";
+    case 'failed':     return "Xato";
+    case 'awaiting_admin_review': return "Tekshiruv";
     default:           return s;
   }
 };
 
-const gameIcon = (g: string) => g === 'pubg' ? '🎮' : '🔥';
+const gameIcon = (g: string) => g === 'pubg' ? <Gamepad2 className="w-4 h-4 text-cyber-purple inline-block" /> : <Flame className="w-4 h-4 text-orange-500 inline-block" />;
 
 function formatUptime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -221,7 +222,7 @@ const AdminPanel: React.FC = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-[#0d0d1a] flex flex-col items-center justify-center px-6 text-center">
-        <span className="text-5xl mb-4">🚫</span>
+        <Ban className="w-12 h-12 text-red-500 mb-4 animate-bounce" />
         <h2 className="text-xl font-black text-white mb-2">Ruxsat yo'q</h2>
         <p className="text-sm text-gray-400 mb-6">Bu sahifaga faqat admin kirishi mumkin</p>
         <Button
@@ -272,9 +273,9 @@ const AdminPanel: React.FC = () => {
                 : ''
             }`}
           >
-            {t === 'stats'  ? '📊 Stats'  : ''}
-            {t === 'orders' ? '📋 Buyurtmalar' : ''}
-            {t === 'system' ? '⚙️ Tizim' : ''}
+            {t === 'stats'  && <span className="flex items-center justify-center gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Stats</span>}
+            {t === 'orders' && <span className="flex items-center justify-center gap-1.5"><ClipboardList className="w-3.5 h-3.5" /> Buyurtmalar</span>}
+            {t === 'system' && <span className="flex items-center justify-center gap-1.5"><Settings className="w-3.5 h-3.5" /> Tizim</span>}
           </Button>
         ))}
       </div>
@@ -283,7 +284,10 @@ const AdminPanel: React.FC = () => {
         {/* Error */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-4 text-red-400 text-xs font-semibold">
-            ⚠️ {error}
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
           </div>
         )}
 
@@ -344,9 +348,10 @@ const AdminPanel: React.FC = () => {
               variant="ghost"
               size="none"
               onClick={loadStats}
+              icon={<RotateCw className="w-3.5 h-3.5" />}
               className="w-full py-2.5 rounded-xl border border-white/10 text-gray-400 text-xs font-bold hover:text-white hover:border-white/20 transition-all"
             >
-              🔄 Yangilash
+              Yangilash
             </Button>
           </div>
         )}
@@ -368,19 +373,19 @@ const AdminPanel: React.FC = () => {
                       : 'border-white/10 text-gray-400 hover:text-white'
                   }`}
                 >
-                  {s === ''           ? '📋 Barchasi' : ''}
-                  {s === 'awaiting_admin_review' ? '🔍 Tekshiruv' : ''}
-                  {s === 'pending'    ? '⏳ Kutilmoqda' : ''}
-                  {s === 'processing' ? '🔄 Jarayonda' : ''}
-                  {s === 'completed'  ? '✅ Bajarildi' : ''}
-                  {s === 'failed'     ? '❌ Xato' : ''}
+                  {s === '' && <span className="flex items-center gap-1"><ClipboardList className="w-3 h-3" /> Barchasi</span>}
+                  {s === 'awaiting_admin_review' && <span className="flex items-center gap-1"><Search className="w-3 h-3 text-purple-400" /> Tekshiruv</span>}
+                  {s === 'pending' && <span className="flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-yellow-400" /> Kutilmoqda</span>}
+                  {s === 'processing' && <span className="flex items-center gap-1"><RotateCw className="w-3 h-3 text-blue-400 animate-spin" /> Jarayonda</span>}
+                  {s === 'completed' && <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-400" /> Bajarildi</span>}
+                  {s === 'failed' && <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-red-400" /> Xato</span>}
                 </Button>
               ))}
             </div>
 
             {orders.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16">
-                <span className="text-4xl mb-3 select-none">😔</span>
+                <Frown className="w-10 h-10 text-gray-500 mb-3" />
                 <span className="text-gray-500 text-sm font-medium">
                   {isUz ? 'Buyurtmalar topilmadi' : 'No orders found'}
                 </span>
@@ -420,17 +425,19 @@ const AdminPanel: React.FC = () => {
                           variant="ghost"
                           size="none"
                           onClick={() => approveOrder(order.id)}
+                          icon={<CheckCircle2 className="w-3.5 h-3.5 text-green-400" />}
                           className="px-3 py-1 bg-green-500/20 border border-green-500/30 text-green-400 text-[11px] font-bold rounded-lg hover:bg-green-500/30 transition-all"
                         >
-                          ✅ Tasdiqlash
+                          Tasdiqlash
                         </Button>
                         <Button
                           variant="ghost"
                           size="none"
                           onClick={() => rejectOrder(order.id)}
+                          icon={<XCircle className="w-3.5 h-3.5 text-red-400" />}
                           className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all"
                         >
-                          ❌ Rad etish
+                          Rad etish
                         </Button>
                       </>
                     )}
@@ -442,7 +449,7 @@ const AdminPanel: React.FC = () => {
                         disabled={retryingId === order.id}
                         className="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
                       >
-                        {retryingId === order.id ? '...' : '🔄 Retry'}
+                        {retryingId === order.id ? '...' : <span className="flex items-center gap-1"><RotateCw className="w-3 h-3" /> Retry</span>}
                       </Button>
                     )}
                   </div>
@@ -468,9 +475,10 @@ const AdminPanel: React.FC = () => {
               variant="ghost"
               size="none"
               onClick={loadOrders}
+              icon={<RotateCw className="w-3.5 h-3.5" />}
               className="w-full py-2.5 rounded-xl border border-white/10 text-gray-400 text-xs font-bold hover:text-white hover:border-white/20 transition-all"
             >
-              🔄 Yangilash
+              Yangilash
             </Button>
           </div>
         )}
@@ -525,9 +533,10 @@ const AdminPanel: React.FC = () => {
               variant="ghost"
               size="none"
               onClick={loadBotStatus}
+              icon={<RotateCw className="w-3.5 h-3.5" />}
               className="w-full py-2.5 rounded-xl border border-white/10 text-gray-400 text-xs font-bold hover:text-white hover:border-white/20 transition-all"
             >
-              🔄 Yangilash
+              Yangilash
             </Button>
           </div>
         )}

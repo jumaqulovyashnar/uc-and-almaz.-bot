@@ -3,6 +3,7 @@ import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { Check, Copy } from 'lucide-react';
 
 import useStore from '../store/useStore';
 
@@ -79,9 +80,10 @@ const Referrals: React.FC = () => {
                 className={`whitespace-nowrap py-1 px-3 min-h-[32px] text-xs font-semibold transition-all duration-300 ${
                   copied ? '!bg-green-600 !text-white hover:!bg-green-600' : ''
                 }`}
+                icon={copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 onClick={handleCopy}
               >
-                {copied ? 'Nusxalandi! ✓' : 'Nusxa olish'}
+                {copied ? 'Nusxalandi!' : 'Nusxa olish'}
               </Button>
 
             </div>

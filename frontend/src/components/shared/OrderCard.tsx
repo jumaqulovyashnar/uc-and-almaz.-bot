@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Gamepad2, Flame } from 'lucide-react';
 import type { Order } from '../../types';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
@@ -39,7 +40,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
             isPubg ? 'bg-purple-900/30 text-cyber-purple border border-purple-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
           }`}>
-            {isPubg ? '🎮' : '🔥'}
+            {isPubg ? <Gamepad2 className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
           </div>
           <div>
             <h4 className="text-sm font-bold text-white uppercase tracking-wider">

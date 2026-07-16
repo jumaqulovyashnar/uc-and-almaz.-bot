@@ -6,6 +6,7 @@ import type { Order } from '../types';
 import useStore from '../store/useStore';
 import { getOrders } from '../services/api';
 import Button from '../components/ui/Button';
+import { Frown } from 'lucide-react';
 
 type FilterType = 'all' | 'completed' | 'processing' | 'failed' | 'pending';
 
@@ -73,11 +74,11 @@ export default function OrderHistory() {
 
       {/* Order list */}
       {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="w-6 h-6 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+        <div className="flex justify-center items-center py-20">
+          <div className="w-8 h-8 border-4 border-cyber-purple border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredOrders.length > 0 ? (
-        <div className="mt-5 flex flex-col gap-3">
+        <div className="mt-6 flex flex-col gap-1">
           {filteredOrders.map((order, index) => (
             <div
               key={order.id}
@@ -90,7 +91,7 @@ export default function OrderHistory() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
-          <span className="text-4xl mb-3">😔</span>
+          <Frown className="w-10 h-10 text-gray-500 mb-3" />
           <span className="text-gray-500 text-sm font-medium">
             {isUz ? 'Buyurtmalar topilmadi' : 'No orders found'}
           </span>

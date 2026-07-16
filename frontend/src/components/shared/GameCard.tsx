@@ -1,4 +1,5 @@
 import React from 'react';
+import { Gamepad2, Flame } from 'lucide-react';
 import py12Img from '../../assets/py12.jpg';
 import fr12Img from '../../assets/fr12.jpg';
 
@@ -16,43 +17,30 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
   return (
     <div
       onClick={onClick}
-      className="relative overflow-hidden rounded-3xl cursor-pointer active:scale-[0.97] transition-transform duration-200 select-none"
-      style={{ height: '140px' }}
+      className="relative overflow-hidden rounded-2xl border border-cyber-border cursor-pointer select-none bg-black transition-all duration-300 card-hover"
+      style={{
+        boxShadow: isPubg
+          ? '0 0 15px rgba(124,58,237,0.15)'
+          : '0 0 15px rgba(255,107,0,0.15)',
+        height: '140px',
+      }}
     >
-      {/* Background image */}
+      {/* Game Image Background */}
       <img
         src={bgImage}
-        alt={isPubg ? 'PUBG' : 'Free Fire'}
-        className="absolute inset-0 w-full h-full"
-        style={{ objectFit: 'cover', objectPosition: 'center top' }}
-        draggable={false}
+        alt={isPubg ? 'PUBG MOBILE' : 'FREE FIRE'}
+        className="absolute inset-0 w-full h-full object-cover opacity-75"
       />
+      {/* Dark overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent z-10" />
 
-      {/* Dark gradient overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: isPubg
-            ? 'linear-gradient(135deg, rgba(10,5,30,0.82) 0%, rgba(80,20,120,0.45) 60%, rgba(0,0,0,0.1) 100%)'
-            : 'linear-gradient(135deg, rgba(20,8,0,0.85) 0%, rgba(160,60,0,0.45) 60%, rgba(0,0,0,0.1) 100%)',
-        }}
-      />
-
-      {/* Shimmer effect on hover */}
-      <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.07) 50%, transparent 60%)',
-        }}
-      />
-
-      {/* Content */}
-      <div className="absolute inset-0 flex items-center justify-between px-5">
+      <div className="absolute inset-0 flex items-center justify-between px-5 z-20">
         {/* Left side */}
         <div>
           {/* Badge */}
           <div className="flex items-center gap-1.5 mb-2">
             <span
-              className="text-[10px] font-black px-2 py-0.5 rounded-full tracking-widest uppercase"
+              className="text-[10px] font-black px-2 py-0.5 rounded-full tracking-widest uppercase inline-flex items-center gap-1"
               style={{
                 background: isPubg
                   ? 'rgba(180,80,255,0.25)'
@@ -63,7 +51,17 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
                 color: isPubg ? '#d580ff' : '#ffaa40',
               }}
             >
-              {isPubg ? '🎮 PUBG MOBILE' : '🔥 FREE FIRE'}
+              {isPubg ? (
+                <>
+                  <Gamepad2 className="w-3 h-3" />
+                  PUBG MOBILE
+                </>
+              ) : (
+                <>
+                  <Flame className="w-3 h-3" />
+                  FREE FIRE
+                </>
+              )}
             </span>
           </div>
 

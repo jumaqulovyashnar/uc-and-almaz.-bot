@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Copy, AlertTriangle, Check } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
 import { createOrder, getOrders } from '../services/api';
@@ -102,7 +103,6 @@ export default function Checkout() {
   };
 
   const price = selectedPackage?.price || 0;
-  const gameIcon = selectedGame === 'freefire' ? '💎' : '🎮';
   const gameName = selectedGame === 'freefire' ? 'FREE FIRE' : 'PUBG MOBILE';
 
   if (createdOrder) {
@@ -133,7 +133,7 @@ export default function Checkout() {
             <span className="text-xl font-mono font-bold tracking-widest text-white">
               {PAYMENT_CARDS[paymentMethod || 'uzcard']}
             </span>
-            <span className="text-xl">📋</span>
+            <Copy className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
           </div>
           
           <p className="text-xs text-gray-400 mt-3 font-semibold">
@@ -142,7 +142,7 @@ export default function Checkout() {
 
           <div className="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
             <p className="text-xs text-red-400 font-bold mb-2 uppercase tracking-wide flex items-center gap-2">
-              <span className="animate-pulse">⚠️</span> {isUz ? "Muhim!" : "Important!"}
+              <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse flex-shrink-0" /> {isUz ? "Muhim!" : "Important!"}
             </p>
             <p className="text-sm text-white/90">
               {isUz ? "Ilovadan (Click, Payme, Uzum) to'lov qilayotganda izoh (kommentariya) qismiga faqatgina quydagini yozing:" : "When paying via your app (Click, Payme, Uzum) write exactly this in the comment:"}
@@ -154,7 +154,7 @@ export default function Checkout() {
               <span className="text-2xl font-black text-red-400 font-mono tracking-widest">
                 #{createdOrder.id}
               </span>
-              <span className="text-xl">📋</span>
+              <Copy className="w-5 h-5 text-red-400 hover:text-red-300 transition-colors" />
             </div>
             <p className="text-[10px] text-red-400 mt-2 font-semibold">
               {isUz ? "Aks holda to'lov avtomatik qabul qilinmaydi va pulingiz qaytarilmaydi!" : "Otherwise your payment will not be processed automatically and money will not be refunded!"}
@@ -171,9 +171,10 @@ export default function Checkout() {
               clearCart();
               navigate('/orders');
             }}
+            icon={<Check className="w-4 h-4" />}
             className="font-black text-sm py-3.5 tracking-wider"
           >
-            {isUz ? "Men to'lov qildim ✅" : 'I have paid ✅'}
+            {isUz ? "Men to'lov qildim" : 'I have paid'}
           </Button>
         </div>
         <p className="text-center text-xs text-gray-500 mt-4">

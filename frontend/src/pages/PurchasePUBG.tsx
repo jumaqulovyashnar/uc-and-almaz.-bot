@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Gamepad2, CheckCircle2, AlertTriangle, Package, Sparkles, ShoppingCart } from 'lucide-react';
+import CurrencyIcon from '../components/icons/CurrencyIcon';
 import { pubgPackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
@@ -64,7 +66,10 @@ const PubgBannerSlider: React.FC = () => {
           <h1 className="text-2xl font-black text-white tracking-wider drop-shadow-lg">
             PUBG MOBILE
           </h1>
-          <p className="text-xs text-gray-300 mt-0.5">🎮 UC & To'plamlar</p>
+          <p className="text-xs text-gray-300 mt-0.5 flex items-center gap-1">
+            <Gamepad2 className="w-3.5 h-3.5 text-cyber-purple" />
+            UC & To'plamlar
+          </p>
         </div>
         {/* dot indicators */}
         <div className="flex gap-1.5 items-center mb-1">
@@ -136,7 +141,11 @@ const ToplamlarCard: React.FC<ToplamlarCardProps> = ({ pkg, isSelected, onClick 
     >
       {/* Icon box */}
       <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${iconBg} flex items-center justify-center flex-shrink-0 shadow-md`}>
-        <span className="text-xl">{pkg.image ?? '📦'}</span>
+        {pkg.image ? (
+          <span className="text-xl">{pkg.image}</span>
+        ) : (
+          <Package className="w-5 h-5 text-white" />
+        )}
       </div>
 
       {/* Text */}
@@ -189,7 +198,9 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
           : 'bg-cyber-card border-cyber-border hover:border-cyber-purple/40'
       }`}
     >
-      <span className="absolute top-2 right-2 text-base opacity-20">🪙</span>
+      <div className="absolute top-2 right-2 opacity-20">
+        <CurrencyIcon type="uc" className="w-5 h-5" />
+      </div>
       <div>
         <p className="text-base font-black text-white">{pkg.amount} UC</p>
       </div>
@@ -409,15 +420,21 @@ const PurchasePUBG: React.FC = () => {
 
         {isVerified && playerNickname && (
           <div className="mt-2 bg-green-950/20 border border-green-500/20 rounded-xl px-3 py-2 animate-slide-up">
-            <p className="text-xs text-green-400 font-semibold">✅ {playerNickname}</p>
+            <p className="text-xs text-green-400 font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+              {playerNickname}
+            </p>
           </div>
         )}
         {error && (
           <div className="mt-2 bg-yellow-950/20 border border-yellow-500/20 rounded-xl px-3 py-2 animate-slide-up">
-            <p className="text-xs text-yellow-400 font-semibold">
-              ⚠️ {isUz 
-                ? "Ismni avtomatik aniqlash imkoni bo'lmadi. ID to'g'riligiga ishonchingiz komil bo'lsa, xaridni davom ettirishingiz mumkin." 
-                : "Unable to retrieve name. If you are sure your ID is correct, you can proceed with the purchase."}
+            <p className="text-xs text-yellow-400 font-semibold flex items-start gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <span>
+                {isUz 
+                  ? "Ismni avtomatik aniqlash imkoni bo'lmadi. ID to'g'riligiga ishonchingiz komil bo'lsa, xaridni davom ettirishingiz mumkin." 
+                  : "Unable to retrieve name. If you are sure your ID is correct, you can proceed with the purchase."}
+              </span>
             </p>
           </div>
         )}
@@ -446,7 +463,7 @@ const PurchasePUBG: React.FC = () => {
                 : 'bg-transparent border border-cyber-border/50 text-gray-500 hover:text-gray-300'
             }`}
           >
-            <span className="text-yellow-400">✦</span>
+            <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
             {isUz ? 'AVTO 24/7' : 'AUTO 24/7'}
           </Button>
           <Button
@@ -457,7 +474,8 @@ const PurchasePUBG: React.FC = () => {
               tabMode !== 'toplamlar' ? 'border border-cyber-border/50 text-gray-500 hover:text-gray-300' : 'shadow-[0_0_12px_rgba(124,58,237,0.4)]'
             }`}
           >
-            📦 {isUz ? "To'plamlar" : 'Bundles'}
+            <Package className="w-3.5 h-3.5" />
+            {isUz ? "To'plamlar" : 'Bundles'}
           </Button>
         </div>
 
@@ -514,9 +532,10 @@ const PurchasePUBG: React.FC = () => {
             fullWidth
             disabled={!selectedPackage || !playerId}
             onClick={() => navigate('/checkout')}
+            icon={<ShoppingCart className="w-4 h-4" />}
             className="font-black text-sm uppercase py-4 rounded-2xl tracking-wider"
           >
-            {isUz ? 'SOTIB OLISH 🛒' : 'BUY NOW 🛒'}
+            {isUz ? 'SOTIB OLISH' : 'BUY NOW'}
           </Button>
         </div>
       </div>

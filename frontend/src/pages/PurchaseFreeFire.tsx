@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Gem, CheckCircle2, AlertTriangle, ShoppingCart } from 'lucide-react';
 import { CategoryTabs } from '../components/shared/CategoryTabs';
 import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
@@ -67,7 +68,10 @@ const FFBannerSlider: React.FC = () => {
           <h1 className="text-2xl font-black text-white tracking-wider drop-shadow-lg">
             FREE FIRE
           </h1>
-          <p className="text-xs text-gray-300 mt-0.5">💎 Olmos & Propuski</p>
+          <p className="text-xs text-gray-300 mt-0.5 flex items-center gap-1">
+            <Gem className="w-3.5 h-3.5 text-cyan-400" />
+            Olmos & Propuski
+          </p>
         </div>
         {/* Dot indicators */}
         <div className="flex gap-1.5 items-center mb-1">
@@ -304,15 +308,21 @@ const PurchaseFreeFire: React.FC = () => {
 
         {isVerified && playerNickname && (
           <div className="mt-2 bg-green-950/20 border border-green-500/20 rounded-xl px-3 py-2 animate-slide-up">
-            <p className="text-xs text-green-400 font-semibold">✅ {playerNickname}</p>
+            <p className="text-xs text-green-400 font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+              {playerNickname}
+            </p>
           </div>
         )}
         {error && (
           <div className="mt-2 bg-yellow-950/20 border border-yellow-500/20 rounded-xl px-3 py-2 animate-slide-up">
-            <p className="text-xs text-yellow-400 font-semibold">
-              ⚠️ {isUz 
-                ? "Ismni avtomatik aniqlash imkoni bo'lmadi. ID to'g'riligiga ishonchingiz komil bo'lsa, xaridni davom ettirishingiz mumkin." 
-                : "Unable to retrieve name. If you are sure your ID is correct, you can proceed with the purchase."}
+            <p className="text-xs text-yellow-400 font-semibold flex items-start gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <span>
+                {isUz 
+                  ? "Ismni avtomatik aniqlash imkoni bo'lmadi. ID to'g'riligiga ishonchingiz komil bo'lsa, xaridni davom ettirishingiz mumkin." 
+                  : "Unable to retrieve name. If you are sure your ID is correct, you can proceed with the purchase."}
+              </span>
             </p>
           </div>
         )}
@@ -371,9 +381,10 @@ const PurchaseFreeFire: React.FC = () => {
           fullWidth
           disabled={!selectedPackage || !playerId}
           onClick={() => navigate('/checkout')}
+          icon={<ShoppingCart className="w-4 h-4" />}
           className="font-black text-sm uppercase py-4 rounded-2xl tracking-wider"
         >
-          {isUz ? 'SOTIB OLISH 🛒' : 'BUY NOW 🛒'}
+          {isUz ? 'SOTIB OLISH' : 'BUY NOW'}
         </Button>
       </div>
     </div>

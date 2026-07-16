@@ -1,5 +1,6 @@
 import React from 'react';
 import type { GamePackage } from '../../types';
+import CurrencyIcon from '../icons/CurrencyIcon';
 
 interface PackageCardProps {
   pkg: GamePackage;
@@ -28,9 +29,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onCli
       `}
     >
       {/* Icon/Decoration in corner */}
-      <span className="absolute top-2 right-2 text-lg opacity-25">
-        {isPubg ? '🪙' : '💎'}
-      </span>
+      <div className="absolute top-2.5 right-2.5 opacity-25">
+        <CurrencyIcon type={isPubg ? 'uc' : 'diamond'} className="w-5 h-5" />
+      </div>
 
       {/* Package Amount */}
       <div>

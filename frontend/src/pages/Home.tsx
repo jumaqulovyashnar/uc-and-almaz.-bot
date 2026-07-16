@@ -8,11 +8,11 @@ import useStore from '../store/useStore';
 import { getPublicStats } from '../services/api';
 
 const HERO_SLIDES = [
-  { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
-  { id: 2, imageUrl: '/images/free.jpg',   title: 'FREE FIRE',    subtitle: '💎 Olmos & Propuski — tez yetkazib berish' },
-  { id: 3, imageUrl: '/images/pubg1.webp', title: 'PUBG MOBILE',  subtitle: "🏆 Prime & Prime Plus obunalar" },
-  { id: 4, imageUrl: '/images/free1.webp', title: 'FREE FIRE MAX', subtitle: "⚡ 24/7 avtomatik to'ldirish" },
-  { id: 5, imageUrl: '/images/pubg2.jpg',  title: 'PUBG MOBILE',  subtitle: '🎯 Barcha paketlar bir joyda' },
+  { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: "UC & To'plamlar — eng qulay narxlarda" },
+  { id: 2, imageUrl: '/images/free.jpg',   title: 'FREE FIRE',    subtitle: 'Olmos & Propuski — tez yetkazib berish' },
+  { id: 3, imageUrl: '/images/pubg1.webp', title: 'PUBG MOBILE',  subtitle: "Prime & Prime Plus obunalar" },
+  { id: 4, imageUrl: '/images/free1.webp', title: 'FREE FIRE MAX', subtitle: "24/7 avtomatik to'ldirish" },
+  { id: 5, imageUrl: '/images/pubg2.jpg',  title: 'PUBG MOBILE',  subtitle: 'Barcha paketlar bir joyda' },
 ];
 
 const Home: React.FC = () => {
