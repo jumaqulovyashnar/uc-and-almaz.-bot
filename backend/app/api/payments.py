@@ -75,9 +75,10 @@ async def click_webhook(
             if order["payment_status"] != "pending_payment":
                 return JSONResponse(content={"error": -4, "error_note": "ORDER_ALREADY_PAID"})
             
-            # Create transaction record in database
+            # Create transaction record in database. Use INSERT OR IGNORE to avoid overwriting existing
+            # transactions and rely on DB unique index for idempotency.
             await execute(
-                "INSERT OR REPLACE INTO transactions (order_id, payment_provider, external_id, amount, status) VALUES (?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO transactions (order_id, payment_provider, external_id, amount, status) VALUES (?, ?, ?, ?, ?)",
                 order_id, "click", str(click_trans_id), amount, "prepare"
             )
             

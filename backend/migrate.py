@@ -183,6 +183,8 @@ async def migrate() -> None:
         await db.execute("CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_game_packages_game ON game_packages(game, category);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_transactions_order_id ON transactions(order_id);")
+        # Ensure external transaction id + provider is unique to enforce idempotency at DB level
+        await db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_external_provider ON transactions(external_id, payment_provider);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_referral_earnings_referrer_id ON referral_earnings(referrer_id);")
         await db.commit()
         logging.info("[Migrate] ✓ indexes created")

@@ -37,16 +37,18 @@ async def cmd_start(message: types.Message, command: CommandObject):
                                     # Create the referred user
                                     await db.execute(
                                         "INSERT INTO users (telegram_id, first_name, last_name, username, referred_by) VALUES (?, ?, ?, ?, ?)",
-                                        telegram_id,
-                                        message.from_user.first_name or "Foydalanuvchi",
-                                        message.from_user.last_name,
-                                        message.from_user.username,
-                                        referrer["id"]
+                                        (
+                                            telegram_id,
+                                            message.from_user.first_name or "Foydalanuvchi",
+                                            message.from_user.last_name,
+                                            message.from_user.username,
+                                            referrer["id"]
+                                        )
                                     )
                                     # Increment referrer's count
                                     await db.execute(
                                         "UPDATE users SET referrals_count = referrals_count + 1 WHERE id = ?",
-                                        referrer["id"]
+                                        (referrer["id"],)
                                     )
                                     await db.commit()
                                     logging.info(f"[Bot] Registered referred user {telegram_id} under referrer {referrer_tg_id}")
