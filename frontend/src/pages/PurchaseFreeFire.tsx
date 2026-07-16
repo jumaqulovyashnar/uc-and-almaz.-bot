@@ -134,7 +134,7 @@ const PurchaseFreeFire: React.FC = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+        const apiBase = import.meta.env.VITE_API_URL ?? '';
         const res = await fetch(`${apiBase}/packages/freefire`);
         if (res.ok) {
           const json = await res.json();
@@ -180,7 +180,7 @@ const PurchaseFreeFire: React.FC = () => {
     setError(null);
     setVerifyLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+      const apiBase = import.meta.env.VITE_API_URL ?? '';
       const res = await fetch(`${apiBase}/verify-player`, {
         method: 'POST',
         headers: {

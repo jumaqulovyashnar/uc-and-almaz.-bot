@@ -6,7 +6,15 @@ import type {
   PaymentMethodType,
 } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
+
+if (!API_BASE) {
+  // Warn in dev if env var not set to prevent silent fallback to localhost in production builds
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.warn('[API] VITE_API_URL is not set. Using localhost fallback is disabled in codebase. Set VITE_API_URL in your .env files.');
+  }
+}
 
 const getHeaders = () => {
   const tg = (window as any)?.Telegram?.WebApp;

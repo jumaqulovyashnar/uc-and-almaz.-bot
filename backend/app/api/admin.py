@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from app.middleware.auth import get_admin_user
 from app.services import order as order_service
-from app.core.database import query, test_connection
+from app.core.database import query, test_connection, execute
 from app.core.redis import test_redis_connection
 from app.workers.purchase_worker import add_purchase_job
 from app.models.admin import UpdateConfigInput, ReviewInput
@@ -107,7 +107,20 @@ async def approve_order(id: int):
         
     import datetime
     await order_service.update_status(id, "completed", {"completed_at": datetime.datetime.now()})
-    
+
+    # Also mark payment_status as paid (admin manually confirmed payment)
+    try:
+        await execute("UPDATE orders SET payment_status = 'paid' WHERE id = ?", id)
+    except Exception as e:
+        logging.error(f"[Admin] Failed to mark order payment_status as paid: {e}")
+
+    # Trigger referral cashback (idempotent due to referral_earnings unique constraint)
+    try:
+        from app.services.referral import process_referral_cashback
+        await process_referral_cashback(id)
+    except Exception as e:
+        logging.error(f"[Admin] Referral cashback failed for order {id}: {e}")
+
     return {"success": True, "data": {"message": "Order approved and marked as completed"}}
 
 @router.post("/orders/{id}/reject")

@@ -32,30 +32,29 @@ async def cmd_start(message: types.Message, command: CommandObject):
                         current_user = await query_row("SELECT id FROM users WHERE telegram_id = ?", telegram_id)
                         if not current_user:
                             db = get_db()
-                            async with db.execute("BEGIN TRANSACTION"):
-                                try:
-                                    # Create the referred user
-                                    await db.execute(
-                                        "INSERT INTO users (telegram_id, first_name, last_name, username, referred_by) VALUES (?, ?, ?, ?, ?)",
-                                        (
-                                            telegram_id,
-                                            message.from_user.first_name or "Foydalanuvchi",
-                                            message.from_user.last_name,
-                                            message.from_user.username,
-                                            referrer["id"]
-                                        )
+                            try:
+                                # Create the referred user
+                                await db.execute(
+                                    "INSERT INTO users (telegram_id, first_name, last_name, username, referred_by) VALUES (?, ?, ?, ?, ?)",
+                                    (
+                                        telegram_id,
+                                        message.from_user.first_name or "Foydalanuvchi",
+                                        message.from_user.last_name,
+                                        message.from_user.username,
+                                        referrer["id"]
                                     )
-                                    # Increment referrer's count
-                                    await db.execute(
-                                        "UPDATE users SET referrals_count = referrals_count + 1 WHERE id = ?",
-                                        (referrer["id"],)
-                                    )
-                                    await db.commit()
-                                    logging.info(f"[Bot] Registered referred user {telegram_id} under referrer {referrer_tg_id}")
-                                except Exception as inner_e:
-                                    await db.rollback()
-                                    logging.error(f"[Bot] Failed transaction during referral start: {inner_e}")
-                                    raise inner_e
+                                )
+                                # Increment referrer's count
+                                await db.execute(
+                                    "UPDATE users SET referrals_count = referrals_count + 1 WHERE id = ?",
+                                    (referrer["id"],)
+                                )
+                                await db.commit()
+                                logging.info(f"[Bot] Registered referred user {telegram_id} under referrer {referrer_tg_id}")
+                            except Exception as inner_e:
+                                await db.rollback()
+                                logging.error(f"[Bot] Failed transaction during referral start: {inner_e}")
+                                raise inner_e
                 except Exception as e:
                     logging.error(f"[Bot] Referral processing failed: {e}")
 

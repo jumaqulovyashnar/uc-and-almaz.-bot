@@ -23,26 +23,25 @@ async def process_referral_cashback(order_id: int) -> None:
         # Safer pattern: attempt to INSERT the referral_earnings first. If UNIQUE constraint prevents it,
         # we consider cashback already processed. Otherwise, update user's balance.
         try:
-            async with db.execute("BEGIN TRANSACTION"):
-                try:
-                    await db.execute(
-                        "INSERT INTO referral_earnings (referrer_id, referred_user_id, order_id, amount) VALUES (?, ?, ?, ?)",
-                        (referrer_id, order["user_id"], order_id, cashback_amount)
-                    )
-                    await db.execute(
-                        "UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?",
-                        (cashback_amount, referrer_id)
-                    )
-                    await db.commit()
-                    logging.info(f"[ReferralService] Credited {cashback_amount} UZS cashback to referrer {referrer_id} for order {order_id}")
-                except Exception as inner_e:
-                    await db.rollback()
-                    # If UNIQUE constraint violated, another concurrent worker already processed cashback.
-                    if "UNIQUE" in str(inner_e).upper() or "constraint" in str(inner_e).lower():
-                        logging.info(f"[ReferralService] Cashback already processed (race) for order {order_id}. Skipping.")
-                        return
-                    logging.error(f"[ReferralService] Transaction failed: {inner_e}")
-                    raise inner_e
+            try:
+                await db.execute(
+                    "INSERT INTO referral_earnings (referrer_id, referred_user_id, order_id, amount) VALUES (?, ?, ?, ?)",
+                    (referrer_id, order["user_id"], order_id, cashback_amount)
+                )
+                await db.execute(
+                    "UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?",
+                    (cashback_amount, referrer_id)
+                )
+                await db.commit()
+                logging.info(f"[ReferralService] Credited {cashback_amount} UZS cashback to referrer {referrer_id} for order {order_id}")
+            except Exception as inner_e:
+                await db.rollback()
+                # If UNIQUE constraint violated, another concurrent worker already processed cashback.
+                if "UNIQUE" in str(inner_e).upper() or "constraint" in str(inner_e).lower():
+                    logging.info(f"[ReferralService] Cashback already processed (race) for order {order_id}. Skipping.")
+                    return
+                logging.error(f"[ReferralService] Transaction failed: {inner_e}")
+                raise inner_e
         except Exception as tx_e:
             logging.error(f"[ReferralService] Error during cashback transaction for order {order_id}: {tx_e}")
 

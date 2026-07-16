@@ -35,14 +35,17 @@ async def click_webhook(
         secret = env.CLICK_SECRET_KEY or "mock_click_secret"
         
         prep_id_str = merchant_prepare_id if action == 1 else ""
-        raw_sign = f"{click_trans_id}{service_id}{secret}{merchant_trans_id}{prep_id_str}{amount:.2f if isinstance(amount, float) else amount}{action}{sign_time}"
-        
+        # Compute amount string separately to avoid f-string format errors
+        amount_str = f"{amount:.2f}" if isinstance(amount, float) else str(amount)
+        raw_sign = f"{click_trans_id}{service_id}{secret}{merchant_trans_id}{prep_id_str}{amount_str}{action}{sign_time}"
+
         # Click amount sign matching could be float format dependent, fallback to raw float or int if matches
         computed_sign = hashlib.md5(raw_sign.encode()).hexdigest()
-        
-        # Fallback sign with alternative float formatting if signature mismatch
+
+        # Fallback sign with alternative integer formatting if signature mismatch
         if computed_sign != sign_string:
-            raw_sign_alt = f"{click_trans_id}{service_id}{secret}{merchant_trans_id}{prep_id_str}{int(amount)}{action}{sign_time}"
+            raw_sign_alt_amount = str(int(amount))
+            raw_sign_alt = f"{click_trans_id}{service_id}{secret}{merchant_trans_id}{prep_id_str}{raw_sign_alt_amount}{action}{sign_time}"
             computed_sign_alt = hashlib.md5(raw_sign_alt.encode()).hexdigest()
             if computed_sign_alt == sign_string:
                 computed_sign = computed_sign_alt

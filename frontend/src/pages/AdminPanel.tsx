@@ -4,7 +4,12 @@ import useStore from '../store/useStore';
 import Button from '../components/ui/Button';
 import { Gamepad2, Flame, Ban, BarChart3, ClipboardList, Settings, AlertTriangle, Frown, CheckCircle2, XCircle, RotateCw, Search } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
+if (!API_BASE && import.meta.env.DEV) {
+  // eslint-disable-next-line no-console
+  console.warn('[AdminPanel] VITE_API_URL is not set. Set it in .env or your deployment provider before building.');
+}
 const ADMIN_ID = 6709001451;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
