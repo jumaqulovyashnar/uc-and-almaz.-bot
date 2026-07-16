@@ -215,14 +215,10 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
 };
 
 // ─── Main page ───────────────────────────────────────────────────────────────
-type TabMode = 'avto' | 'toplamlar';
-
 const PurchasePUBG: React.FC = () => {
   const navigate = useNavigate();
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tabMode, setTabMode] = useState<TabMode>('avto');
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('almazar');
   const [dynamicPackages, setDynamicPackages] = useState<GamePackage[]>([]);
 
   const {
@@ -278,8 +274,6 @@ const PurchasePUBG: React.FC = () => {
 
   // UC packages (avto mode)
   const ucPackages = currentPackages.filter((p) => p.category === 'almazar');
-  // To'plamlar packages
-  const toplamlarPackages = currentPackages.filter((p) => p.category === 'toplamlar');
 
   const handleVerify = async () => {
     if (!playerId) return;
@@ -350,11 +344,6 @@ const PurchasePUBG: React.FC = () => {
     } finally {
       setVerifyLoading(false);
     }
-  };
-
-  const handleTabChange = (mode: TabMode) => {
-    setTabMode(mode);
-    setPackage(null);
   };
 
   const formatPrice = (price: number) =>
@@ -451,61 +440,17 @@ const PurchasePUBG: React.FC = () => {
           {isUz ? 'MAHSULOTNI TANLANG' : 'SELECT PRODUCT'}
         </p>
 
-        {/* Tab switcher: AVTO 24/7 | To'plamlar */}
-        <div className="flex gap-2 mb-4">
-          <Button
-            variant="ghost"
-            size="none"
-            onClick={() => handleTabChange('avto')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 ${
-              tabMode === 'avto'
-                ? 'bg-cyber-card border border-cyber-border text-yellow-400 font-bold'
-                : 'bg-transparent border border-cyber-border/50 text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-            {isUz ? 'AVTO 24/7' : 'AUTO 24/7'}
-          </Button>
-          <Button
-            variant={tabMode === 'toplamlar' ? 'primary' : 'ghost'}
-            size="none"
-            onClick={() => handleTabChange('toplamlar')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 ${
-              tabMode !== 'toplamlar' ? 'border border-cyber-border/50 text-gray-500 hover:text-gray-300' : 'shadow-[0_0_12px_rgba(124,58,237,0.4)]'
-            }`}
-          >
-            <Package className="w-3.5 h-3.5" />
-            {isUz ? "To'plamlar" : 'Bundles'}
-          </Button>
+        {/* ── UC packages in 2-col grid ── */}
+        <div className="grid grid-cols-2 gap-3">
+          {ucPackages.map((pkg) => (
+            <UcCard
+              key={pkg.id}
+              pkg={pkg}
+              isSelected={selectedPackage?.id === pkg.id}
+              onClick={() => setPackage(pkg)}
+            />
+          ))}
         </div>
-
-        {/* ── AVTO mode: UC packages in 2-col grid ── */}
-        {tabMode === 'avto' && (
-          <div className="grid grid-cols-2 gap-3">
-            {ucPackages.map((pkg) => (
-              <UcCard
-                key={pkg.id}
-                pkg={pkg}
-                isSelected={selectedPackage?.id === pkg.id}
-                onClick={() => setPackage(pkg)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* ── To'plamlar mode: full-width list cards ── */}
-        {tabMode === 'toplamlar' && (
-          <div className="flex flex-col gap-3">
-            {toplamlarPackages.map((pkg) => (
-              <ToplamlarCard
-                key={pkg.id}
-                pkg={pkg}
-                isSelected={selectedPackage?.id === pkg.id}
-                onClick={() => setPackage(pkg)}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Fixed bottom buy bar ──────────────────────────── */}
