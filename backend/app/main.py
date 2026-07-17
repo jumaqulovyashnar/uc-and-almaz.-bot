@@ -144,6 +144,14 @@ async def lifespan(app: FastAPI):
         bot_task.cancel()
     if worker_task:
         worker_task.cancel()
+
+    # Close Playwright browser on shutdown
+    try:
+        from app.services.automation import close_browser
+        await close_browser()
+        logging.info("[Server] ✅ Shared Playwright browser closed.")
+    except Exception as e:
+        logging.warning(f"[Server] ⚠️ Failed to close browser: {e}")
     
     # Close Bot session
     try:

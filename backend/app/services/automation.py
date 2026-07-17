@@ -164,6 +164,32 @@ def _make_launch_args(headless: bool = True) -> Dict[str, Any]:
     return args
 
 
+_playwright_instance = None
+_browser_instance = None
+
+async def get_browser() -> Browser:
+    global _playwright_instance, _browser_instance
+    if _browser_instance is None:
+        _playwright_instance = await async_playwright().start()
+        _browser_instance = await _playwright_instance.chromium.launch(**_make_launch_args(headless=True))
+    return _browser_instance
+
+async def close_browser():
+    global _playwright_instance, _browser_instance
+    if _browser_instance:
+        try:
+            await _browser_instance.close()
+        except Exception:
+            pass
+        _browser_instance = None
+    if _playwright_instance:
+        try:
+            await _playwright_instance.stop()
+        except Exception:
+            pass
+        _playwright_instance = None
+
+
 # ── verify_pubg_id ────────────────────────────────────────────────────────────
 
 _PUBG_MAX_RETRIES = 2   # attempt up to 2 times before giving up
@@ -215,7 +241,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                 for i in range(count):
                     el = loc.nth(i)
                     if await el.is_visible():
-                        await el.click(force=True)
+                        await el.dispatch_event("click")
             except Exception:
                 pass
 
@@ -223,7 +249,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
         try:
             cookie_btn = page.locator('text="Принять все"').first
             if await cookie_btn.is_visible():
-                await cookie_btn.click(force=True)
+                await cookie_btn.dispatch_event("click")
                 await asyncio.sleep(0.2)
             else:
                 # Fallback to general search including divs
@@ -247,7 +273,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
             if await trigger.is_visible():
                 try: await trigger.scroll_into_view_if_needed(timeout=2000)
                 except Exception: pass
-                await trigger.click(force=True)
+                await trigger.dispatch_event("click")
                 await asyncio.sleep(0.2)
             else:
                 await page.evaluate("""() => {
@@ -267,17 +293,18 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
         # ── 5. Fill Player ID inside iframe (or main page as fallback) ───────
         filled = False
         try:
-            # Scroll parent iframe element on main page into view
+            iframe_locator = page.frame_locator('iframe[src*="playerid_enter"]')
+            input_selector = 'input[type="number"], input[placeholder*="ID"], input[placeholder*="id"]'
+            input_field = iframe_locator.locator(input_selector).first
+            await input_field.wait_for(state="visible", timeout=8_000)
+            
+            # Scroll parent iframe element on main page into view *after* it has loaded and is visible
             try:
                 iframe_element = page.locator('iframe[src*="playerid_enter"]').first
                 await iframe_element.scroll_into_view_if_needed(timeout=2000)
             except Exception:
                 pass
-
-            iframe_locator = page.frame_locator('iframe[src*="playerid_enter"]')
-            input_selector = 'input[type="number"], input[placeholder*="ID"], input[placeholder*="id"]'
-            input_field = iframe_locator.locator(input_selector).first
-            await input_field.wait_for(state="visible", timeout=8_000)
+                
             try:
                 await input_field.scroll_into_view_if_needed(timeout=2000)
             except Exception:
@@ -293,15 +320,10 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                 pass
             
             if await ok_button.is_visible():
-                await ok_button.click(force=True)
+                await ok_button.dispatch_event("click")
             else:
-                # Try clicking any submit button inside iframe
                 submit_btn = iframe_locator.locator('button, div[role="button"], input[type="button"]').first
-                try:
-                    await submit_btn.scroll_into_view_if_needed(timeout=2000)
-                except Exception:
-                    pass
-                await submit_btn.click(force=True)
+                await submit_btn.dispatch_event("click")
             await asyncio.sleep(0.5)
         except Exception as iframe_err:
             logging.warning(f"[Automation] Iframe method failed: {iframe_err}, trying main page fallback.")
@@ -458,53 +480,52 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
                      "Run: python -m playwright install chromium",
         }
 
-    browser: Optional[Browser] = None
     last_result: Dict[str, Any] = {}
 
     for attempt in range(1, _PUBG_MAX_RETRIES + 1):
+        context = None
         try:
-            async with async_playwright() as p:
-                browser = await p.chromium.launch(**_make_launch_args(headless=True))
-                context = await browser.new_context()
+            browser = await get_browser()
+            context = await browser.new_context()
 
-                if MIDASBUY_COOKIES_PATH.exists():
-                    try:
-                        cookies = load_cookies(MIDASBUY_COOKIES_PATH)
-                        await context.add_cookies(cookies)
-                        logging.info(f"[Automation] Loaded {len(cookies)} Midasbuy cookies.")
-                    except Exception as ce:
-                        logging.warning(f"[Automation] Cookie load warning: {ce}")
-                else:
-                    logging.warning(
-                        f"[Automation] Midasbuy cookie file missing: {MIDASBUY_COOKIES_PATH}. "
-                        "Running unauthenticated (higher captcha risk)."
-                    )
+            if MIDASBUY_COOKIES_PATH.exists():
+                try:
+                    cookies = load_cookies(MIDASBUY_COOKIES_PATH)
+                    await context.add_cookies(cookies)
+                    logging.info(f"[Automation] Loaded {len(cookies)} Midasbuy cookies.")
+                except Exception as ce:
+                    logging.warning(f"[Automation] Cookie load warning: {ce}")
+            else:
+                logging.warning(
+                    f"[Automation] Midasbuy cookie file missing: {MIDASBUY_COOKIES_PATH}. "
+                    "Running unauthenticated (higher captcha risk)."
+                )
 
-                result = await _pubg_attempt(context, player_id)
-                await browser.close()
-                browser = None
+            result = await _pubg_attempt(context, player_id)
+            await context.close()
+            context = None
 
-                # Non-retryable results
-                if result.get("success") or result.get("error_code") in (
-                    "INVALID_ID", "CAPTCHA_TRIGGERED"
-                ):
-                    return result
+            # Non-retryable results
+            if result.get("success") or result.get("error_code") in (
+                "INVALID_ID", "CAPTCHA_TRIGGERED"
+            ):
+                return result
 
-                last_result = result
-                if attempt < _PUBG_MAX_RETRIES:
-                    logging.warning(
-                        f"[Automation] PUBG attempt {attempt} failed "
-                        f"({result.get('error_code')}), retrying…"
-                    )
-                    await asyncio.sleep(2)
+            last_result = result
+            if attempt < _PUBG_MAX_RETRIES:
+                logging.warning(
+                    f"[Automation] PUBG attempt {attempt} failed "
+                    f"({result.get('error_code')}), retrying…"
+                )
+                await asyncio.sleep(2)
 
         except Exception as e:
-            if browser:
+            if context:
                 try:
-                    await browser.close()
+                    await context.close()
                 except Exception:
                     pass
-                browser = None
+                context = None
             last_result = {
                 "success": False,
                 "error_code": "SERVICE_DOWN",
@@ -665,53 +686,51 @@ async def verify_freefire_id(player_id: str) -> Dict[str, Any]:
             "error": "Chromium not installed. Run: python -m playwright install chromium",
         }
 
-    browser: Optional[Browser] = None
     last_result: Dict[str, Any] = {}
 
     for attempt in range(1, _FF_MAX_RETRIES + 1):
+        context = None
         try:
-            async with async_playwright() as p:
-                browser = await p.chromium.launch(**_make_launch_args(headless=True))
-                context = await browser.new_context()
+            browser = await get_browser()
+            context = await browser.new_context()
 
-                cookie_path = GARENA_FF_COOKIES_PATH if GARENA_FF_COOKIES_PATH.exists() \
-                    else GARENA_COOKIES_PATH
-                if cookie_path.exists():
-                    try:
-                        cookies = load_cookies(cookie_path)
-                        await context.add_cookies(cookies)
-                        logging.info(f"[Automation] Loaded {len(cookies)} Garena cookies.")
-                    except Exception as ce:
-                        logging.warning(f"[Automation] Cookie load warning: {ce}")
-                else:
-                    logging.warning(
-                        f"[Automation] Garena cookie file missing: {cookie_path}. "
-                        "Running unauthenticated."
-                    )
+            cookie_path = GARENA_FF_COOKIES_PATH if GARENA_FF_COOKIES_PATH.exists()                 else GARENA_COOKIES_PATH
+            if cookie_path.exists():
+                try:
+                    cookies = load_cookies(cookie_path)
+                    await context.add_cookies(cookies)
+                    logging.info(f"[Automation] Loaded {len(cookies)} Garena cookies.")
+                except Exception as ce:
+                    logging.warning(f"[Automation] Cookie load warning: {ce}")
+            else:
+                logging.warning(
+                    f"[Automation] Garena cookie file missing: {cookie_path}. "
+                    "Running unauthenticated."
+                )
 
-                result = await _ff_attempt(context, player_id)
-                await browser.close()
-                browser = None
+            result = await _ff_attempt(context, player_id)
+            await context.close()
+            context = None
 
-                if result.get("success") or result.get("error_code") in (
-                    "INVALID_ID", "CAPTCHA_TRIGGERED"
-                ):
-                    return result
+            if result.get("success") or result.get("error_code") in (
+                "INVALID_ID", "CAPTCHA_TRIGGERED"
+            ):
+                return result
 
-                last_result = result
-                if attempt < _FF_MAX_RETRIES:
-                    logging.warning(
-                        f"[Automation] FF attempt {attempt} failed, retrying…"
-                    )
-                    await asyncio.sleep(2)
+            last_result = result
+            if attempt < _FF_MAX_RETRIES:
+                logging.warning(
+                    f"[Automation] FF attempt {attempt} failed, retrying…"
+                )
+                await asyncio.sleep(2)
 
         except Exception as e:
-            if browser:
+            if context:
                 try:
-                    await browser.close()
+                    await context.close()
                 except Exception:
                     pass
-                browser = None
+                context = None
             last_result = {
                 "success": False, "error_code": "SERVICE_DOWN",
                 "error": f"Internal scraper error: {e}",
