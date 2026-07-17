@@ -69,7 +69,7 @@ export async function getPackages(
 export async function verifyPlayer(
   game: GameType,
   playerId: string
-): Promise<{ nickname: string; valid: boolean; error?: string }> {
+): Promise<{ nickname: string; valid: boolean; error?: string; error_code?: string }> {
   try {
     const res = await fetch(`${API_BASE}/verify-player`, {
       method: 'POST',
@@ -82,7 +82,9 @@ export async function verifyPlayer(
     }
     const detail = json.detail;
     let errMsg = "Xatolik yuz berdi";
+    let errCode = "UNKNOWN";
     if (detail && typeof detail === 'object') {
+      errCode = detail.error_code || "UNKNOWN";
       if (detail.error_code === 'CAPTCHA_TRIGGERED') {
         errMsg = "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering.";
       } else if (detail.error_code === 'INVALID_ID') {
@@ -95,10 +97,10 @@ export async function verifyPlayer(
     } else if (typeof detail === 'string') {
       errMsg = detail;
     }
-    return { nickname: '', valid: false, error: errMsg };
+    return { nickname: '', valid: false, error: errMsg, error_code: errCode };
   } catch (error) {
     console.error('[API] verifyPlayer error:', error);
-    return { nickname: '', valid: false, error: 'Tarmoq xatosi' };
+    return { nickname: '', valid: false, error: 'Tarmoq xatosi', error_code: 'NETWORK_ERROR' };
   }
 }
 

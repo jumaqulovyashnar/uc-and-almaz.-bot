@@ -7,6 +7,7 @@ import CurrencyIcon from '../components/icons/CurrencyIcon';
 import { pubgPackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
+import { verifyPlayer } from '../services/api';
 
 // ─── PUBG banner slides (infinity loop) ─────────────────────────────────────
 const PUBG_SLIDES = [
@@ -292,33 +293,14 @@ const PurchasePUBG: React.FC = () => {
     setErrorCode(null);
     setVerifyLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_URL ?? '';
-      const res = await fetch(`${apiBase}/verify-player`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          game: 'pubg',
-          player_id: playerId,
-        }),
-      });
-
-      const json = await res.json();
-      if (res.ok && json.success) {
-        setNickname(json.data.nickname);
+      const res = await verifyPlayer('pubg', playerId);
+      if (res.valid) {
+        setNickname(res.nickname);
         setVerified(true);
       } else {
-        const detail = json.detail;
+        const errorCode = res.error_code || 'UNKNOWN';
         let errMsg: string;
-        let errorCode = 'UNKNOWN';
 
-        if (detail && typeof detail === 'object') {
-          errorCode = detail.error_code || 'UNKNOWN';
-        }
-
-        // Map error_code → user-friendly Uzbek/English message
-        // Never show raw Python exception strings
         if (errorCode === 'INVALID_ID') {
           errMsg = isUz
             ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
@@ -336,7 +318,6 @@ const PurchasePUBG: React.FC = () => {
             ? "Juda ko'p so'rov yuborildi. Bir oz kuting va qayta urining."
             : "Too many attempts. Please wait a moment and try again.";
         } else {
-          // SERVICE_DOWN or any other code — calm, no raw exception
           errMsg = isUz
             ? "Tekshiruv xizmati vaqtincha ishlamayapti. Qaytadan urining yoki xaridni davom ettiring — ID va nickname qo'lda tasdiqlanadi."
             : "Verification service is temporarily unavailable. You may retry or proceed; your ID and nickname will be manually confirmed.";

@@ -8,6 +8,7 @@ import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
+import { verifyPlayer } from '../services/api';
 import frrrImg from '../assets/frrr.jpg';
 import hh11Img from '../assets/hh11.avif';
 
@@ -180,44 +181,28 @@ const PurchaseFreeFire: React.FC = () => {
     setError(null);
     setVerifyLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_URL ?? '';
-      const res = await fetch(`${apiBase}/verify-player`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          game: 'freefire',
-          player_id: playerId,
-        }),
-      });
-
-      const json = await res.json();
-      if (res.ok && json.success) {
-        setNickname(json.data.nickname);
+      const res = await verifyPlayer('freefire', playerId);
+      if (res.valid) {
+        setNickname(res.nickname);
         setVerified(true);
       } else {
-        const detail = json.detail;
+        const errorCode = res.error_code || 'UNKNOWN';
         let errMsg = isUz ? "O'yinchi topilmadi yoki xatolik yuz berdi" : "Player not found or verification error";
         
-        if (detail && typeof detail === 'object') {
-          if (detail.error_code === 'CAPTCHA_TRIGGERED') {
-            errMsg = isUz 
-              ? "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering."
-              : "Due to security check (Captcha), name could not be resolved. If ID is correct, feel free to proceed.";
-          } else if (detail.error_code === 'INVALID_ID') {
-            errMsg = isUz 
-              ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
-              : "Player not found. Please verify your ID.";
-          } else if (detail.error_code === 'TIMEOUT') {
-            errMsg = isUz 
-              ? "Kutish vaqti tugadi (Tizim band). Qaytadan urining yoki to'g'ridan-to'g'ri xarid qiling."
-              : "Request timed out. Please try again or proceed with the purchase directly.";
-          } else {
-            errMsg = detail.message || errMsg;
-          }
-        } else if (typeof detail === 'string') {
-          errMsg = detail;
+        if (errorCode === 'CAPTCHA_TRIGGERED') {
+          errMsg = isUz 
+            ? "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering."
+            : "Due to security check (Captcha), name could not be resolved. If ID is correct, feel free to proceed.";
+        } else if (errorCode === 'INVALID_ID') {
+          errMsg = isUz 
+            ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
+            : "Player not found. Please verify your ID.";
+        } else if (errorCode === 'TIMEOUT') {
+          errMsg = isUz 
+            ? "Kutish vaqti tugadi (Tizim band). Qaytadan urining yoki to'g'ridan-to'g'ri xarid qiling."
+            : "Request timed out. Please try again or proceed with the purchase directly.";
+        } else if (res.error) {
+          errMsg = res.error;
         }
 
         setError(errMsg);
