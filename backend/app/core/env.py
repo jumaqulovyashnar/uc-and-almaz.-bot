@@ -16,18 +16,24 @@ class Settings(BaseSettings):
     PORT: str = "3000"
     NODE_ENV: str = "development"
     REFERRAL_CASHBACK_PERCENT: float = 0.05
-    
+
     # Click.uz
     CLICK_MERCHANT_ID: str = ""
     CLICK_SERVICE_ID: str = ""
     CLICK_SECRET_KEY: str = ""
-    
+
     # Payme.uz
     PAYME_MERCHANT_ID: str = ""
     PAYME_MERCHANT_KEY: str = ""
-    
+
     # Provider Reseller API
     PROVIDER_API_KEY: str = ""
+
+    # JollyMax — PUBG Mobile player ID verification (HTTP API, no browser)
+    JOLLYMAX_APP_ID:          str  = "APP20220811034444301"
+    JOLLYMAX_GOODS_ID:        str  = "G20230718123400139"
+    JOLLYMAX_PAY_TYPE_ID:     str  = "698832"
+    JOLLYMAX_FALLBACK_ENABLED: bool = True  # fallback to Playwright if JollyMax fails
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(BASE_DIR, ".env"),
