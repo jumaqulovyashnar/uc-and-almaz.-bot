@@ -199,7 +199,12 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
             return {"success": False, "error_code": "CAPTCHA_TRIGGERED",
                     "error": "Midasbuy security/captcha page on load."}
 
-        await asyncio.sleep(5)
+        try:
+            # Wait up to 3 seconds for the login trigger to be attached
+            trigger = page.locator('text="Введите свой идентификатор игрока сейчас"').first
+            await trigger.wait_for(state="attached", timeout=3000)
+        except Exception:
+            pass
 
         # ── 3. Dismiss popups & Accept Cookies ───────────────────────────────
         # Close Point Shop / event popups first
@@ -211,7 +216,6 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                     el = loc.nth(i)
                     if await el.is_visible():
                         await el.click(force=True)
-                        await asyncio.sleep(0.5)
             except Exception:
                 pass
 
@@ -220,7 +224,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
             cookie_btn = page.locator('text="Принять все"').first
             if await cookie_btn.is_visible():
                 await cookie_btn.click(force=True)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
             else:
                 # Fallback to general search including divs
                 await page.evaluate("""() => {
@@ -233,7 +237,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                     if (tgt) { tgt.click(); return true; }
                     return false;
                 }""")
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
         except Exception:
             pass
 
@@ -241,8 +245,10 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
         try:
             trigger = page.locator('text="Введите свой идентификатор игрока сейчас"').first
             if await trigger.is_visible():
+                try: await trigger.scroll_into_view_if_needed(timeout=2000)
+                except Exception: pass
                 await trigger.click(force=True)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
             else:
                 await page.evaluate("""() => {
                     const divs = Array.from(document.querySelectorAll('div, p, span, button'));
@@ -254,28 +260,49 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                     ));
                     if (trigger) trigger.click();
                 }""")
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
         except Exception:
             pass
 
         # ── 5. Fill Player ID inside iframe (or main page as fallback) ───────
         filled = False
         try:
+            # Scroll parent iframe element on main page into view
+            try:
+                iframe_element = page.locator('iframe[src*="playerid_enter"]').first
+                await iframe_element.scroll_into_view_if_needed(timeout=2000)
+            except Exception:
+                pass
+
             iframe_locator = page.frame_locator('iframe[src*="playerid_enter"]')
             input_selector = 'input[type="number"], input[placeholder*="ID"], input[placeholder*="id"]'
             input_field = iframe_locator.locator(input_selector).first
             await input_field.wait_for(state="visible", timeout=8_000)
+            try:
+                await input_field.scroll_into_view_if_needed(timeout=2000)
+            except Exception:
+                pass
             await input_field.fill(player_id)
             filled = True
             
             # Click Verify/Submit button inside the iframe
             ok_button = iframe_locator.locator('.Button_btn_primary__1ncdM').first
+            try:
+                await ok_button.scroll_into_view_if_needed(timeout=2000)
+            except Exception:
+                pass
+            
             if await ok_button.is_visible():
                 await ok_button.click(force=True)
             else:
                 # Try clicking any submit button inside iframe
-                await iframe_locator.locator('button, div[role="button"], input[type="button"]').first.click()
-            await asyncio.sleep(3)
+                submit_btn = iframe_locator.locator('button, div[role="button"], input[type="button"]').first
+                try:
+                    await submit_btn.scroll_into_view_if_needed(timeout=2000)
+                except Exception:
+                    pass
+                await submit_btn.click(force=True)
+            await asyncio.sleep(0.5)
         except Exception as iframe_err:
             logging.warning(f"[Automation] Iframe method failed: {iframe_err}, trying main page fallback.")
 
@@ -302,7 +329,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                     });
                     if (tgt) tgt.click();
                 }""")
-                await asyncio.sleep(3)
+                await asyncio.sleep(0.5)
             except Exception as inp_err:
                 await _save_failure_artifacts(page, "pubg_input", inp_err)
                 return {"success": False, "error_code": "TIMEOUT",
