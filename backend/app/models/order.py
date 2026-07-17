@@ -13,11 +13,11 @@ class CreateOrderInput(BaseModel):
     @model_validator(mode="after")
     def validate_player_id(self) -> 'CreateOrderInput':
         if self.game == "pubg":
-            if not re.match(r"^\d{5,12}$", self.player_id):
-                raise ValueError("PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak (M-n: 5123456789)")
+            if not re.match(r"^\d{11}$", self.player_id):
+                raise ValueError("PUBG Player ID faqat 11 ta raqamdan iborat bo'lishi kerak (M-n: 52186038540)")
         elif self.game == "freefire":
-            if not re.match(r"^\d{8,12}$", self.player_id):
-                raise ValueError("Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak (M-n: 1234567890)")
+            if not re.match(r"^\d{11}$", self.player_id):
+                raise ValueError("Free Fire Player ID faqat 11 ta raqamdan iborat bo'lishi kerak (M-n: 16342296705)")
         return self
 
 class WebhookInput(BaseModel):

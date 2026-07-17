@@ -168,12 +168,12 @@ const PurchaseFreeFire: React.FC = () => {
 
   const handleVerify = async () => {
     if (!playerId) return;
-    const ffRegex = /^\d{8,12}$/;
+    const ffRegex = /^\d{11}$/;
     if (!ffRegex.test(playerId)) {
       setError(
         isUz
-          ? "Free Fire ID faqat 8-12 ta raqamdan iborat bo'lishi kerak"
-          : 'Free Fire ID must be 8-12 digits of numbers'
+          ? "Free Fire ID faqat 11 ta raqamdan iborat bo'lishi kerak"
+          : 'Free Fire ID must be exactly 11 digits'
       );
       setVerified(false);
       return;
@@ -266,7 +266,7 @@ const PurchaseFreeFire: React.FC = () => {
               error={error || undefined}
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={12}
+              maxLength={11}
               onChange={(e) => {
                 setPlayerId(e.target.value.replace(/\D/g, ''));
                 if (error) setError(null);

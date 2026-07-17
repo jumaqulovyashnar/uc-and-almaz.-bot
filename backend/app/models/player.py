@@ -8,9 +8,9 @@ class VerifyPlayerInput(BaseModel):
     @model_validator(mode="after")
     def validate_player_id(self) -> 'VerifyPlayerInput':
         if self.game == "pubg":
-            if not re.match(r"^\d{5,12}$", self.player_id):
-                raise ValueError("PUBG Player ID faqat 5-12 ta raqamdan iborat bo'lishi kerak")
+            if not re.match(r"^\d{11}$", self.player_id):
+                raise ValueError("PUBG Player ID faqat 11 ta raqamdan iborat bo'lishi kerak")
         elif self.game == "freefire":
-            if not re.match(r"^\d{8,12}$", self.player_id):
-                raise ValueError("Free Fire Player ID faqat 8-12 ta raqamdan iborat bo'lishi kerak")
+            if not re.match(r"^\d{11}$", self.player_id):
+                raise ValueError("Free Fire Player ID faqat 11 ta raqamdan iborat bo'lishi kerak")
         return self
