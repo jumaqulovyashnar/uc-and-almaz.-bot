@@ -191,7 +191,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
 
         # ── 2. Captcha / block page check ────────────────────────────────────
         blocked = await page.evaluate("""() => {
-            const t = (document.body.textContent || '').toLowerCase();
+            const t = (document.body.innerText || '').toLowerCase();
             return t.includes('security check') || t.includes('captcha') ||
                    !!document.querySelector('.geetest_holder, iframe[src*="captcha"]');
         }""")
@@ -271,7 +271,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
             # Click Verify/Submit button inside the iframe
             ok_button = iframe_locator.locator('.Button_btn_primary__1ncdM').first
             if await ok_button.is_visible():
-                await ok_button.click()
+                await ok_button.click(force=True)
             else:
                 # Try clicking any submit button inside iframe
                 await iframe_locator.locator('button, div[role="button"], input[type="button"]').first.click()
@@ -316,11 +316,8 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
             
             # Check main page
             err_found_main = await page.evaluate("""() => {
-                const t = (document.body.textContent || '').toLowerCase();
-                const keywords = [
-                    "invalid id", "not found", "не найден", "неверный", "does not exist", 
-                    "недопустимый", "error", "ошибка", "noto'g'ri", "mavjud emas", "topilmadi"
-                ];
+                const t = (document.body.innerText || '').toLowerCase();
+                const keywords = ["недопустимый игровой id", "неверный id", "игрок не найден", "invalid player id", "player not found", "invalid game id", "invalid id"];
                 return keywords.some(kw => t.includes(kw));
             }""")
             if err_found_main:
@@ -332,11 +329,8 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                     if "playerid_enter" in f.url:
                         try:
                             err_found_frame = await f.evaluate("""() => {
-                                const t = (document.body.textContent || '').toLowerCase();
-                                const keywords = [
-                                    "invalid id", "not found", "не найден", "неверный", "does not exist", 
-                                    "недопустимый", "error", "ошибка", "noto'g'ri", "mavjud emas", "topilmadi"
-                                ];
+                                const t = (document.body.innerText || '').toLowerCase();
+                                const keywords = ["недопустимый игровой id", "неверный id", "игрок не найден", "invalid player id", "player not found", "invalid game id", "invalid id"];
                                 return keywords.some(kw => t.includes(kw));
                             }""")
                             if err_found_frame:
@@ -522,7 +516,7 @@ async def _ff_attempt(context: BrowserContext, player_id: str) -> Dict[str, Any]
 
         # Captcha on load
         blocked = await page.evaluate("""() => {
-            const t = (document.body.textContent || '').toLowerCase();
+            const t = (document.body.innerText || '').toLowerCase();
             return t.includes('geetest') || t.includes('captcha') ||
                    t.includes('access') || t.includes('behaviour') ||
                    !!document.querySelector('.geetest_holder');
@@ -596,11 +590,8 @@ async def _ff_attempt(context: BrowserContext, player_id: str) -> Dict[str, Any]
                         "error": "Garena Geetest captcha after submitting ID."}
 
             err_found = await page.evaluate("""() => {
-                const t = (document.body.textContent||'').toLowerCase();
-                const keywords = [
-                    "invalid id", "not found", "не найден", "неверный", "does not exist", 
-                    "недопустимый", "error", "ошибка", "noto'g'ri", "mavjud emas", "topilmadi"
-                ];
+                const t = (document.body.innerText || '').toLowerCase();
+                const keywords = ["недопустимый игровой id", "неверный id", "игрок не найден", "invalid player id", "player not found", "invalid game id", "invalid id"];
                 return keywords.some(kw => t.includes(kw));
             }""")
             if err_found:
