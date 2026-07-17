@@ -119,6 +119,34 @@ async def _save_failure_artifacts(page: Optional[Any], label: str, exc: Exceptio
 
 
 
+# ── Startup Chromium check ────────────────────────────────────────────────────
+_chromium_ok: Optional[bool] = None  # None = not yet checked
+
+
+async def _ensure_chromium() -> bool:
+    """
+    Launch and immediately close Chromium once to verify the binary is installed.
+    Cached after first call — only runs once per process lifetime.
+    """
+    global _chromium_ok
+    if _chromium_ok is not None:
+        return _chromium_ok
+    try:
+        async with async_playwright() as p:
+            b = await p.chromium.launch(headless=True)
+            await b.close()
+        _chromium_ok = True
+        logging.info("[Automation] ✅ Chromium binary is available.")
+    except Exception as e:
+        _chromium_ok = False
+        logging.error(
+            "[Automation] ❌ Chromium is NOT installed or not found. "
+            "Run: python -m playwright install chromium\n"
+            f"  Detail: {e}"
+        )
+    return _chromium_ok
+
+
 # ── Shared browser launcher ───────────────────────────────────────────────────
 
 def _make_launch_args(headless: bool = True) -> Dict[str, Any]:
