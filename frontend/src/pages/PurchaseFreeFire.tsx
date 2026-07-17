@@ -195,8 +195,8 @@ const PurchaseFreeFire: React.FC = () => {
             : "Due to security check (Captcha), name could not be resolved. If ID is correct, feel free to proceed.";
         } else if (errorCode === 'INVALID_ID') {
           errMsg = isUz 
-            ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
-            : "Player not found. Please verify your ID.";
+            ? "Bunaqa IDga ega player (o'yinchi) mavjud emas."
+            : "No player exists with this ID.";
         } else if (errorCode === 'TIMEOUT') {
           errMsg = isUz 
             ? "Kutish vaqti tugadi (Tizim band). Qaytadan urining yoki to'g'ridan-to'g'ri xarid qiling."

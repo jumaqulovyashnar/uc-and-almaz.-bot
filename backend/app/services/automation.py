@@ -311,6 +311,45 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
         # ── 6. Extract Nickname ───────────────────────────────────────────────
         nickname = None
         for _ in range(15):
+            # Check for invalid ID error messages on main page or inside frames first
+            err_found = False
+            
+            # Check main page
+            err_found_main = await page.evaluate("""() => {
+                const t = (document.body.textContent || '').toLowerCase();
+                const keywords = [
+                    "invalid id", "not found", "не найден", "неверный", "does not exist", 
+                    "недопустимый", "error", "ошибка", "noto'g'ri", "mavjud emas", "topilmadi"
+                ];
+                return keywords.some(kw => t.includes(kw));
+            }""")
+            if err_found_main:
+                err_found = True
+                
+            # Check inside iframe frames
+            if not err_found:
+                for f in page.frames:
+                    if "playerid_enter" in f.url:
+                        try:
+                            err_found_frame = await f.evaluate("""() => {
+                                const t = (document.body.textContent || '').toLowerCase();
+                                const keywords = [
+                                    "invalid id", "not found", "не найден", "неверный", "does not exist", 
+                                    "недопустимый", "error", "ошибка", "noto'g'ri", "mavjud emas", "topilmadi"
+                                ];
+                                return keywords.some(kw => t.includes(kw));
+                            }""")
+                            if err_found_frame:
+                                err_found = True
+                                break
+                        except Exception:
+                            pass
+            
+            if err_found:
+                logging.warning(f"[Automation] PUBG Player ID {player_id} detected as invalid/not found.")
+                return {"success": False, "error_code": "INVALID_ID",
+                        "error": f"PUBG Player ID {player_id} not found."}
+
             # Try to get nickname from main page
             nickname = await page.evaluate(f"""() => {{
                 const elements = Array.from(document.querySelectorAll('div, span, p, a'));
@@ -558,8 +597,11 @@ async def _ff_attempt(context: BrowserContext, player_id: str) -> Dict[str, Any]
 
             err_found = await page.evaluate("""() => {
                 const t = (document.body.textContent||'').toLowerCase();
-                return t.includes('invalid id') || t.includes('not found') ||
-                       t.includes('не найден') || t.includes('неверный');
+                const keywords = [
+                    "invalid id", "not found", "не найден", "неверный", "does not exist", 
+                    "недопустимый", "error", "ошибка", "noto'g'ri", "mavjud emas", "topilmadi"
+                ];
+                return keywords.some(kw => t.includes(kw));
             }""")
             if err_found:
                 return {"success": False, "error_code": "INVALID_ID",

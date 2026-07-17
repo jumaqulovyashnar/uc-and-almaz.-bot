@@ -303,8 +303,8 @@ const PurchasePUBG: React.FC = () => {
 
         if (errorCode === 'INVALID_ID') {
           errMsg = isUz
-            ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
-            : "Player not found. Please verify your ID.";
+            ? "Bunaqa IDga ega player (o'yinchi) mavjud emas."
+            : "No player exists with this ID.";
         } else if (errorCode === 'CAPTCHA_TRIGGERED') {
           errMsg = isUz
             ? "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering."
