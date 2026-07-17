@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "install:all": "npm install && npm install --prefix frontend && .venv\\Scripts\\pip install -r backend/requirements.txt telethon psutil",
-    "dev:backend": ".venv\\Scripts\\python backend/app/main.py",
+    "dev:backend": "cd backend && ..\\.venv\\Scripts\\python -u -m app.main",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev": "npx -y concurrently -n \"backend,frontend\" -c \"magenta,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\""
   }

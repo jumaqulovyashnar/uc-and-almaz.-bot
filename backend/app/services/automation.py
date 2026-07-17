@@ -682,34 +682,63 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
                 await browser.close()
                 return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Midasbuy security verification/captcha triggered on page load."}
             
-            # Type Player ID
-            input_selector = 'input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="Идентификатор"], input.input-bar__input, input.id-input'
+            # Wait for page to render initial popups
+            await asyncio.sleep(5)
+            
+            # 1. Close Point Shop / event popups first (using force=True)
+            for selector in [".close_button-JHHCtQ", ".MidasbuyUI-close_btn_23ba7b"]:
+                try:
+                    loc = page.locator(selector)
+                    count = await loc.count()
+                    for i in range(count):
+                        el = loc.nth(i)
+                        if await el.is_visible():
+                            await el.click(force=True)
+                            await asyncio.sleep(0.5)
+                except Exception as close_err:
+                    logging.warning(f"[Automation] Failed to close popup {selector}: {close_err}")
+                    
+            # 2. Click Accept all cookies (using force=True on the actual text locator)
             try:
-                await page.wait_for_selector(input_selector, timeout=10000)
+                cookie_btn = page.locator('text="Принять все"').first
+                if await cookie_btn.is_visible():
+                    await cookie_btn.click(force=True)
+                    await asyncio.sleep(1)
+            except Exception as cookie_err:
+                logging.warning(f"[Automation] Failed to accept cookies: {cookie_err}")
+                
+            # 3. Click Player ID login trigger
+            try:
+                trigger = page.locator('text="Введите свой идентификатор игрока сейчас"').first
+                if await trigger.is_visible():
+                    await trigger.click(force=True)
+                    await asyncio.sleep(1)
+                else:
+                    await page.evaluate("""() => {
+                        const divs = Array.from(document.querySelectorAll('div, p, span, button'));
+                        const trigger = divs.find(d => d.textContent && (d.textContent.includes('Введите свой') || d.textContent.includes('идентификатор') || d.textContent.includes("id o'yinchi") || d.textContent.includes('Enter your player ID')));
+                        if (trigger) trigger.click();
+                    }""")
+                    await asyncio.sleep(1)
+            except Exception as trigger_err:
+                logging.warning(f"[Automation] Failed to click login trigger: {trigger_err}")
+
+            # 4. Locate the iframe and input field
+            try:
+                iframe_locator = page.frame_locator('iframe[src*="playerid_enter"]')
+                input_selector = 'input[type="number"], input[placeholder*="ID"], input[placeholder*="id"], input[placeholder*="Идентификатор"]'
+                input_field = iframe_locator.locator(input_selector).first
+                
+                await input_field.wait_for(state="visible", timeout=10000)
+                await input_field.fill(player_id)
+                
+                # Click Verify/Submit button inside the iframe using the exact class
+                ok_button = iframe_locator.locator('.Button_btn_primary__1ncdM').first
+                await ok_button.click()
+                await asyncio.sleep(3)
             except Exception as se:
                 await browser.close()
-                return {"success": False, "error_code": "TIMEOUT", "error": f"Timeout waiting for PUBG Player ID input: {str(se)}"}
-                
-            await page.click(input_selector, click_count=3)
-            await page.keyboard.press("Backspace")
-            await page.type(input_selector, player_id, delay=50)
-            
-            # Click Verify OK
-            clicked = await page.evaluate("""() => {
-                const buttons = Array.from(document.querySelectorAll('button, div[role="button"], span, p, a, input[type="button"]'));
-                const target = buttons.find(el => {
-                    const text = el.textContent?.trim().toLowerCase() || '';
-                    return text === 'ok' || text === 'ввод' || text === 'войти' || text === 'подтвердить' || text === 'check' || text === 'verify';
-                });
-                if (target) {
-                    target.click();
-                    return true;
-                }
-                return false;
-            }""")
-            if not clicked:
-                await browser.close()
-                return {"success": False, "error_code": "SCRAPER_BLOCKED", "error": "Could not find or click PUBG verification button."}
+                return {"success": False, "error_code": "TIMEOUT", "error": f"Timeout waiting for PUBG Player ID input or submit: {str(se)}"}
             
             # Wait for nickname to load
             nickname = None
@@ -723,34 +752,108 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
                     await browser.close()
                     return {"success": False, "error_code": "CAPTCHA_TRIGGERED", "error": "Blocked by Midasbuy Security Captcha Verification."}
 
-                has_error = await page.evaluate("""() => {
-                    const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
-                    return elements.some(el => {
-                        const t = el.textContent?.trim().toLowerCase() || '';
-                        return t.includes('error') || t.includes('не найден') || t.includes('invalid') || t.includes('not found') || t.includes('неverny id') || t.includes('неверный id');
-                    });
-                }""")
+                # Check for errors on main page and inside iframe
+                has_error = False
+                try:
+                    has_error = await page.evaluate("""() => {
+                        const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
+                        return elements.some(el => {
+                            const t = el.textContent?.trim().toLowerCase() || '';
+                            return t.includes('error') || t.includes('не найден') || t.includes('invalid') || t.includes('not found') || t.includes('неverny id') || t.includes('неверный id');
+                        });
+                    }""")
+                    if not has_error:
+                        for f in page.frames:
+                            if "playerid_enter" in f.url:
+                                has_error = await f.evaluate("""() => {
+                                    const elements = Array.from(document.querySelectorAll('div, span, p, .error-msg, .error'));
+                                    return elements.some(el => {
+                                        const t = el.textContent?.trim().toLowerCase() || '';
+                                        return t.includes('error') || t.includes('не найден') || t.includes('invalid') || t.includes('not found') || t.includes('неverny id') || t.includes('неверный id');
+                                    });
+                                }""")
+                                if has_error:
+                                    break
+                except Exception:
+                    pass
                 if has_error:
                     logging.warning(f"[Automation] Invalid PUBG player ID: {player_id}")
                     await browser.close()
                     return {"success": False, "error_code": "INVALID_ID", "error": f"PUBG Player ID '{player_id}' is invalid or does not exist."}
                     
-                nickname = await page.evaluate("""() => {
-                    const elements = Array.from(document.querySelectorAll('div, span, p'));
-                    const labelEl = elements.find(el => {
-                        const t = el.textContent?.trim().toLowerCase() || '';
-                        return t.includes('character name') || t.includes('имя персонажа') || t.includes('nickname') || t.includes('taxallus');
-                    });
-                    if (labelEl && labelEl.parentElement) {
-                        return labelEl.parentElement.textContent.replace(labelEl.textContent, '').trim();
-                    }
-                    
-                    const nickEl = document.querySelector('.nickname, .user-name, .character-name, .info-value, .name');
-                    if (nickEl && nickEl.textContent.trim()) {
-                        return nickEl.textContent.trim();
-                    }
+                # Extract nickname from element containing the player ID
+                nickname = await page.evaluate(f"""() => {{
+                    const elements = Array.from(document.querySelectorAll('div, span, p, a'));
+                    const matches = elements.filter(el => {{
+                        const t = el.textContent || '';
+                        return t.includes('{player_id}');
+                    }});
+                    if (matches.length > 0) {{
+                        matches.sort((a, b) => a.textContent.length - b.textContent.length);
+                        let target = matches[0];
+                        let text = target.textContent.trim();
+                        let match = text.match(/^(.*?)\\s*\\(/);
+                        if (match && match[1].trim()) return match[1].trim();
+                        
+                        if (target.parentElement) {{
+                            text = target.parentElement.textContent.trim();
+                            match = text.match(/^(.*?)\\s*\\(/);
+                            if (match && match[1].trim()) return match[1].trim();
+                        }}
+                    }}
                     return null;
-                }""")
+                }}""")
+                
+                # Check target frame for nickname if not found on main page
+                if not nickname:
+                    try:
+                        for f in page.frames:
+                            if "playerid_enter" in f.url:
+                                nickname = await f.evaluate(f"""() => {{
+                                    const elements = Array.from(document.querySelectorAll('div, span, p, a'));
+                                    const matches = elements.filter(el => {{
+                                        const t = el.textContent || '';
+                                        return t.includes('{player_id}');
+                                    }});
+                                    if (matches.length > 0) {{
+                                        matches.sort((a, b) => a.textContent.length - b.textContent.length);
+                                        let target = matches[0];
+                                        let text = target.textContent.trim();
+                                        let match = text.match(/^(.*?)\\s*\\(/);
+                                        if (match && match[1].trim()) return match[1].trim();
+                                        
+                                        if (target.parentElement) {{
+                                            text = target.parentElement.textContent.trim();
+                                            match = text.match(/^(.*?)\\s*\\(/);
+                                            if (match && match[1].trim()) return match[1].trim();
+                                        }}
+                                    }}
+                                    return null;
+                                }}""")
+                                if nickname:
+                                    break
+                    except Exception:
+                        pass
+                
+                # Standard fallback label extraction
+                if not nickname:
+                    nickname = await page.evaluate("""() => {
+                        const elements = Array.from(document.querySelectorAll('div, span, p'));
+                        const labelEl = elements.find(el => {
+                            const t = el.textContent?.trim().toLowerCase() || '';
+                            return t.includes('character name') || t.includes('имя персонажа') || t.includes('nickname') || t.includes('taxallus');
+                        });
+                        if (labelEl && labelEl.parentElement) {
+                            return labelEl.parentElement.textContent.replace(labelEl.textContent, '').trim();
+                        }
+                        
+                        const nickEl = document.querySelector('.nickname, .user-name, .character-name, .info-value, .name');
+                        if (nickEl && nickEl.textContent.trim()) {
+                            return nickEl.textContent.trim();
+                        }
+                        return null;
+                    }""")
+                    
                 if nickname:
                     break
                 await asyncio.sleep(0.5)
@@ -769,5 +872,3 @@ async def verify_pubg_id(player_id: str) -> Dict[str, Any]:
             except Exception:
                 pass
         return {"success": False, "error_code": "SERVICE_DOWN", "error": f"Internal Playwright/Scraper exception: {str(e)}"}
-
-

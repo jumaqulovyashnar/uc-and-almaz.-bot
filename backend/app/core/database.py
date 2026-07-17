@@ -15,7 +15,7 @@ def get_db() -> aiosqlite.Connection:
     return db
 
 # SQLite database path (stored next to backend/)
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cyberpay.db")
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "cyberpay.db")
 
 async def init_db() -> None:
     global db

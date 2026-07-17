@@ -1,4 +1,8 @@
+import sys
 import asyncio
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -198,6 +202,6 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     port = int(env.PORT)
-    reload = env.NODE_ENV == "development"
-    logging.info(f"[Server] Express API server running on port {port} in {env.NODE_ENV} mode")
+    reload = env.NODE_ENV == "development" and sys.platform != 'win32'
+    logging.info(f"[Server] Express API server running on port {port} in {env.NODE_ENV} mode (reload={reload})")
     uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=reload)
