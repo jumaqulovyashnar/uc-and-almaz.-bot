@@ -172,15 +172,15 @@ _PUBG_MAX_RETRIES = 2   # attempt up to 2 times before giving up
 async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, Any]:
     """
     Single attempt to verify a PUBG Player ID on Midasbuy.
-    Uses a fresh page within the existing browser context (no new browser launch).
-    All selectors are role/attribute/text-regex based — no hashed CSS classes.
+    Uses a fresh page within the existing browser context.
+    Uses the robust iframe input handling and nickname extraction from test_pubg_14.py.
     """
     page = await context.new_page()
     try:
         # ── 1. Navigate ──────────────────────────────────────────────────────
         try:
             await page.goto(
-                "https://www.midasbuy.com/midasbuy/uz/buy/pubgm",
+                "https://www.midasbuy.com/midasbuy/uz/buy/pubgm?lang=ru",
                 wait_until="domcontentloaded",
                 timeout=30_000,
             )
@@ -199,89 +199,85 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
             return {"success": False, "error_code": "CAPTCHA_TRIGGERED",
                     "error": "Midasbuy security/captcha page on load."}
 
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
 
-        # ── 3. Dismiss popups (role/aria — no hashed classes) ────────────────
-        # Accept-cookies button: any button whose text contains "accept" (case-insensitive)
-        for _ in range(3):
-            dismissed = await page.evaluate("""() => {
-                const btns = Array.from(document.querySelectorAll(
-                    'button, [role="button"], a'));
-                const tgt = btns.find(b => {
-                    const t = (b.textContent || '').trim().toLowerCase();
-                    return t.includes('accept') || t.includes('принять') ||
-                           t.includes('qabul') || t.includes('agree');
-                });
-                if (tgt) { tgt.click(); return true; }
-                return false;
-            }""")
-            if dismissed:
-                await asyncio.sleep(0.5)
-                break
+        # ── 3. Dismiss popups & Accept Cookies ───────────────────────────────
+        # Close Point Shop / event popups first
+        for selector in [".close_button-JHHCtQ", ".MidasbuyUI-close_btn_23ba7b"]:
+            try:
+                loc = page.locator(selector)
+                count = await loc.count()
+                for i in range(count):
+                    el = loc.nth(i)
+                    if await el.is_visible():
+                        await el.click(force=True)
+                        await asyncio.sleep(0.5)
+            except Exception:
+                pass
 
-        # Close modal overlays: any element with a close/× label or aria-label
-        for _ in range(4):
-            closed = await page.evaluate("""() => {
-                const sel = [
-                    '[aria-label="close"]', '[aria-label="Close"]',
-                    '[aria-label="закрыть"]', '[title="Close"]',
-                    'button.close', '[data-dismiss="modal"]',
-                ];
-                for (const s of sel) {
-                    const el = document.querySelector(s);
-                    if (el && el.offsetParent !== null) { el.click(); return true; }
-                }
-                // fallback: any visible button whose text is exactly × or ✕
-                const btns = Array.from(document.querySelectorAll('button, [role="button"]'));
-                const x = btns.find(b => /^[×✕x]$/i.test((b.textContent||'').trim())
-                                      && b.offsetParent !== null);
-                if (x) { x.click(); return true; }
-                return false;
-            }""")
-            if not closed:
-                break
-            await asyncio.sleep(0.4)
+        # Accept all cookies
+        try:
+            cookie_btn = page.locator('text="Принять все"').first
+            if await cookie_btn.is_visible():
+                await cookie_btn.click(force=True)
+                await asyncio.sleep(1)
+            else:
+                # Fallback to general search including divs
+                await page.evaluate("""() => {
+                    const btns = Array.from(document.querySelectorAll('button, [role="button"], a, div'));
+                    const tgt = btns.find(b => {
+                        const t = (b.textContent || '').trim().toLowerCase();
+                        return t.includes('accept') || t.includes('принять') ||
+                               t.includes('qabul') || t.includes('agree');
+                    });
+                    if (tgt) { tgt.click(); return true; }
+                    return false;
+                }""")
+                await asyncio.sleep(1)
+        except Exception:
+            pass
 
-        # ── 4. Click "enter player ID" trigger ───────────────────────────────
-        # Language-agnostic: look for text containing "player" + "id" in any lang
-        trigger_clicked = await page.evaluate("""() => {
-            const els = Array.from(document.querySelectorAll('div,p,span,button,a'));
-            const tgt = els.find(e => {
-                const t = (e.textContent || '').toLowerCase();
-                return (t.includes('player') && t.includes('id')) ||
-                       t.includes('идентификатор') ||
-                       t.includes('o\\'yinchi id') ||
-                       t.includes('enter your') ||
-                       t.includes('введите');
-            });
-            if (tgt) { tgt.click(); return true; }
-            return false;
-        }""")
-        if trigger_clicked:
-            await asyncio.sleep(1)
+        # ── 4. Click Player ID login trigger ─────────────────────────────────
+        try:
+            trigger = page.locator('text="Введите свой идентификатор игрока сейчас"').first
+            if await trigger.is_visible():
+                await trigger.click(force=True)
+                await asyncio.sleep(1)
+            else:
+                await page.evaluate("""() => {
+                    const divs = Array.from(document.querySelectorAll('div, p, span, button'));
+                    const trigger = divs.find(d => d.textContent && (
+                        d.textContent.includes('Введите свой') || 
+                        d.textContent.includes('идентификатор') || 
+                        d.textContent.includes("id o'yinchi") || 
+                        d.textContent.includes('Enter your player ID')
+                    ));
+                    if (trigger) trigger.click();
+                }""")
+                await asyncio.sleep(1)
+        except Exception:
+            pass
 
-        # ── 5. Fill player ID inside iframe (if present) or on main page ─────
+        # ── 5. Fill Player ID inside iframe (or main page as fallback) ───────
         filled = False
-        # Try iframe first
-        for frame in page.frames:
-            if not filled:
-                try:
-                    inp = frame.locator('input[type="number"], input[type="text"]').first
-                    if await inp.count() > 0:
-                        await inp.wait_for(state="visible", timeout=5_000)
-                        await inp.fill("")
-                        await inp.fill(player_id)  # player_id passed as value, never interpolated
-                        filled = True
-                        logging.info(f"[Automation] Filled player ID in frame: {frame.url}")
-                        # Submit inside the same frame
-                        submit = frame.locator(
-                            'button[type="submit"], button:not([disabled])'
-                        ).first
-                        if await submit.count() > 0:
-                            await submit.click()
-                        await asyncio.sleep(2)
-                except Exception:
-                    pass
+        try:
+            iframe_locator = page.frame_locator('iframe[src*="playerid_enter"]')
+            input_selector = 'input[type="number"], input[placeholder*="ID"], input[placeholder*="id"]'
+            input_field = iframe_locator.locator(input_selector).first
+            await input_field.wait_for(state="visible", timeout=8_000)
+            await input_field.fill(player_id)
+            filled = True
+            
+            # Click Verify/Submit button inside the iframe
+            ok_button = iframe_locator.locator('.Button_btn_primary__1ncdM').first
+            if await ok_button.is_visible():
+                await ok_button.click()
+            else:
+                # Try clicking any submit button inside iframe
+                await iframe_locator.locator('button, div[role="button"], input[type="button"]').first.click()
+            await asyncio.sleep(3)
+        except Exception as iframe_err:
+            logging.warning(f"[Automation] Iframe method failed: {iframe_err}, trying main page fallback.")
 
         if not filled:
             # Fallback: main-page input
@@ -292,13 +288,13 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                 'input[name*="id" i]'
             )
             try:
-                await page.wait_for_selector(inp_sel, timeout=8_000)
+                await page.wait_for_selector(inp_sel, timeout=5_000)
                 await page.fill(inp_sel, player_id)
                 filled = True
-                # Submit
+                # Submit OK
                 await page.evaluate("""() => {
                     const btns = Array.from(document.querySelectorAll(
-                        'button[type="submit"], button:not([disabled])'));
+                        'button, div[role="button"], span, p, a, input[type="button"]'));
                     const tgt = btns.find(b => {
                         const t = (b.textContent||'').trim().toLowerCase();
                         return t === 'ok' || t === 'verify' || t === 'check' ||
@@ -306,91 +302,68 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
                     });
                     if (tgt) tgt.click();
                 }""")
-                await asyncio.sleep(2)
+                await asyncio.sleep(3)
             except Exception as inp_err:
                 await _save_failure_artifacts(page, "pubg_input", inp_err)
                 return {"success": False, "error_code": "TIMEOUT",
                         "error": f"Could not find player ID input: {inp_err}"}
 
-        # ── 6. Poll for result ────────────────────────────────────────────────
-        nickname: Optional[str] = None
-        for _ in range(20):
-            # Captcha check
-            cap = await page.evaluate("""() => {
-                return !!document.querySelector(
-                    '.geetest_holder, iframe[src*="captcha"]');
-            }""")
-            if cap:
-                return {"success": False, "error_code": "CAPTCHA_TRIGGERED",
-                        "error": "Captcha triggered after submitting player ID."}
+        # ── 6. Extract Nickname ───────────────────────────────────────────────
+        nickname = None
+        for _ in range(15):
+            # Try to get nickname from main page
+            nickname = await page.evaluate(f"""() => {{
+                const elements = Array.from(document.querySelectorAll('div, span, p, a'));
+                const matches = elements.filter(el => {{
+                    const t = el.textContent || '';
+                    return t.includes('{player_id}');
+                }});
+                if (matches.length > 0) {{
+                    matches.sort((a, b) => a.textContent.length - b.textContent.length);
+                    let target = matches[0];
+                    let text = target.textContent.trim();
+                    let match = text.match(/^(.*?)\s*\(/);
+                    if (match && match[1].trim()) return match[1].trim();
+                    
+                    if (target.parentElement) {{
+                        text = target.parentElement.textContent.trim();
+                        match = text.match(/^(.*?)\s*\(/);
+                        if (match && match[1].trim()) return match[1].trim();
+                    }}
+                }}
+                return null;
+            }}""")
 
-            # Error check — language-agnostic
-            err_found = await page.evaluate("""() => {
-                const t = (document.body.textContent || '').toLowerCase();
-                return t.includes('invalid id') || t.includes('not found') ||
-                       t.includes('не найден') || t.includes('неверный') ||
-                       t.includes('does not exist');
-            }""")
-            if err_found:
-                return {"success": False, "error_code": "INVALID_ID",
-                        "error": f"PUBG Player ID {player_id!r} not found."}
-
-            # Nickname extraction — pass player_id as arg to avoid JS injection
-            nick = await page.evaluate(
-                """(pid) => {
-                    const els = Array.from(document.querySelectorAll(
-                        'div,span,p,a,.nickname,.character-name,.user-name,.info-value'));
-                    // prefer element that contains the player_id (confirms correct user)
-                    const matches = els.filter(e => (e.textContent||'').includes(pid));
-                    if (matches.length) {
-                        matches.sort((a,b) => a.textContent.length - b.textContent.length);
-                        const t = matches[0].textContent.trim();
-                        const m = t.match(/^(.*?)\\s*\\(/);
-                        if (m && m[1].trim()) return m[1].trim();
-                        return t.split('\\n')[0].trim() || null;
-                    }
-                    // fallback: label-adjacent
-                    const lbl = els.find(e => {
-                        const t = (e.textContent||'').toLowerCase();
-                        return t.includes('character name') || t.includes('nickname') ||
-                               t.includes('имя персонажа') || t.includes('taxallus');
-                    });
-                    if (lbl && lbl.parentElement) {
-                        return lbl.parentElement.textContent
-                            .replace(lbl.textContent,'').trim() || null;
-                    }
-                    return null;
-                }""",
-                player_id,   # ← passed as argument, never interpolated into JS source
-            )
-            if nick:
-                nickname = nick
-                break
-
-            # Also check frames
+            # If not found on main page, try inside iframe
             if not nickname:
-                for frame in page.frames:
-                    try:
-                        nick = await frame.evaluate(
-                            """(pid) => {
-                                const els = Array.from(document.querySelectorAll(
-                                    'div,span,p,a,.nickname,.character-name'));
-                                const m = els.filter(e=>(e.textContent||'').includes(pid));
-                                if (m.length) {
-                                    m.sort((a,b)=>a.textContent.length-b.textContent.length);
-                                    const t=m[0].textContent.trim();
-                                    const rx=t.match(/^(.*?)\\s*\\(/);
-                                    return rx&&rx[1].trim()?rx[1].trim():null;
-                                }
+                try:
+                    for f in page.frames:
+                        if "playerid_enter" in f.url:
+                            nickname = await f.evaluate(f"""() => {{
+                                const elements = Array.from(document.querySelectorAll('div, span, p, a'));
+                                const matches = elements.filter(el => {{
+                                    const t = el.textContent || '';
+                                    return t.includes('{player_id}');
+                                }});
+                                if (matches.length > 0) {{
+                                    matches.sort((a, b) => a.textContent.length - b.textContent.length);
+                                    let target = matches[0];
+                                    let text = target.textContent.trim();
+                                    let match = text.match(/^(.*?)\s*\(/);
+                                    if (match && match[1].trim()) return match[1].trim();
+                                    
+                                    if (target.parentElement) {{
+                                        text = target.parentElement.textContent.trim();
+                                        match = text.match(/^(.*?)\s*\(/);
+                                        if (match && match[1].trim()) return match[1].trim();
+                                    }}
+                                }}
                                 return null;
-                            }""",
-                            player_id,
-                        )
-                        if nick:
-                            nickname = nick
-                            break
-                    except Exception:
-                        pass
+                            }}""")
+                            if nickname:
+                                break
+                except Exception:
+                    pass
 
             if nickname:
                 break
@@ -407,7 +380,7 @@ async def _pubg_attempt(context: BrowserContext, player_id: str) -> Dict[str, An
 
     except Exception as e:
         await _save_failure_artifacts(page, "pubg_attempt", e)
-        raise   # re-raise so outer retry loop can catch it
+        raise
     finally:
         try:
             await page.close()

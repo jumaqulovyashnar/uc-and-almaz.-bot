@@ -142,17 +142,24 @@ class JollyMaxParser:
                     data  = await resp.json(content_type=None)
                     inner = data.get("data") or {}
                     nickname = inner.get("nickName")
+                    is_valid = inner.get("isValid")
                     if not nickname:
-                        raise JollyMaxError(
-                            "INVALID_ID",
-                            f"PUBG Player ID {self.user_id} not found on JollyMax",
-                        )
+                        if is_valid == 1:
+                            raise JollyMaxError(
+                                "SERVICE_DOWN",
+                                f"JollyMax verified ID {self.user_id} is valid, but did not return a nickname.",
+                            )
+                        else:
+                            raise JollyMaxError(
+                                "INVALID_ID",
+                                f"PUBG Player ID {self.user_id} not found on JollyMax",
+                            )
                     self._user_info = {"id": self.user_id, "nickname": nickname}
                     return self._user_info
 
             except JollyMaxError as e:
-                if e.error_code == "INVALID_ID":
-                    raise  # never retry a confirmed invalid ID
+                if e.error_code in ("INVALID_ID", "SERVICE_DOWN"):
+                    raise  # never retry a confirmed invalid ID or missing nickname
                 last_exc = e
                 logger.warning("[JollyMax] attempt %s failed: %s", attempt, e)
                 await asyncio.sleep(0.5 * attempt)
