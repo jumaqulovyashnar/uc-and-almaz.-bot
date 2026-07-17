@@ -219,6 +219,7 @@ const PurchasePUBG: React.FC = () => {
   const navigate = useNavigate();
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [dynamicPackages, setDynamicPackages] = useState<GamePackage[]>([]);
 
   const {
@@ -288,6 +289,7 @@ const PurchasePUBG: React.FC = () => {
       return;
     }
     setError(null);
+    setErrorCode(null);
     setVerifyLoading(true);
     try {
       const apiBase = import.meta.env.VITE_API_URL ?? '';
@@ -308,38 +310,50 @@ const PurchasePUBG: React.FC = () => {
         setVerified(true);
       } else {
         const detail = json.detail;
-        let errMsg = isUz ? "O'yinchi topilmadi yoki xatolik yuz berdi" : "Player not found or verification error";
-        
+        let errMsg: string;
+        let errorCode = 'UNKNOWN';
+
         if (detail && typeof detail === 'object') {
-          if (detail.error_code === 'CAPTCHA_TRIGGERED') {
-            errMsg = isUz 
-              ? "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering."
-              : "Due to security check (Captcha), name could not be resolved. If ID is correct, feel free to proceed.";
-          } else if (detail.error_code === 'INVALID_ID') {
-            errMsg = isUz 
-              ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
-              : "Player not found. Please verify your ID.";
-          } else if (detail.error_code === 'TIMEOUT') {
-            errMsg = isUz 
-              ? "Kutish vaqti tugadi (Tizim band). Qaytadan urining yoki to'g'ridan-to'g'ri xarid qiling."
-              : "Request timed out. Please try again or proceed with the purchase directly.";
-          } else {
-            errMsg = detail.message || errMsg;
-          }
-        } else if (typeof detail === 'string') {
-          errMsg = detail;
+          errorCode = detail.error_code || 'UNKNOWN';
+        }
+
+        // Map error_code → user-friendly Uzbek/English message
+        // Never show raw Python exception strings
+        if (errorCode === 'INVALID_ID') {
+          errMsg = isUz
+            ? "Ushbu ID egasi topilmadi. Iltimos, ID raqamini tekshiring."
+            : "Player not found. Please verify your ID.";
+        } else if (errorCode === 'CAPTCHA_TRIGGERED') {
+          errMsg = isUz
+            ? "Xavfsizlik tekshiruvi (Captcha) tufayli ismni avtomatik aniqlab bo'lmadi. ID to'g'ri bo'lsa, xaridni davom ettiravering."
+            : "Security check (Captcha) prevented auto-verification. If your ID is correct, you may proceed.";
+        } else if (errorCode === 'TIMEOUT') {
+          errMsg = isUz
+            ? "So'rov vaqti tugadi. Qaytadan urinib ko'ring yoki to'g'ridan-to'g'ri xarid qiling."
+            : "Request timed out. Please retry or proceed with the purchase.";
+        } else if (errorCode === 'RATE_LIMITED') {
+          errMsg = isUz
+            ? "Juda ko'p so'rov yuborildi. Bir oz kuting va qayta urining."
+            : "Too many attempts. Please wait a moment and try again.";
+        } else {
+          // SERVICE_DOWN or any other code — calm, no raw exception
+          errMsg = isUz
+            ? "Tekshiruv xizmati vaqtincha ishlamayapti. Qaytadan urining yoki xaridni davom ettiring — ID va nickname qo'lda tasdiqlanadi."
+            : "Verification service is temporarily unavailable. You may retry or proceed; your ID and nickname will be manually confirmed.";
         }
 
         setError(errMsg);
+        setErrorCode(errorCode);
         setVerified(false);
       }
     } catch (err) {
       console.error('[PurchasePUBG] Verification failed:', err);
       setError(
         isUz
-          ? "Tizimga ulanishda xatolik yuz berdi (Tarmoq yoki CORS xatosi)"
-          : "Connection error to the system (Network or CORS error)"
+          ? "Tarmoq xatosi. Internet aloqangizni tekshiring va qaytadan urining."
+          : "Network error. Please check your connection and try again."
       );
+      setErrorCode('NETWORK_ERROR');
       setVerified(false);
     } finally {
       setVerifyLoading(false);
@@ -385,7 +399,7 @@ const PurchasePUBG: React.FC = () => {
               maxLength={12}
               onChange={(e) => {
                 setPlayerId(e.target.value.replace(/\D/g, ''));
-                if (error) setError(null);
+                if (error) { setError(null); setErrorCode(null); }
               }}
             />
           </div>
@@ -416,14 +430,18 @@ const PurchasePUBG: React.FC = () => {
           </div>
         )}
         {error && (
-          <div className="mt-2 bg-yellow-950/20 border border-yellow-500/20 rounded-xl px-3 py-2 animate-slide-up">
-            <p className="text-xs text-yellow-400 font-semibold flex items-start gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
-              <span>
-                {isUz 
-                  ? "Ismni avtomatik aniqlash imkoni bo'lmadi. ID to'g'riligiga ishonchingiz komil bo'lsa, xaridni davom ettirishingiz mumkin." 
-                  : "Unable to retrieve name. If you are sure your ID is correct, you can proceed with the purchase."}
-              </span>
+          <div className={`mt-2 rounded-xl px-3 py-2 animate-slide-up border ${
+            errorCode === 'INVALID_ID'
+              ? 'bg-red-950/20 border-red-500/25'
+              : 'bg-yellow-950/20 border-yellow-500/20'
+          }`}>
+            <p className={`text-xs font-semibold flex items-start gap-1.5 ${
+              errorCode === 'INVALID_ID' ? 'text-red-400' : 'text-yellow-400'
+            }`}>
+              <AlertTriangle className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${
+                errorCode === 'INVALID_ID' ? 'text-red-400' : 'text-yellow-400'
+              }`} />
+              <span>{error}</span>
             </p>
           </div>
         )}
