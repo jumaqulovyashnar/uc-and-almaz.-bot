@@ -103,9 +103,14 @@ const Referrals: React.FC = () => {
           </CardHeader>
           <CardContent className="mt-3">
             <div className="flex gap-2 bg-cyber-bg/50 border border-cyber-border rounded-xl p-3 items-center justify-between">
-              <span className="text-xs text-gray-300 overflow-hidden text-ellipsis whitespace-nowrap select-all pr-2">
+              <a
+                href={referralLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-cyber-cyan hover:underline overflow-hidden text-ellipsis whitespace-nowrap pr-2"
+              >
                 {referralLink}
-              </span>
+              </a>
               <Button
                 variant="primary"
                 size="sm"

@@ -287,7 +287,7 @@ async def btn_referal(message: types.Message, state: FSMContext):
             f"👥 <b>Hamkorlik dasturi</b>\n\n"
             f"Do'stlaringizni taklif qiling va ularning har bir xarididan <b>5%</b> bonus oling!\n\n"
             f"🔗 <b>Sizning taklif havolangiz:</b>\n"
-            f"<code>https://t.me/{env.BOT_USERNAME}?start={telegram_id}</code>\n\n"
+            f"<a href=\"https://t.me/{env.BOT_USERNAME}?start={telegram_id}\">https://t.me/{env.BOT_USERNAME}?start={telegram_id}</a>\n\n"
             f"📊 <b>Statistika:</b>\n"
             f"• Taklif qilingan do'stlar: {referrals_count} ta\n"
             f"• Topilgan bonuslar: {referral_balance:,.0f} so'm"
