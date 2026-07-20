@@ -70,7 +70,12 @@ async def register_referral(referred_user: Dict[str, Any], ref_param: Optional[s
                 return False
 
             await db.execute(
-                "UPDATE users SET referrals_count = referrals_count + 1 WHERE id = ?",
+                """
+                UPDATE users
+                   SET referrals_count  = referrals_count + 1,
+                       referral_balance = referral_balance + 250.0
+                 WHERE id = ?
+                """,
                 (referrer["id"],),
             )
             await db.execute("COMMIT")

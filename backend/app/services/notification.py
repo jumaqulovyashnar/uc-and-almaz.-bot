@@ -41,7 +41,8 @@ async def send_referral_notification(referrer_telegram_id: int, referred_first_n
         message = (
             f"🎉 <b>Yangi referal qo'shildi!</b>\n\n"
             f"👤 <b>{referred_first_name}</b> sizning taklif havolangiz orqali botga qo'shildi.\n\n"
-            f"💰 Do'stingiz xarid qilganda, siz har bir tranzaksiyadan "
+            f"🎁 Hisobingizga <b>250 so'm</b> bonus qo'shildi!\n\n"
+            f"💰 Do'stingiz xarid qilganda, siz qo'shimcha ravishda har bir tranzaksiyadan "
             f"<b>{cashback_pct}%</b> keshbek olasiz!"
         )
         await bot.send_message(
@@ -49,7 +50,7 @@ async def send_referral_notification(referrer_telegram_id: int, referred_first_n
             text=message,
             parse_mode="HTML"
         )
-        logging.info(f"[Notification] Referral notification sent to {referrer_telegram_id}")
+        logging.info(f"[Notification] Referral notification sent to {referrer_telegram_id} with 250 UZS bonus")
     except Exception as e:
         logging.error(f"[Notification] send_referral_notification error: {e}")
 
