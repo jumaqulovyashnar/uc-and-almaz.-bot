@@ -107,6 +107,62 @@ export async function verifyPlayer(
 /**
  * Create a new order
  */
+export interface DynamicGame {
+  key: string;
+  name: string;
+  image: string;
+  popular: boolean;
+}
+
+export interface DynamicProduct {
+  product_id: string;
+  name: string;
+  price_uzs: number;
+}
+
+export async function getDynamicGames(): Promise<DynamicGame[]> {
+  try {
+    const res = await fetch(`${API_BASE}/packages/games`);
+    if (!res.ok) throw new Error('Failed to fetch dynamic games');
+    const json = await res.json();
+    if (json.status === 'success') {
+      return json.games;
+    }
+    return [];
+  } catch (error) {
+    console.error('[API] getDynamicGames error:', error);
+    return [];
+  }
+}
+
+export async function getDynamicProducts(gameKey: string): Promise<{
+  requires_server: boolean;
+  has_validator: boolean;
+  id_label: string;
+  products: DynamicProduct[];
+} | null> {
+  try {
+    const res = await fetch(`${API_BASE}/packages/products/${gameKey}`);
+    if (!res.ok) throw new Error('Failed to fetch dynamic products');
+    const json = await res.json();
+    if (json.status === 'success') {
+      return {
+        requires_server: json.requires_server,
+        has_validator: json.has_validator,
+        id_label: json.id_label || 'Player ID',
+        products: json.products || []
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('[API] getDynamicProducts error:', error);
+    return null;
+  }
+}
+
+/**
+ * Create a new order
+ */
 export async function createOrder(data: {
   game: GameType;
   packageId: string;
@@ -116,6 +172,7 @@ export async function createOrder(data: {
   playerId: string;
   playerNickname: string;
   paymentMethod: PaymentMethodType;
+  serverId?: string;
 }): Promise<Order> {
   const res = await fetch(`${API_BASE}/orders`, {
     method: 'POST',
@@ -123,13 +180,14 @@ export async function createOrder(data: {
     body: JSON.stringify({
       game: data.game,
       category: 'package', // Backend expects category, can be default
-      package_id: parseInt(data.packageId),
+      package_id: data.packageId,
       package_name: data.packageName,
       amount: data.amount,
       price: data.price,
       player_id: data.playerId,
       player_nickname: data.playerNickname,
-      payment_method: data.paymentMethod
+      payment_method: data.paymentMethod,
+      server_id: data.serverId
     })
   });
   

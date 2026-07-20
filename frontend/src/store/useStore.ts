@@ -25,6 +25,7 @@ interface StoreState {
   playerNickname: string;
   isVerified: boolean;
   paymentMethod: PaymentMethodType | null;
+  serverId: string;
 
   // Language & Theme state
   language: 'uz' | 'en';
@@ -41,6 +42,7 @@ interface StoreState {
   setPackage: (pkg: GamePackage | null) => void;
   setCategory: (category: CategoryType) => void;
   setPlayerId: (id: string) => void;
+  setServerId: (id: string) => void;
   setNickname: (nickname: string) => void;
   setVerified: (verified: boolean) => void;
   setPaymentMethod: (method: PaymentMethodType | null) => void;
@@ -91,6 +93,7 @@ export const useStore = create<StoreState>((set) => ({
   playerNickname: '',
   isVerified: false,
   paymentMethod: null,
+  serverId: '',
   language: 'uz',
   theme: getSavedTheme(),
   orders: [],
@@ -106,6 +109,7 @@ export const useStore = create<StoreState>((set) => ({
       playerNickname: '',
       isVerified: false,
       paymentMethod: null,
+      serverId: '',
     }),
 
   setPackage: (pkg) => set({ selectedPackage: pkg }),
@@ -115,6 +119,8 @@ export const useStore = create<StoreState>((set) => ({
 
   setPlayerId: (id) =>
     set({ playerId: id, isVerified: false, playerNickname: '' }),
+
+  setServerId: (id) => set({ serverId: id }),
 
   setNickname: (nickname) => set({ playerNickname: nickname }),
 
@@ -139,6 +145,7 @@ export const useStore = create<StoreState>((set) => ({
       playerNickname: '',
       isVerified: false,
       paymentMethod: null,
+      serverId: '',
     }),
 
   setTelegramUser: (user) => set({ telegramUser: user }),

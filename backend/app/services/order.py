@@ -5,8 +5,8 @@ from app.core.database import query, query_row, execute
 async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
     try:
         await execute("""
-            INSERT INTO orders (user_id, game, category, package_id, package_name, amount, price, player_id, player_nickname, payment_method)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO orders (user_id, game, category, package_id, package_name, amount, price, player_id, player_nickname, payment_method, provider_product_id, server_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         order_data["user_id"],
         order_data["game"],
@@ -17,7 +17,9 @@ async def create(order_data: Dict[str, Any]) -> Dict[str, Any]:
         order_data["price"],
         order_data["player_id"],
         order_data.get("player_nickname"),
-        order_data.get("payment_method")
+        order_data.get("payment_method"),
+        order_data.get("provider_product_id"),
+        order_data.get("server_id")
         )
         # Get the last inserted row
         return await query_row("SELECT * FROM orders WHERE id = last_insert_rowid()")

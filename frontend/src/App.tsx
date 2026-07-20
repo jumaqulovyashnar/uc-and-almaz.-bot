@@ -7,6 +7,7 @@ const Welcome       = lazy(() => import('./pages/Welcome'));
 const Home          = lazy(() => import('./pages/Home'));
 const PurchasePUBG  = lazy(() => import('./pages/PurchasePUBG'));
 const PurchaseFF    = lazy(() => import('./pages/PurchaseFreeFire'));
+const PurchaseGame  = lazy(() => import('./pages/PurchaseGame'));
 const Checkout      = lazy(() => import('./pages/Checkout'));
 const OrderHistory  = lazy(() => import('./pages/OrderHistory'));
 const Profile       = lazy(() => import('./pages/Profile'));
@@ -120,6 +121,7 @@ function AppContent() {
             <Route path="/home"                element={<Home />} />
             <Route path="/purchase/pubg"       element={<PurchasePUBG />} />
             <Route path="/purchase/freefire"   element={<PurchaseFF />} />
+            <Route path="/purchase/:gameKey"   element={<PurchaseGame />} />
             <Route path="/checkout"            element={<Checkout />} />
             <Route path="/orders"              element={<OrderHistory />} />
             <Route path="/profile"             element={<Profile />} />

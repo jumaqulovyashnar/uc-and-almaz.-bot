@@ -26,6 +26,18 @@ async def init_db() -> None:
         await db.execute("PRAGMA journal_mode=WAL")
         await db.execute("PRAGMA foreign_keys=ON")
         await db.commit()
+        
+        # Add custom columns for dynamic provider API integration
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN provider_product_id TEXT")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE orders ADD COLUMN server_id TEXT")
+        except Exception:
+            pass
+        await db.commit()
+        
         logging.info(f"[DB] SQLite database initialized at {DB_PATH}")
     except Exception as e:
         logging.error(f"[DB] SQLite initialization failed: {e}")

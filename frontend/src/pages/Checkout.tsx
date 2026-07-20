@@ -31,6 +31,7 @@ export default function Checkout() {
     playerNickname,
     paymentMethod,
     language,
+    serverId,
     setPaymentMethod,
     clearCart,
   } = useStore();
@@ -87,7 +88,8 @@ export default function Checkout() {
         price: selectedPackage.price,
         playerId,
         playerNickname,
-        paymentMethod
+        paymentMethod,
+        serverId: serverId || undefined
       });
       setCreatedOrder(order);
     } catch (err: any) {
@@ -99,11 +101,10 @@ export default function Checkout() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // You could show a toast here if you have a toast system
   };
 
   const price = selectedPackage?.price || 0;
-  const gameName = selectedGame === 'freefire' ? 'FREE FIRE' : 'PUBG MOBILE';
+  const gameName = selectedGame ? selectedGame.replace(/-/g, ' ').toUpperCase() : 'GAME';
 
   if (createdOrder) {
     const mins = Math.floor(timeLeft / 60);
@@ -231,6 +232,7 @@ export default function Checkout() {
               </h3>
               <p className="text-xs text-gray-500 font-mono mt-1">
                 ID: {playerId || '—'}
+                {serverId && ` (Server: ${serverId})`}
               </p>
             </div>
             <div className="text-right">

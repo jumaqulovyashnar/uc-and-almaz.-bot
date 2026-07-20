@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Gamepad2 } from 'lucide-react';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
-import GameCard from '../components/shared/GameCard';
 import HeroSlider from '../components/shared/HeroSlider';
 import useStore from '../store/useStore';
-import { getPublicStats } from '../services/api';
+import { getPublicStats, getDynamicGames, type DynamicGame } from '../services/api';
 
 const HERO_SLIDES = [
   { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
@@ -19,18 +19,34 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { setGame, language } = useStore();
   const [stats, setStats] = useState<{ total_uc: number; total_diamonds: number } | null>(null);
+  const [games, setGames] = useState<DynamicGame[]>([]);
+  const [gamesLoading, setGamesLoading] = useState<boolean>(true);
 
   const isUz = language === 'uz';
 
   useEffect(() => {
     getPublicStats().then(s => setStats(s)).catch(() => {});
+    
+    getDynamicGames()
+      .then(g => {
+        setGames(g);
+        setGamesLoading(false);
+      })
+      .catch(() => setGamesLoading(false));
   }, []);
 
   const fmt = (n: number) => n > 0 ? n.toLocaleString('uz-UZ') : '0';
 
-  const handleGameSelect = (game: 'pubg' | 'freefire') => {
-    setGame(game);
-    navigate(`/purchase/${game}`);
+  const handleGameSelect = (gameKey: string) => {
+    setGame(gameKey);
+    // Legacy support for pubg-mobile-buykos to PurchasePUBG, free-fire-cis-new to PurchaseFreeFire, etc.
+    if (gameKey === 'pubg-mobile-buykos' || gameKey === 'pubg') {
+      navigate('/purchase/pubg');
+    } else if (gameKey === 'free-fire-cis-new' || gameKey === 'freefire') {
+      navigate('/purchase/freefire');
+    } else {
+      navigate(`/purchase/${gameKey}`);
+    }
   };
 
   return (
@@ -68,10 +84,49 @@ const Home: React.FC = () => {
         <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-3">
           {isUz ? "O'yinni tanlang" : 'Select Game'}
         </h2>
-        <div className="flex flex-col gap-4">
-          <GameCard game="pubg" packagesCount={6} onClick={() => handleGameSelect('pubg')} />
-          <GameCard game="freefire" packagesCount={6} onClick={() => handleGameSelect('freefire')} />
-        </div>
+        
+        {gamesLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="flex gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyber-purple animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 rounded-full bg-cyber-purple animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 rounded-full bg-cyber-purple animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {games.map((g) => (
+              <div
+                key={g.key}
+                onClick={() => handleGameSelect(g.key)}
+                className="relative bg-cyber-card border border-cyber-border rounded-none p-4 cursor-pointer hover:border-[#c6f806] transition-all flex flex-col justify-between h-[155px] animate-fade-in group select-none"
+              >
+                {g.popular && (
+                  <div className="absolute top-0 right-0 bg-[#c6f806] text-black font-black text-[9px] px-1.5 py-0.5 tracking-wider uppercase">
+                    TOP
+                  </div>
+                )}
+                <div>
+                  {/* Game Thumbnail */}
+                  <div className="w-12 h-12 border border-cyber-border bg-[#0c0e12] flex items-center justify-center rounded-none overflow-hidden mb-3">
+                    {g.image ? (
+                      <img src={g.image} alt={g.name} className="w-full h-full object-cover rounded-none" />
+                    ) : (
+                      <Gamepad2 className="w-6 h-6 text-gray-500" />
+                    )}
+                  </div>
+                  <h4 className="font-extrabold text-white text-xs leading-snug line-clamp-2 uppercase tracking-wide">
+                    {g.name}
+                  </h4>
+                </div>
+                <div className="text-[#c6f806] font-extrabold text-[9px] tracking-wider uppercase mt-auto flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span>DONAT OLISH</span>
+                  <span className="text-[10px]">➔</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <BottomNav />

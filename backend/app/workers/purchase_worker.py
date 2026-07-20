@@ -33,36 +33,46 @@ import httpx
 import os
 from app.core.env import env
 
-async def call_provider_api(game: str, player_id: str, provider_service_id: str, order_id: int) -> Dict[str, Any]:
+async def call_provider_api(game: str, player_id: str, provider_service_id: str, order_id: int, server_id: Optional[str] = None) -> Dict[str, Any]:
     api_key = env.PROVIDER_API_KEY
     if not api_key:
         return {"success": False, "error": "PROVIDER_API_KEY is not configured"}
         
-    url = os.getenv("PROVIDER_API_URL", "https://api.provider.com/v1/orders")
+    url = "https://69544e6345d5c.xvest5.ru/DonatlarimBot/api.php"
     
-    # We send standard SMM Reseller Panel params (key, action, service, link, quantity)
-    payload = {
-        "key": api_key,
-        "action": "add",
-        "service": provider_service_id,
-        "link": player_id,
-        "quantity": 1,
-        "custom_id": str(order_id)
+    headers = {
+        "Content-Type": "application/json",
+        "X-API-Key": api_key
     }
     
+    payload = {
+        "action": "create_order",
+        "game_key": game,
+        "product_id": provider_service_id,
+        "player_id": player_id
+    }
+    if server_id:
+        payload["server_id"] = server_id
+        
     try:
         async def make_request():
             async with httpx.AsyncClient() as client:
-                response = await client.post(url, data=payload, timeout=20.0)
+                logging.info(f"[Worker] Sending request to {url} | payload: {payload}")
+                response = await client.post(url, headers=headers, json=payload, timeout=25.0)
+                logging.info(f"[Worker] Response from provider API: {response.status_code} | {response.text}")
                 if response.status_code == 200:
                     res_data = response.json()
-                    if "order" in res_data or res_data.get("status") == "success" or "order_id" in res_data:
-                        order_id_val = res_data.get("order") or res_data.get("order_id") or "12345"
+                    if res_data.get("status") == "success":
+                        order_id_val = res_data.get("order_id") or "12345"
                         return {"success": True, "provider_order_id": str(order_id_val)}
                     else:
-                        return {"success": False, "error": res_data.get("error") or "Unknown API response format"}
+                        return {"success": False, "error": res_data.get("message") or "API error status"}
                 else:
-                    return {"success": False, "error": f"API returned status code {response.status_code}"}
+                    try:
+                        err_msg = response.json().get("message")
+                    except Exception:
+                        err_msg = response.text
+                    return {"success": False, "error": err_msg or f"API status code {response.status_code}"}
         
         # Try 3 times with 2 seconds delay if API fails
         for attempt in range(3):
@@ -90,18 +100,22 @@ async def process_purchase_job(job_data: Dict[str, Any]) -> None:
 
         # 2. Fetch package details to get provider_service_id
         from app.core.database import query_row, execute
-        order_db = await query_row("SELECT package_id FROM orders WHERE id = ?", order_id)
+        order_db = await query_row("SELECT package_id, provider_product_id, server_id FROM orders WHERE id = ?", order_id)
         provider_service_id = None
-        if order_db and order_db["package_id"]:
-            pkg = await query_row("SELECT provider_service_id FROM game_packages WHERE id = ?", order_db["package_id"])
-            if pkg:
-                provider_service_id = pkg["provider_service_id"]
+        server_id = None
+        if order_db:
+            provider_service_id = order_db["provider_product_id"]
+            server_id = order_db["server_id"]
+            if not provider_service_id and order_db["package_id"]:
+                pkg = await query_row("SELECT provider_service_id FROM game_packages WHERE id = ?", order_db["package_id"])
+                if pkg:
+                    provider_service_id = pkg["provider_service_id"]
                 
         if not provider_service_id:
             provider_service_id = f"{game}_{package_name.lower().replace(' ', '_')}"
 
         # 3. Call Provider API instead of browser automation
-        result = await call_provider_api(game, player_id, provider_service_id, order_id)
+        result = await call_provider_api(game, player_id, provider_service_id, order_id, server_id)
 
         if not result.get("success"):
             err_msg = result.get("error") or "Provider API failed"

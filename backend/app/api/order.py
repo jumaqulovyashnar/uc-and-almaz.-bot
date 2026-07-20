@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional, Dict, Any
+import httpx
+import re
 from app.middleware.auth import get_current_user
 from app.services import order as order_service
 from app.services import package as package_service
@@ -13,31 +15,70 @@ async def create_order(
     payload: CreateOrderInput,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
-    # Verify package exists
-    pkg = await package_service.get_by_id(payload.package_id)
-    if not pkg:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Package not found"
-        )
+    pkg_name = ""
+    pkg_amount = 0
+    pkg_price = 0.0
+    provider_product_id = payload.package_id
+
+    # Try fetching local package first if it's an integer
+    local_pkg = None
+    if payload.package_id.isdigit():
+        local_pkg = await package_service.get_by_id(int(payload.package_id))
+
+    if local_pkg:
+        pkg_name = local_pkg["name"]
+        pkg_amount = local_pkg["amount"]
+        pkg_price = float(local_pkg["sell_price"])
+        provider_product_id = local_pkg["provider_service_id"]
+    else:
+        # Fetch from provider API dynamically
+        url = f"https://69544e6345d5c.xvest5.ru/DonatlarimBot/api.php?action=get_products&game_key={payload.game}"
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.get(url, timeout=15.0)
+                if res.status_code == 200:
+                    api_data = res.json()
+                    products = api_data.get("products", [])
+                    matching_prod = next((p for p in products if str(p["product_id"]) == payload.package_id), None)
+                    if matching_prod:
+                        pkg_name = matching_prod["name"]
+                        pkg_price = float(matching_prod["price_uzs"])
+                        # Extract first number from name as amount
+                        amt_match = re.search(r'\d+', pkg_name)
+                        pkg_amount = int(amt_match.group()) if amt_match else 0
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Product not found in provider list"
+                        )
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="Failed to connect to provider API"
+                    )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Provider lookup failed: {str(e)}"
+            )
 
     # Create order in database
     order = await order_service.create({
         "user_id": current_user["id"],
         "game": payload.game,
         "category": payload.category,
-        "package_id": payload.package_id,
-        "package_name": pkg["name"],
-        "amount": pkg["amount"],
-        "price": float(pkg["sell_price"]),
+        "package_id": None,  # Set to None to bypass foreign key constraint
+        "package_name": pkg_name,
+        "amount": pkg_amount,
+        "price": pkg_price,
         "player_id": payload.player_id,
         "player_nickname": payload.player_nickname,
-        "payment_method": payload.payment_method
+        "payment_method": payload.payment_method,
+        "provider_product_id": provider_product_id,
+        "server_id": payload.server_id
     })
-
-    # Queue background task
-    # Background task should only be queued after payment is confirmed.
-    # Removed add_purchase_job from here.
 
     return {
         "success": True,
