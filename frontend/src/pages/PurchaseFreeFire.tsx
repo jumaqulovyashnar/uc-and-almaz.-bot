@@ -258,37 +258,19 @@ const PurchaseFreeFire: React.FC = () => {
         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">
           PLAYER ID
         </p>
-        <div className="bg-cyber-card border border-cyber-border rounded-2xl p-3.5 flex gap-2 items-start">
-          <div className="flex-1">
-            <Input
-              placeholder={isUz ? 'ID raqamini kiriting...' : 'Enter ID number...'}
-              value={playerId}
-              error={error || undefined}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={11}
-              onChange={(e) => {
-                setPlayerId(e.target.value.replace(/\D/g, ''));
-                if (error) setError(null);
-              }}
-            />
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            className="py-3 px-5 font-bold rounded-xl"
-            onClick={handleVerify}
-            disabled={!playerId || verifyLoading}
-          >
-            {verifyLoading ? (
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : (
-              isUz ? 'Tekshirish' : 'Verify'
-            )}
-          </Button>
+        <div className="bg-cyber-card border border-cyber-border rounded-2xl p-3.5">
+          <Input
+            placeholder={isUz ? 'ID raqamini kiriting...' : 'Enter ID number...'}
+            value={playerId}
+            error={error || undefined}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={11}
+            onChange={(e) => {
+              setPlayerId(e.target.value.replace(/\D/g, ''));
+              if (error) setError(null);
+            }}
+          />
         </div>
 
         {isVerified && playerNickname && (
@@ -310,11 +292,6 @@ const PurchaseFreeFire: React.FC = () => {
               </span>
             </p>
           </div>
-        )}
-        {!isVerified && !error && playerId && !verifyLoading && (
-          <p className="text-[10px] text-gray-500 mt-1.5 px-1">
-            {isUz ? 'Tugmani bosib ID ni tekshiring' : 'Click button to verify ID'}
-          </p>
         )}
       </div>
 
