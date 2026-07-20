@@ -7,7 +7,7 @@ import CurrencyIcon from '../components/icons/CurrencyIcon';
 import { pubgPackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
-import { verifyPlayer } from '../services/api';
+import { verifyPlayer, API_BASE } from '../services/api';
 
 // ─── PUBG banner slides (infinity loop) ─────────────────────────────────────
 const PUBG_SLIDES = [
@@ -240,7 +240,7 @@ const PurchasePUBG: React.FC = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL ?? '';
+        const apiBase = API_BASE;
         const res = await fetch(`${apiBase}/packages/pubg`);
         if (res.ok) {
           const json = await res.json();

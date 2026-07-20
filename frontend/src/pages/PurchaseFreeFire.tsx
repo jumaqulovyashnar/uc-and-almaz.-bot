@@ -8,7 +8,7 @@ import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
 import { useStore } from '../store/useStore';
 import type { CategoryType, GamePackage } from '../types';
-import { verifyPlayer } from '../services/api';
+import { verifyPlayer, API_BASE } from '../services/api';
 import frrrImg from '../assets/frrr.jpg';
 import hh11Img from '../assets/hh11.avif';
 
@@ -135,7 +135,7 @@ const PurchaseFreeFire: React.FC = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL ?? '';
+        const apiBase = API_BASE;
         const res = await fetch(`${apiBase}/packages/freefire`);
         if (res.ok) {
           const json = await res.json();

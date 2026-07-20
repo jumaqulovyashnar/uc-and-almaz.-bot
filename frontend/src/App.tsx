@@ -14,12 +14,7 @@ const Profile       = lazy(() => import('./pages/Profile'));
 const Referrals     = lazy(() => import('./pages/Referrals'));
 const AdminPanel    = lazy(() => import('./pages/AdminPanel'));
 
-const API_BASE = import.meta.env.VITE_API_URL ?? '';
-
-if (!API_BASE && import.meta.env.DEV) {
-  // eslint-disable-next-line no-console
-  console.warn('[App] VITE_API_URL is not set. Set it in .env or your deployment provider before building.');
-}
+import { API_BASE } from './services/api';
 
 // Yuklanayotganda ko'rsatiladigan minimal spinner
 function PageLoader() {

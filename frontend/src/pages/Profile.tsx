@@ -7,7 +7,7 @@ import { Crown, Check } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 
 const ADMIN_ID = 6709001451;
-const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
+import { API_BASE } from '../services/api';
 
 const getHeaders = () => {
   const tg = (window as any)?.Telegram?.WebApp;

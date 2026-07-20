@@ -6,15 +6,38 @@ import type {
   PaymentMethodType,
 } from '../types';
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || '';
-
-if (!API_BASE) {
-  // Warn in dev if env var not set to prevent silent fallback to localhost in production builds
-  if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
-    console.warn('[API] VITE_API_URL is not set. Using localhost fallback is disabled in codebase. Set VITE_API_URL in your .env files.');
+const getApiBase = (): string => {
+  // 1. Try to read from URL query parameters
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const urlApi = params.get('api_url');
+    if (urlApi) {
+      localStorage.setItem('cyberpay-api-url', urlApi);
+      return urlApi;
+    }
+  } catch (e) {
+    console.error('Failed to parse URL params:', e);
   }
-}
+
+  // 2. Try to read from localStorage
+  try {
+    const saved = localStorage.getItem('cyberpay-api-url');
+    if (saved) return saved;
+  } catch (e) {
+    // ignore
+  }
+
+  // 3. Fallback to build-time environment variable
+  const envApi = import.meta.env.VITE_API_URL as string;
+  if (envApi && !envApi.includes('REPLACE_WITH_YOUR_BACKEND_DOMAIN')) {
+    return envApi;
+  }
+
+  // 4. Ultimate fallback (local dev)
+  return 'http://localhost:3002/api';
+};
+
+export const API_BASE = getApiBase();
 
 const getHeaders = () => {
   const tg = (window as any)?.Telegram?.WebApp;

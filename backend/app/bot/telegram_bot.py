@@ -54,6 +54,14 @@ class RechargeStates(StatesGroup):
     waiting_for_amount = State()
     waiting_for_receipt = State()
 
+def get_webapp_url_with_api() -> str:
+    base_url = env.WEBAPP_URL
+    api_url = env.API_URL.replace("/payments/webhook", "") if "/payments/webhook" in env.API_URL else ""
+    if api_url:
+        separator = "&" if "?" in base_url else "?"
+        return f"{base_url}{separator}api_url={api_url}"
+    return base_url
+
 # --- Helper function for welcome/inline keyboard ---
 def get_welcome_inline_keyboard():
     return types.InlineKeyboardMarkup(
@@ -61,7 +69,7 @@ def get_welcome_inline_keyboard():
             [
                 types.InlineKeyboardButton(
                     text="📱 Ilovani ochish",
-                    web_app=types.WebAppInfo(url=env.WEBAPP_URL)
+                    web_app=types.WebAppInfo(url=get_webapp_url_with_api())
                 )
             ],
             [
