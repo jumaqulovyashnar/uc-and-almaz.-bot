@@ -349,34 +349,80 @@ const PurchasePUBG: React.FC = () => {
       {/* ── Banner Slider ─────────────────────────────────── */}
       <div className="relative">
         {/* Back button */}
-        <Button
-          variant="ghost"
-          size="none"
+        <button
           onClick={() => navigate('/home')}
-          className="absolute top-3 left-3 z-20 bg-black/50 backdrop-blur-sm rounded-full p-2 hover:bg-black/70 transition-colors"
+          className="absolute top-3 left-3 z-20 bg-black/40 border border-white/20 text-gray-300 hover:text-white px-3 py-1.5 font-extrabold text-[11px] tracking-wider rounded-none transition-colors"
         >
-          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </Button>
+          ◀ {isUz ? 'ORQAGA' : 'BACK'}
+        </button>
 
         <PubgBannerSlider />
       </div>
 
-      {/* ── Player ID ─────────────────────────────────────── */}
-      <div className="px-4 mt-4 animate-fade-in">
-        {/* Section label */}
-        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">
-          {isUz ? 'PLAYER ID' : 'PLAYER ID'}
-        </p>
-        <div className="bg-cyber-card border border-cyber-border rounded-2xl p-3.5">
+      {/* ── Section 02: SELECT PRODUCT ────────────────────── */}
+      <div className="px-4 mt-5 animate-fade-in">
+        <div className="flex items-center mb-3">
+          <span className="bg-[#c6f806] text-black font-extrabold px-1.5 py-0.5 text-[10px] rounded-none">02</span>
+          <span className="text-white font-black tracking-wider text-[11px] ml-2 uppercase">
+            {isUz ? 'PAKETNI TANLA' : 'SELECT PRODUCT'}
+          </span>
+          <div className="flex-1 h-[1px] bg-white/10 ml-3" />
+        </div>
+
+        {/* Game Title Bar */}
+        <div className="bg-[#121118] border-l-[3px] border-[#c6f806] px-3.5 py-2.5 flex items-center gap-2 rounded-none mb-4">
+          <span className="text-sm">🔫</span>
+          <span className="font-black text-white text-xs tracking-wider uppercase">PUBG Mobile</span>
+        </div>
+
+        {/* ── UC packages in vertical list ── */}
+        <div className="flex flex-col gap-2.5">
+          {ucPackages.map((pkg) => (
+            <UcCard
+              key={pkg.id}
+              pkg={pkg}
+              isSelected={selectedPackage?.id === pkg.id}
+              onClick={() => setPackage(pkg)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Section 03: ENTER DETAILS ─────────────────────── */}
+      <div className="px-4 mt-8 animate-fade-in">
+        <div className="flex items-center mb-4">
+          <span className="bg-[#c6f806] text-black font-extrabold px-1.5 py-0.5 text-[10px] rounded-none">03</span>
+          <span className="text-white font-black tracking-wider text-[11px] ml-2 uppercase">
+            {isUz ? "MA'LUMOTLARNI KIRIT" : "ENTER DETAILS"}
+          </span>
+          <div className="flex-1 h-[1px] bg-white/10 ml-3" />
+        </div>
+
+        {/* Selected package block styled as selected card */}
+        {selectedPackage && (
+          <div className="border border-[#c6f806] bg-cyber-card px-4 py-4 flex justify-between items-center rounded-none mb-4 animate-fade-in w-full">
+            <span className="font-extrabold text-white text-sm">{selectedPackage.name}</span>
+            <div className="text-right">
+              <span className="text-[#c6f806] font-black text-sm">{formatPrice(selectedPackage.price)}</span>
+              <span className="text-gray-400 text-[11px] font-semibold ml-1">so'm</span>
+            </div>
+          </div>
+        )}
+
+        {/* Player ID label and input */}
+        <div className="mt-2">
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 px-0.5">
+            PLAYER ID
+          </p>
           <Input
-            placeholder={isUz ? 'Player ID ni kiriting...' : 'Enter Player ID...'}
+            placeholder={isUz ? 'ID raqamingiz...' : 'Enter player ID...'}
             value={playerId}
             error={error || undefined}
             inputMode="numeric"
             pattern="[0-9]*"
             maxLength={11}
+            roundedClassName="rounded-none"
+            containerClassName="border-[#201E29] focus-within:border-[#c6f806] focus-within:ring-[#c6f806]/40"
             onChange={(e) => {
               setPlayerId(e.target.value.replace(/\D/g, ''));
               if (error) { setError(null); setErrorCode(null); }
@@ -385,7 +431,7 @@ const PurchasePUBG: React.FC = () => {
         </div>
 
         {isVerified && playerNickname && (
-          <div className="mt-2 bg-green-950/20 border border-green-500/20 rounded-xl px-3 py-2 animate-slide-up">
+          <div className="mt-2 bg-green-950/20 border border-green-500/20 px-3 py-2 animate-slide-up">
             <p className="text-xs text-green-400 font-semibold flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
               {playerNickname}
@@ -393,7 +439,7 @@ const PurchasePUBG: React.FC = () => {
           </div>
         )}
         {error && (
-          <div className={`mt-2 rounded-xl px-3 py-2 animate-slide-up border ${
+          <div className={`mt-2 px-3 py-2 animate-slide-up border ${
             errorCode === 'INVALID_ID'
               ? 'bg-red-950/20 border-red-500/25'
               : 'bg-yellow-950/20 border-yellow-500/20'
@@ -410,28 +456,8 @@ const PurchasePUBG: React.FC = () => {
         )}
       </div>
 
-      {/* ── Product section ───────────────────────────────── */}
-      <div className="px-4 mt-5">
-        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
-          {isUz ? 'MAHSULOTNI TANLANG' : 'SELECT PRODUCT'}
-        </p>
-
-        {/* ── UC packages in 2-col grid ── */}
-        <div className="grid grid-cols-2 gap-3">
-          {ucPackages.map((pkg) => (
-            <UcCard
-              key={pkg.id}
-              pkg={pkg}
-              isSelected={selectedPackage?.id === pkg.id}
-              onClick={() => setPackage(pkg)}
-            />
-          ))}
-        </div>
-      </div>
-
       {/* ── Fixed bottom buy bar ──────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-cyber-bg/90 backdrop-blur-xl border-t border-cyber-border p-4 pb-safe">
-        {/* Welcome nav strip height compensation — 32px */}
         <div style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           {selectedPackage ? (
             <div className="flex items-center justify-between mb-3">
@@ -448,16 +474,14 @@ const PurchasePUBG: React.FC = () => {
               {isUz ? "Mahsulot tanlang" : 'Choose a product'}
             </p>
           )}
-          <Button
-            variant="primary"
-            fullWidth
+          <button
             disabled={!selectedPackage || !playerId}
             onClick={() => navigate('/checkout')}
-            icon={<ShoppingCart className="w-4 h-4" />}
-            className="font-black text-sm uppercase py-4 rounded-2xl tracking-wider"
+            className="w-full rounded-none bg-[#c6f806] hover:bg-[#b0dc05] active:scale-[0.99] text-black font-black text-sm uppercase py-4 tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isUz ? 'SOTIB OLISH' : 'BUY NOW'}
-          </Button>
+            <span>{isUz ? 'DAVOM ETISH' : 'CONTINUE'}</span>
+            <span className="text-base font-bold">➔</span>
+          </button>
         </div>
       </div>
     </div>
