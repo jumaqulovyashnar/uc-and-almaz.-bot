@@ -31,6 +31,7 @@ async def migrate() -> None:
                 referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
                 referral_balance REAL NOT NULL DEFAULT 0.0,
                 referrals_count INTEGER NOT NULL DEFAULT 0,
+                balance REAL NOT NULL DEFAULT 0.0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
@@ -173,6 +174,10 @@ async def migrate() -> None:
             pass
         try:
             await db.execute("ALTER TABLE users ADD COLUMN referrals_count INTEGER DEFAULT 0;")
+        except Exception:
+            pass
+        try:
+            await db.execute("ALTER TABLE users ADD COLUMN balance REAL DEFAULT 0.0;")
         except Exception:
             pass
 
