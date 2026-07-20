@@ -125,11 +125,6 @@ async def cmd_start(message: types.Message, command: CommandObject, state: FSMCo
             parse_mode=ParseMode.HTML
         )
 
-    # Initialize/restore bottom persistent menu keyboard
-    await message.answer(
-        "👇 Botdan foydalanish uchun quyidagi tugmalardan foydalanishingiz mumkin:",
-        reply_markup=main_keyboard
-    )
 
 
 @dp.message(Command("help"))
