@@ -20,10 +20,10 @@ bot = Bot(token=env.BOT_TOKEN)
 dp = Dispatcher()
 
 # --- Configurations with Fallbacks ---
-BOT_CARD_NUMBER = os.getenv("BOT_CARD_NUMBER", "8600 1204 5678 9012")
+BOT_CARD_NUMBER = env.BOT_CARD_NUMBER
 TELEGRAM_CHANNEL_URL = os.getenv("TELEGRAM_CHANNEL_URL", "https://t.me/top_DonateUz")
 TELEGRAM_SUPPORT_URL = os.getenv("TELEGRAM_SUPPORT_URL", "https://t.me/yashnar")
-WELCOME_PHOTO_URL = os.getenv("WELCOME_PHOTO_URL", "https://img.freepik.com/premium-vector/online-game-mascot-logo-concept_12592-127.jpg")
+WELCOME_PHOTO_URL = env.WELCOME_PHOTO_URL
 
 # --- Keyboards ---
 main_keyboard = types.ReplyKeyboardMarkup(
@@ -38,9 +38,6 @@ main_keyboard = types.ReplyKeyboardMarkup(
         ],
         [
             types.KeyboardButton(text="👥 Referal"),
-            types.KeyboardButton(text="🔑 API kalitim")
-        ],
-        [
             types.KeyboardButton(text="ℹ️ Yordam")
         ]
     ],
@@ -306,14 +303,6 @@ async def btn_referal(message: types.Message, state: FSMContext):
         await message.answer("⚠️ Referal ma'lumotlarini olishda xatolik yuz berdi.")
 
 
-@dp.message(lambda message: message.text == "🔑 API kalitim")
-async def btn_api_kalit(message: types.Message, state: FSMContext):
-    await state.clear()
-    text = (
-        f"🔑 <b>Sizning API kalitingiz:</b>\n\n"
-        f"<code>Faol emas. API orqali integratsiya qilish uchun admin bilan bog'laning.</code>"
-    )
-    await message.answer(text, parse_mode=ParseMode.HTML, reply_markup=main_keyboard)
 
 
 @dp.message(lambda message: message.text == "ℹ️ Yordam")

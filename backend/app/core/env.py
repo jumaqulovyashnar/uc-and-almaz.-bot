@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     BOT_USERNAME: str = "top_DonateUzbot"
     ADMIN_TELEGRAM_ID: str = "6709001451"
+    BOT_CARD_NUMBER: str = "9860 1801 0950 0686"
+    WELCOME_PHOTO_URL: str = "https://telegra.ph/file/0c99dfde637dfbf2b2207.png"
     WEBAPP_URL: str = "https://localhost:5173"
     DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379"
