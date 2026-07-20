@@ -279,12 +279,12 @@ const PurchasePUBG: React.FC = () => {
 
   const handleVerify = async () => {
     if (!playerId) return;
-    const pubgRegex = /^\d{11}$/;
+    const pubgRegex = /^\d{8,12}$/;
     if (!pubgRegex.test(playerId)) {
       setError(
         isUz
-          ? "PUBG Player ID faqat 11 ta raqamdan iborat bo'lishi kerak"
-          : 'PUBG Player ID must be exactly 11 digits'
+          ? "PUBG Player ID 8-12 ta raqamdan iborat bo'lishi kerak"
+          : 'PUBG Player ID must be 8-12 digits'
       );
       setVerified(false);
       return;
