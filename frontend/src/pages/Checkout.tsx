@@ -157,13 +157,35 @@ export default function Checkout() {
   const price = selectedPackage?.price || 0;
   const gameName = selectedGame ? selectedGame.replace(/-/g, ' ').toUpperCase() : 'GAME';
 
+  const handleBack = () => {
+    if (selectedGame) {
+      if (selectedGame === 'pubg-mobile-buykos' || selectedGame === 'pubg') {
+        navigate('/purchase/pubg');
+      } else if (selectedGame === 'free-fire-cis-new' || selectedGame === 'freefire') {
+        navigate('/purchase/freefire');
+      } else {
+        navigate(`/purchase-game/${selectedGame}`);
+      }
+    } else {
+      navigate('/home');
+    }
+  };
+
   if (createdOrder) {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
     
     return (
       <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8 animate-fade-in">
-        <h1 className="text-xl font-black text-white mt-4 tracking-wide uppercase text-center">
+        <button
+          onClick={handleBack}
+          className="mb-4 flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-[#121118] px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95 cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+          <span>{language === 'uz' ? 'ORQAGA' : 'BACK'}</span>
+        </button>
+
+        <h1 className="text-xl font-black text-white tracking-wide uppercase text-center">
           {isUz ? "To'lov ko'rsatmasi" : 'Payment Instructions'}
         </h1>
         
@@ -257,8 +279,8 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8">
       <button
-        onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-black px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95"
+        onClick={handleBack}
+        className="mb-4 flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-[#121118] px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95 cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
         <span>{language === 'uz' ? 'ORQAGA' : 'BACK'}</span>
