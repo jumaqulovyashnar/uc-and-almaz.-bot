@@ -73,11 +73,11 @@ const Home: React.FC = () => {
             </span>
           </div>
 
-          <div className="text-right">
+          <div className="text-right flex items-center gap-1">
             <span className="text-lg font-black text-[#FF6B00]">
               {stats !== null ? fmt(totalItemsSold) : '0'}
             </span>
-            <span className="text-xs font-semibold text-gray-400 ml-1">ta</span>
+            <span className="text-sm font-extrabold text-[#FF6B00]">ta</span>
           </div>
         </div>
       </div>

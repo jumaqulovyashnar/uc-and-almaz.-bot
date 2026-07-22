@@ -209,9 +209,9 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
           </span>
         )}
       </div>
-      <div className="text-right">
+      <div className="text-right flex items-center gap-1">
         <span className="text-orange-500 font-black text-sm">{formatPrice(pkg.price)}</span>
-        <span className="text-gray-400 text-[11px] font-semibold ml-1">so'm</span>
+        <span className="text-xs font-bold text-gray-300">so'm</span>
       </div>
     </div>
   );

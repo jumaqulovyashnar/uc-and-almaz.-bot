@@ -35,9 +35,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onCli
           </span>
         )}
       </div>
-      <div className="text-right">
+      <div className="text-right flex items-center gap-1">
         <span className="text-[#FF6B00] font-black text-sm">{formatPrice(pkg.price)}</span>
-        <span className="text-gray-400 text-[11px] font-semibold ml-1">so'm</span>
+        <span className="text-xs font-bold text-gray-300">so'm</span>
       </div>
     </div>
   );
