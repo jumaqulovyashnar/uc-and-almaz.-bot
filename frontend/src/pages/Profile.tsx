@@ -86,15 +86,8 @@ export default function Profile() {
   const isUz = language === 'uz';
   const tgUser = telegramUser || (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  const realUsername = tgUser?.username 
-    ? `@${tgUser.username}` 
-    : (tgUser?.first_name 
-        ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
-        : '@jumaqulov_yashnar');
-
-  const userSubText = tgUser?.username && tgUser?.first_name 
-    ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
-    : (tgUser?.id ? `ID: ${tgUser.id}` : null);
+  const displayName = [tgUser?.first_name, tgUser?.last_name].filter(Boolean).join(' ') || 'Yashnar Jumaqulov';
+  const displayUsername = tgUser?.username ? `@${tgUser.username}` : '@jumaqulov_yashnar';
 
   const isAdmin = tgUser?.id === ADMIN_ID;
 
@@ -108,12 +101,14 @@ export default function Profile() {
 
       {/* ── User Info Header ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-4 animate-fade-in">
+        {/* 1-qator: Foydalanuvchi Ism Familiyasi */}
         <h2 className="text-xl font-black text-white tracking-wide text-center">
-          {realUsername}
+          {displayName}
         </h2>
-        {userSubText && (
+        {/* 2-qator: Telegram @username */}
+        {displayUsername && (
           <p className="text-xs font-bold text-[#FF6B00] font-mono mt-1.5 bg-[#FF6B00]/10 px-3 py-1 border border-[#FF6B00]/30">
-            {userSubText}
+            {displayUsername}
           </p>
         )}
         {isAdmin && (
