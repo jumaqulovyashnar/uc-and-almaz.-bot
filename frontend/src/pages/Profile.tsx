@@ -102,22 +102,8 @@ export default function Profile() {
     <div className="min-h-screen bg-cyber-bg pb-24 pt-16">
       <Header />
 
-      {/* ── Avatar & info ── */}
+      {/* ── User Info Header (Clean text without avatar box) ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-4 animate-fade-in">
-        {/* Avatar box */}
-        <div className="relative mb-3">
-          <div className="w-20 h-20 rounded-none flex items-center justify-center shadow-xl border border-[#FF6B00]/40 overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #FF6B00, #E65C00)' }}>
-            {photoUrl ? (
-              <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl font-black text-white">{avatarLetter}</span>
-            )}
-          </div>
-          {/* Online status indicator */}
-          <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-cyber-bg" />
-        </div>
-
         <h2 className="text-xl font-black text-white tracking-wide text-center">
           {fullName}
         </h2>
