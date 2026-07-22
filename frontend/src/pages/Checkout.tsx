@@ -343,9 +343,8 @@ export default function Checkout() {
         {/* Karta raqami va amal qilish muddati inputlari */}
         {(paymentMethod === 'uzcard' || paymentMethod === 'humo') && (
           <div className="mt-4 p-4 bg-[#121118] border border-orange-500/40 rounded-none animate-fade-in space-y-3.5 shadow-lg">
-            <p className="text-xs font-black text-orange-500 uppercase tracking-wider flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-orange-500 shrink-0" />
-              <span>{isUz ? "Karta Ma'lumotlaringiz (Karta Raqami va Amal Qilish Muddati):" : "Your Card Details (Number & Expiry Date):"}</span>
+            <p className="text-xs font-black text-[#FFB300] uppercase tracking-wider">
+              {isUz ? "Karta Ma'lumotlaringiz (Karta Raqami va Amal Qilish Muddati):" : "Your Card Details (Number & Expiry Date):"}
             </p>
             
             <div>
