@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ArrowLeft, Gamepad2 } from 'lucide-react';
 import useStore from '../store/useStore';
 import { getDynamicProducts, verifyPlayer, type DynamicProduct } from '../services/api';
 import Input from '../components/ui/Input';
@@ -141,7 +141,7 @@ export default function PurchaseGame() {
 
         {/* Game Title Bar */}
         <div className="bg-[#121118] border-l-[3px] border-[#FF6B00] px-3.5 py-2.5 flex items-center gap-2 rounded-none mb-4">
-          <span className="text-sm">🎮</span>
+          <Gamepad2 className="w-4 h-4 text-[#FF6B00]" />
           <span className="font-black text-white text-xs tracking-wider uppercase">{gameDisplayName}</span>
         </div>
 

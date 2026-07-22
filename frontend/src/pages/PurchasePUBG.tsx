@@ -374,7 +374,7 @@ const PurchasePUBG: React.FC = () => {
 
         {/* Game Title Bar */}
         <div className="bg-[#121118] border-l-[3px] border-[#FF6B00] px-3.5 py-2.5 flex items-center gap-2 rounded-none mb-4">
-          <span className="text-sm">🔫</span>
+          <Gamepad2 className="w-4 h-4 text-[#FF6B00]" />
           <span className="font-black text-white text-xs tracking-wider uppercase">PUBG Mobile</span>
         </div>
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Gem, CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Gem, CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Flame } from 'lucide-react';
 import { CategoryTabs } from '../components/shared/CategoryTabs';
 import { PackageCard } from '../components/shared/PackageCard';
 import { freeFirePackages } from '../data/packages';
@@ -263,7 +263,7 @@ const PurchaseFreeFire: React.FC = () => {
 
         {/* Game Title Bar */}
         <div className="bg-[#121118] border-l-[3px] border-[#FF6B00] px-3.5 py-2.5 flex items-center gap-2 rounded-none mb-4">
-          <span className="text-sm">🔥</span>
+          <Flame className="w-4 h-4 text-[#FF6B00]" />
           <span className="font-black text-white text-xs tracking-wider uppercase">Free Fire</span>
         </div>
 
