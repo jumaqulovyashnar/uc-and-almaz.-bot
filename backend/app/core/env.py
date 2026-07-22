@@ -20,12 +20,12 @@ class Settings(BaseSettings):
     REFERRAL_CASHBACK_PERCENT: float = 0.05
 
     # Click.uz
-    CLICK_MERCHANT_ID: str = ""
+    CLICK_MERCHANT_ID: str = "54321ec0-f607-50c1-a5e0-27665e715b15"
     CLICK_SERVICE_ID: str = ""
     CLICK_SECRET_KEY: str = ""
 
     # Payme.uz
-    PAYME_MERCHANT_ID: str = ""
+    PAYME_MERCHANT_ID: str = "54321ec0-f607-50c1-a5e0-27665e715b15"
     PAYME_MERCHANT_KEY: str = ""
 
     # Provider Reseller API
