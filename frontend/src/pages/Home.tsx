@@ -60,25 +60,24 @@ const Home: React.FC = () => {
         <HeroSlider slides={HERO_SLIDES} autoPlayInterval={5000} />
       </div>
 
-      {/* ── Single Full Width Stat Card ── */}
+      {/* ── Single Full Width Horizontal Flex Stat Card ── */}
       <div className="px-4 mt-4 animate-slide-up">
         <div
           onClick={() => setIsStatsModalOpen(true)}
-          className="bg-gradient-to-r from-[#FF6B00]/15 via-cyber-card to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-4 w-full transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,107,0,0.3)] flex items-center justify-between"
+          className="bg-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none px-4 py-3.5 w-full transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,107,0,0.3)] flex items-center justify-between select-none"
         >
-          <div>
-            <p className="text-xs text-gray-400 font-extrabold uppercase tracking-wider flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-[#FF6B00]" />
-              <span>{isUz ? 'Jami Buyurtmalar Sonim' : 'Total Orders'}</span>
-            </p>
-            <p className="text-2xl font-black text-white mt-1">
-              {stats !== null ? fmt(totalItemsSold) : '—'} <span className="text-xs font-semibold text-gray-400">ta buyurtma</span>
-            </p>
+          <div className="flex items-center gap-2.5">
+            <ShoppingBag className="w-4 h-4 text-[#FF6B00]" />
+            <span className="text-xs font-black text-white uppercase tracking-wider">
+              {isUz ? 'Jami Buyurtmalar Soni:' : 'Total Orders:'}
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs font-bold text-[#FF6B00] bg-[#FF6B00]/10 px-3 py-1.5 border border-[#FF6B00]/30">
-            <span>{isUz ? '11 ta kategoriya' : '11 categories'}</span>
-            <ChevronRight className="w-4 h-4" />
+          <div className="text-right">
+            <span className="text-lg font-black text-[#FF6B00]">
+              {stats !== null ? fmt(totalItemsSold) : '0'}
+            </span>
+            <span className="text-xs font-semibold text-gray-400 ml-1">ta</span>
           </div>
         </div>
       </div>
