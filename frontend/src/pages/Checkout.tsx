@@ -430,7 +430,7 @@ export default function Checkout() {
           className="font-black text-sm uppercase py-3.5 tracking-wider flex justify-center items-center gap-2"
         >
           {loading && <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
-          {isUz ? "BUYURTMA BERISH" : 'PLACE ORDER'}
+          {isUz ? "SOTIB OLISH ➔" : 'BUY NOW ➔'}
         </Button>
       </div>
     </div>
