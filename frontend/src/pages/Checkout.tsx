@@ -342,14 +342,14 @@ export default function Checkout() {
 
         {/* Karta raqami va amal qilish muddati inputlari */}
         {(paymentMethod === 'uzcard' || paymentMethod === 'humo') && (
-          <div className="mt-4 p-4 bg-[#121118] border border-orange-500/40 rounded-none animate-fade-in space-y-3.5 shadow-lg">
-            <p className="text-xs font-black text-[#FFB300] uppercase tracking-wider">
-              {isUz ? "Karta Ma'lumotlaringiz (Karta Raqami va Amal Qilish Muddati):" : "Your Card Details (Number & Expiry Date):"}
-            </p>
+          <div className="mt-4 p-4 bg-[#14141f] border border-[#FF6B00]/30 rounded-none animate-fade-in space-y-4">
+            <h3 className="text-xs font-black text-[#FF6B00] uppercase tracking-widest border-b border-white/10 pb-2">
+              {isUz ? "KARTA MA'LUMOTLARI" : "CARD DETAILS"}
+            </h3>
             
             <div>
-              <label className="block text-xs text-gray-200 font-bold mb-1 tracking-wide">
-                {isUz ? "Karta raqami (16 ta raqam):" : "Card Number (16 digits):"}
+              <label className="block text-[11px] text-gray-300 font-bold mb-1.5 uppercase tracking-wider">
+                {isUz ? "Karta raqami:" : "Card Number:"}
               </label>
               <input
                 type="text"
@@ -357,12 +357,12 @@ export default function Checkout() {
                 placeholder={paymentMethod === 'uzcard' ? '8600 0000 0000 0000' : '9860 0000 0000 0000'}
                 value={userCardNumber}
                 onChange={(e) => setUserCardNumber(formatCardNumber(e.target.value))}
-                className="w-full bg-black/70 border border-white/20 text-white font-black text-base font-mono p-3 rounded-none focus:border-orange-500 focus:bg-black/90 outline-none tracking-widest placeholder-gray-500 transition-colors"
+                className="w-full bg-black/50 border border-white/15 text-white font-mono font-bold text-base p-3 rounded-none focus:border-[#FF6B00] focus:bg-black/80 outline-none tracking-widest placeholder-gray-600 transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-200 font-bold mb-1 tracking-wide">
+              <label className="block text-[11px] text-gray-300 font-bold mb-1.5 uppercase tracking-wider">
                 {isUz ? "Amal qilish muddati (OO/YY):" : "Expiry Date (MM/YY):"}
               </label>
               <input
@@ -371,7 +371,7 @@ export default function Checkout() {
                 placeholder="12/28"
                 value={userCardExpire}
                 onChange={(e) => setUserCardExpire(formatCardExpire(e.target.value))}
-                className="w-full bg-black/70 border border-white/20 text-white font-black text-base font-mono p-3 rounded-none focus:border-orange-500 focus:bg-black/90 outline-none tracking-widest placeholder-gray-500 transition-colors"
+                className="w-full bg-black/50 border border-white/15 text-white font-mono font-bold text-base p-3 rounded-none focus:border-[#FF6B00] focus:bg-black/80 outline-none tracking-widest placeholder-gray-600 transition-all"
               />
             </div>
           </div>
