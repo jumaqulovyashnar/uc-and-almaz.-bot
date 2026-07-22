@@ -1,5 +1,6 @@
 import base64
 import logging
+import time
 import httpx
 from typing import Optional, Dict, Any, List
 from app.core.env import env
@@ -9,11 +10,11 @@ _token_cache: Optional[Dict[str, Any]] = None
 
 async def get_access_token() -> Optional[str]:
     """
-    Get OAuth2 access token for Paylov Merchant API using Basic Auth + Password grant
+    OAuth: GET ACCESS TOKEN (POST /merchant/oauth2/token/)
     """
     global _token_cache
 
-    if _token_cache and _token_cache.get("expires_at", 0) > logging.time.time() + 60:
+    if _token_cache and _token_cache.get("expires_at", 0) > time.time() + 60:
         return _token_cache.get("access_token")
 
     consumer_key = env.PAYLOV_CONSUMER_KEY
@@ -49,7 +50,7 @@ async def get_access_token() -> Optional[str]:
                 expires_in = data.get("expires_in", 3600)
                 _token_cache = {
                     "access_token": token,
-                    "expires_at": logging.time.time() + expires_in
+                    "expires_at": time.time() + expires_in
                 }
                 return token
             else:
@@ -68,9 +69,13 @@ async def _get_auth_headers() -> Dict[str, str]:
     }
 
 
+# ==============================================================================
+# 1-6) USER CARDS (FOYDALANUVCHI KARTALARI)
+# ==============================================================================
+
 async def create_user_card(user_id: str, card_number: str, expire_date: str) -> Optional[Dict[str, Any]]:
     """
-    1. Create user card & trigger OTP SMS: POST /merchant/userCard/createUserCard/
+    1. POST /merchant/userCard/createUserCard/
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/createUserCard/"
@@ -79,13 +84,10 @@ async def create_user_card(user_id: str, card_number: str, expire_date: str) -> 
         "cardNumber": card_number.replace(" ", ""),
         "expireDate": expire_date.replace("/", "").replace(" ", "")
     }
-
     try:
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)
-            json_data = res.json()
-            logging.info(f"[Paylov] create_user_card response: {json_data}")
-            return json_data
+            return res.json()
     except Exception as e:
         logging.error(f"[Paylov] create_user_card error: {e}")
         return None
@@ -93,7 +95,7 @@ async def create_user_card(user_id: str, card_number: str, expire_date: str) -> 
 
 async def confirm_user_card(card_id: str, otp: str) -> Optional[Dict[str, Any]]:
     """
-    2. Confirm OTP SMS to bind card: POST /merchant/userCard/confirmUserCardCreate/
+    2. POST /merchant/userCard/confirmUserCardCreate/
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/confirmUserCardCreate/"
@@ -101,56 +103,82 @@ async def confirm_user_card(card_id: str, otp: str) -> Optional[Dict[str, Any]]:
         "cardId": str(card_id),
         "otp": str(otp)
     }
-
     try:
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)
-            json_data = res.json()
-            logging.info(f"[Paylov] confirm_user_card response: {json_data}")
-            return json_data
+            return res.json()
     except Exception as e:
         logging.error(f"[Paylov] confirm_user_card error: {e}")
         return None
 
 
-async def get_all_user_cards(user_id: str) -> List[Dict[str, Any]]:
+async def delete_user_card(card_id: str) -> Optional[Dict[str, Any]]:
     """
-    3. Get all saved cards for user: GET /merchant/userCard/getAllUserCards/?userId={userId}
-    """
-    headers = await _get_auth_headers()
-    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/getAllUserCards/?userId={user_id}"
-
-    try:
-        async with httpx.AsyncClient() as client:
-            res = await client.get(url, headers=headers, timeout=15.0)
-            json_data = res.json()
-            if isinstance(json_data, list):
-                return json_data
-            return json_data.get("result", json_data.get("data", []))
-    except Exception as e:
-        logging.error(f"[Paylov] get_all_user_cards error: {e}")
-        return []
-
-
-async def delete_user_card(card_id: str) -> bool:
-    """
-    4. Delete card: DELETE /merchant/userCard/deleteUserCard/?userCardId={cardId}
+    3. DELETE /merchant/userCard/deleteUserCard/?userCardId={cardId}
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/deleteUserCard/?userCardId={card_id}"
-
     try:
         async with httpx.AsyncClient() as client:
             res = await client.delete(url, headers=headers, timeout=15.0)
-            return res.status_code == 200
+            return res.json()
     except Exception as e:
         logging.error(f"[Paylov] delete_user_card error: {e}")
-        return False
+        return None
 
+
+async def get_all_user_cards(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    4. GET /merchant/userCard/getAllUserCards/?userId={userId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/getAllUserCards/?userId={user_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_all_user_cards error: {e}")
+        return None
+
+
+async def get_user_card(card_id: str) -> Optional[Dict[str, Any]]:
+    """
+    5. GET /merchant/userCard/getUserCard/?userCardId={cardId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/getUserCard/?userCardId={card_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_user_card error: {e}")
+        return None
+
+
+async def get_card_history(card_id: str) -> Optional[Dict[str, Any]]:
+    """
+    6. GET /merchant/getCardHistory/?cardId={cardId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/getCardHistory/?cardId={card_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_card_history error: {e}")
+        return None
+
+
+# ==============================================================================
+# 7-9) RECEIPTS & TRANSACTIONS (TO'LOV VA TRANZAKSIYALAR)
+# ==============================================================================
 
 async def create_receipt(user_id: str, amount: float, order_id: str) -> Optional[Dict[str, Any]]:
     """
-    5. Create receipt for payment: POST /merchant/receipts/create/
+    7. POST /merchant/receipts/create/
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/receipts/create/"
@@ -161,13 +189,10 @@ async def create_receipt(user_id: str, amount: float, order_id: str) -> Optional
             "order_id": str(order_id)
         }
     }
-
     try:
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)
-            json_data = res.json()
-            logging.info(f"[Paylov] create_receipt response: {json_data}")
-            return json_data
+            return res.json()
     except Exception as e:
         logging.error(f"[Paylov] create_receipt error: {e}")
         return None
@@ -175,7 +200,7 @@ async def create_receipt(user_id: str, amount: float, order_id: str) -> Optional
 
 async def pay_receipt(transaction_id: str, card_id: str, user_id: str) -> Optional[Dict[str, Any]]:
     """
-    6. Execute 1-click payment with saved card (NO OTP): POST /merchant/receipts/pay/
+    8. POST /merchant/receipts/pay/
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/receipts/pay/"
@@ -184,29 +209,331 @@ async def pay_receipt(transaction_id: str, card_id: str, user_id: str) -> Option
         "cardId": str(card_id),
         "userId": str(user_id)
     }
-
     try:
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)
-            json_data = res.json()
-            logging.info(f"[Paylov] pay_receipt response: {json_data}")
-            return json_data
+            return res.json()
     except Exception as e:
         logging.error(f"[Paylov] pay_receipt error: {e}")
         return None
 
 
-async def get_transaction_status(transaction_id: str) -> Optional[Dict[str, Any]]:
+async def get_transactions(transaction_id: str) -> Optional[Dict[str, Any]]:
     """
-    7. Get transaction status: GET /merchant/getTransactions/?transactionId={transactionId}
+    9. GET /merchant/getTransactions/?transactionId={transactionId}
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/getTransactions/?transactionId={transaction_id}"
-
     try:
         async with httpx.AsyncClient() as client:
             res = await client.get(url, headers=headers, timeout=15.0)
             return res.json()
     except Exception as e:
-        logging.error(f"[Paylov] get_transaction_status error: {e}")
+        logging.error(f"[Paylov] get_transactions error: {e}")
+        return None
+
+
+# ==============================================================================
+# 10-13) PAYMENT HOLD (PULNI MUZLATISH VA CHARGE QILISH)
+# ==============================================================================
+
+async def create_payment_hold(user_id: str, amount: float, card_id: str) -> Optional[Dict[str, Any]]:
+    """
+    10. POST /merchant/payment/hold/create/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/payment/hold/create/"
+    payload = {
+        "userId": str(user_id),
+        "amount": int(amount),
+        "cardId": str(card_id)
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] create_payment_hold error: {e}")
+        return None
+
+
+async def charge_payment_hold(hold_id: str, amount: Optional[float] = None) -> Optional[Dict[str, Any]]:
+    """
+    11. POST /merchant/payment/hold/charge/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/payment/hold/charge/"
+    payload: Dict[str, Any] = {"holdId": str(hold_id)}
+    if amount is not None:
+        payload["amount"] = int(amount)
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] charge_payment_hold error: {e}")
+        return None
+
+
+async def dismiss_payment_hold(hold_id: str) -> Optional[Dict[str, Any]]:
+    """
+    12. POST /merchant/payment/hold/dismiss/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/payment/hold/dismiss/"
+    payload = {"holdId": str(hold_id)}
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] dismiss_payment_hold error: {e}")
+        return None
+
+
+async def get_hold_status(hold_id: str) -> Optional[Dict[str, Any]]:
+    """
+    13. GET /merchant/payment/hold/status/?holdId={holdId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/payment/hold/status/?holdId={hold_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_hold_status error: {e}")
+        return None
+
+
+# ==============================================================================
+# 14-20) SERVICE PAYMENTS (XIZMAT TO'LOVLARI)
+# ==============================================================================
+
+async def get_service_list() -> Optional[Dict[str, Any]]:
+    """
+    14. GET /servicePayment/list/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/list/"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_service_list error: {e}")
+        return None
+
+
+async def get_service_fields(service_id: str) -> Optional[Dict[str, Any]]:
+    """
+    15. GET /servicePayment/fields/{serviceId}/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/fields/{service_id}/"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_service_fields error: {e}")
+        return None
+
+
+async def get_service_info(service_id: str, fields: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    16. POST /servicePayment/info/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/info/"
+    payload = {
+        "serviceId": str(service_id),
+        "fields": fields
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_service_info error: {e}")
+        return None
+
+
+async def create_service_payment(service_id: str, amount: float, fields: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    17. POST /servicePayment/create/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/create/"
+    payload = {
+        "serviceId": str(service_id),
+        "amount": int(amount),
+        "fields": fields
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] create_service_payment error: {e}")
+        return None
+
+
+async def pay_service_payment(transaction_id: str, card_id: str) -> Optional[Dict[str, Any]]:
+    """
+    18. POST /servicePayment/pay/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/pay/"
+    payload = {
+        "transactionId": str(transaction_id),
+        "cardId": str(card_id)
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] pay_service_payment error: {e}")
+        return None
+
+
+async def get_service_transaction_status(transaction_id: str) -> Optional[Dict[str, Any]]:
+    """
+    19. GET /servicePayment/transaction/status/?transactionId={transactionId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/transaction/status/?transactionId={transaction_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_service_transaction_status error: {e}")
+        return None
+
+
+async def get_all_service_transactions() -> Optional[Dict[str, Any]]:
+    """
+    20. GET /servicePayment/transaction/all/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/servicePayment/transaction/all/"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_all_service_transactions error: {e}")
+        return None
+
+
+# ==============================================================================
+# 21-22) SPLIT PAYMENT (TO'LOVNI BO'LISH)
+# ==============================================================================
+
+async def split_payment(transaction_id: str, split_rules: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """
+    21. POST /merchant/splitPayment/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/splitPayment/"
+    payload = {
+        "transactionId": str(transaction_id),
+        "splits": split_rules
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] split_payment error: {e}")
+        return None
+
+
+async def get_split_payment_status(transaction_id: str) -> Optional[Dict[str, Any]]:
+    """
+    22. GET /merchant/splitPayment/status/?transactionId={transactionId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/splitPayment/status/?transactionId={transaction_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_split_payment_status error: {e}")
+        return None
+
+
+# ==============================================================================
+# 23-26) FISCALIZATION (FISKALIZATSIYA VA CHEKLAR)
+# ==============================================================================
+
+async def register_fiscalization(transaction_id: str, fiscal_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    23. POST /merchant/fiscalization/register/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/fiscalization/register/"
+    payload = {
+        "transactionId": str(transaction_id),
+        "fiscalData": fiscal_data
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] register_fiscalization error: {e}")
+        return None
+
+
+async def get_fiscalization_status(transaction_id: str) -> Optional[Dict[str, Any]]:
+    """
+    24. GET /merchant/fiscalization/status/?transactionId={transactionId}
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/fiscalization/status/?transactionId={transaction_id}"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] get_fiscalization_status error: {e}")
+        return None
+
+
+async def refund_fiscalization(transaction_id: str, refund_reason: str) -> Optional[Dict[str, Any]]:
+    """
+    25. POST /merchant/fiscalization/refund/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/fiscalization/refund/"
+    payload = {
+        "transactionId": str(transaction_id),
+        "reason": refund_reason
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] refund_fiscalization error: {e}")
+        return None
+
+
+async def check_pinfl_activity_types(pinfl: str) -> Optional[Dict[str, Any]]:
+    """
+    26. POST /merchant/fiscalization/activity-types/
+    """
+    headers = await _get_auth_headers()
+    url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/fiscalization/activity-types/"
+    payload = {"pinfl": str(pinfl)}
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, headers=headers, timeout=15.0)
+            return res.json()
+    except Exception as e:
+        logging.error(f"[Paylov] check_pinfl_activity_types error: {e}")
         return None
