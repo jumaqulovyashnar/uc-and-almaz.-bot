@@ -93,16 +93,26 @@ async def create_user_card(user_id: str, card_number: str, expire_date: str) -> 
         return None
 
 
-async def confirm_user_card(card_id: str, otp: str) -> Optional[Dict[str, Any]]:
+async def confirm_user_card(
+    card_id: str,
+    otp: str,
+    card_name: Optional[str] = None,
+    pinfl: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     """
     2. POST /merchant/userCard/confirmUserCardCreate/
     """
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/userCard/confirmUserCardCreate/"
-    payload = {
+    payload: Dict[str, Any] = {
         "cardId": str(card_id),
         "otp": str(otp)
     }
+    if card_name:
+        payload["cardName"] = card_name
+    if pinfl:
+        payload["pinfl"] = pinfl
+
     try:
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)

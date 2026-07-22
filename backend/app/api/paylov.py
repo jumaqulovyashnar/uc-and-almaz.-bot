@@ -17,6 +17,8 @@ class AddCardInput(BaseModel):
 class ConfirmCardInput(BaseModel):
     cardId: str
     otp: str
+    cardName: Optional[str] = None
+    pinfl: Optional[str] = None
 
 class PayWithCardInput(BaseModel):
     orderId: str
@@ -86,7 +88,12 @@ async def add_card(data: AddCardInput, current_user: Dict[str, Any] = Depends(ge
 @router.post("/card/confirm")
 async def confirm_card(data: ConfirmCardInput, current_user: Dict[str, Any] = Depends(get_current_user)):
     """2. POST /merchant/userCard/confirmUserCardCreate/"""
-    res = await paylov_service.confirm_user_card(data.cardId, data.otp)
+    res = await paylov_service.confirm_user_card(
+        card_id=data.cardId,
+        otp=data.otp,
+        card_name=data.cardName,
+        pinfl=data.pinfl
+    )
     if not res:
         raise HTTPException(status_code=400, detail="OTP tasdiqlashda xatolik")
     return {"success": True, "data": res}
