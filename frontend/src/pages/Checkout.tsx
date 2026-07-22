@@ -124,8 +124,26 @@ export default function Checkout() {
         </div>
 
         <Card className="mt-6">
+          {/* Paylov Direct Online Auto Payment */}
+          <div className="mb-6 pb-6 border-b border-white/10">
+            <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              ⚡ {isUz ? "Avtomatik Lahzalik To'lov (Paylov)" : "Instant Auto Payment (Paylov)"}
+            </p>
+            <a
+              href={`https://paylov.uz/pay?merchant_id=54321ec0-f607-50c1-a5e0-27665e715b15&amount=${createdOrder.price}&order_id=${createdOrder.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)]"
+            >
+              🚀 {isUz ? "Paylov orqali to'lash (Uzcard / Humo / Click)" : "Pay via Paylov (Uzcard / Humo / Click)"}
+            </a>
+            <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">
+              {isUz ? "To'lov bajarilishi bilan donat 0.1 sekundda avtomatik o'yinga tushadi." : "Donate will be automatically delivered in 0.1s after payment."}
+            </p>
+          </div>
+
           <p className="text-xs text-gray-400 font-semibold mb-2 uppercase tracking-wide">
-            {isUz ? "Karta raqami (nusxa oling):" : "Card number (copy):"}
+            {isUz ? "Yoki qo'lda kartaga o'tkazish (P2P):" : "Or manual card transfer (P2P):"}
           </p>
           <div 
             className="bg-black/30 p-4 rounded-none flex justify-between items-center cursor-pointer border border-white/5 hover:border-white/20 transition-all"
