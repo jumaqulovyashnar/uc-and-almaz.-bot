@@ -143,13 +143,33 @@ export interface DynamicProduct {
   price_uzs: number;
 }
 
+/**
+ * Map remote image URL to local copy.
+ * Remote images from coindrop.uz are blocked by CORS/hotlink protection,
+ * so we serve local copies from /images/games/.
+ */
+function resolveGameImage(remoteUrl: string, gameKey: string): string {
+  if (!remoteUrl) return '';
+  try {
+    const filename = remoteUrl.split('/').pop()?.split('?')[0];
+    if (filename) {
+      return `/images/games/${filename}`;
+    }
+  } catch { /* ignore */ }
+  return remoteUrl;
+}
+
 export async function getDynamicGames(): Promise<DynamicGame[]> {
   try {
     const res = await fetch(`${API_BASE}/packages/games`);
     if (!res.ok) throw new Error('Failed to fetch dynamic games');
     const json = await res.json();
+    console.log('[API] getDynamicGames raw response:', json);
     if (json.status === 'success') {
-      return json.games;
+      return json.games.map((g: any) => ({
+        ...g,
+        image: resolveGameImage(g.image, g.key),
+      }));
     }
     return [];
   } catch (error) {
