@@ -60,50 +60,26 @@ const Home: React.FC = () => {
         <HeroSlider slides={HERO_SLIDES} autoPlayInterval={5000} />
       </div>
 
-      {/* ── Modern Stat Cards (Clickable for full category breakdown) ── */}
-      <div className="flex gap-4 px-4 mt-4 animate-slide-up">
-        {/* Card 1: Jami Sotilgan Tovarlar */}
+      {/* ── Single Full Width Stat Card ── */}
+      <div className="px-4 mt-4 animate-slide-up">
         <div
           onClick={() => setIsStatsModalOpen(true)}
-          className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3.5 flex-1 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(255,107,0,0.25)] flex flex-col justify-between"
+          className="bg-gradient-to-r from-[#FF6B00]/15 via-cyber-card to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-4 w-full transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,107,0,0.3)] flex items-center justify-between"
         >
           <div>
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
-                {isUz ? 'Jami Buyurtmalar' : 'Total Orders'}
-              </p>
+            <p className="text-xs text-gray-400 font-extrabold uppercase tracking-wider flex items-center gap-2">
               <ShoppingBag className="w-4 h-4 text-[#FF6B00]" />
-            </div>
+              <span>{isUz ? 'Jami Buyurtmalar Sonim' : 'Total Orders'}</span>
+            </p>
             <p className="text-2xl font-black text-white mt-1">
-              {stats !== null ? fmt(totalItemsSold) : '—'}
+              {stats !== null ? fmt(totalItemsSold) : '—'} <span className="text-xs font-semibold text-gray-400">ta buyurtma</span>
             </p>
           </div>
-          <p className="text-[10px] text-[#FF6B00] font-bold mt-2 flex items-center gap-0.5">
-            <span>{isUz ? '11 ta kategoriya' : '11 categories'}</span>
-            <ChevronRight className="w-3 h-3" />
-          </p>
-        </div>
 
-        {/* Card 2: Kategoriyalar Statistikasi */}
-        <div
-          onClick={() => setIsStatsModalOpen(true)}
-          className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3.5 flex-1 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(255,107,0,0.25)] flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
-                {isUz ? 'Tovarlar Statistikasi' : 'Product Stats'}
-              </p>
-              <BarChart3 className="w-4 h-4 text-[#FFB300]" />
-            </div>
-            <p className="text-2xl font-black text-white mt-1">
-              11 <span className="text-xs font-semibold text-gray-400">o'yin</span>
-            </p>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-[#FF6B00] bg-[#FF6B00]/10 px-3 py-1.5 border border-[#FF6B00]/30">
+            <span>{isUz ? '11 ta kategoriya' : '11 categories'}</span>
+            <ChevronRight className="w-4 h-4" />
           </div>
-          <p className="text-[10px] text-[#FF6B00] font-bold mt-2 flex items-center gap-0.5">
-            <span>{isUz ? 'Batafsil ko\'rish' : 'View Breakdown'}</span>
-            <ChevronRight className="w-3 h-3" />
-          </p>
         </div>
       </div>
 
