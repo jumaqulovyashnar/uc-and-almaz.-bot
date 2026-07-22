@@ -143,12 +143,43 @@ export interface DynamicProduct {
   price_uzs: number;
 }
 
+export const DEFAULT_GAMES: DynamicGame[] = [
+  { key: 'pubg-mobile-buykos', name: 'PUBG MOBILE', image: '/images/games/pubg-mobile-buykos.avif', popular: true },
+  { key: 'free-fire-cis-new', name: 'FREE FIRE', image: '/images/games/free-fire-cis-new.webp', popular: true },
+  { key: 'mobile-legends-ru', name: 'MOBILE LEGENDS (RU)', image: '/images/games/mobile-legends-ru.jpg', popular: true },
+  { key: 'mobile-legends-global', name: 'MOBILE LEGENDS (GLOBAL)', image: '/images/games/mobile-legends-global.webp', popular: false },
+  { key: 'standoff2-buydon', name: 'STANDOFF 2', image: '/images/games/standoff2-buydon.jpg', popular: false },
+  { key: 'blood-strike', name: 'BLOOD STRIKE', image: '/images/games/blood-strike.avif', popular: false },
+  { key: 'delta-force', name: 'DELTA FORCE', image: '/images/games/delta-force.avif', popular: false },
+  { key: 'arena-breakout', name: 'ARENA BREAKOUT', image: '/images/games/arena-breakout.avif', popular: false },
+  { key: 'steam', name: 'STEAM', image: '/images/games/steam.jpg', popular: false },
+  { key: 'capcut', name: 'CAPCUT', image: '/images/games/capcut.jpg', popular: false },
+  { key: 'stumble-guys', name: 'STUMBLE GUYS', image: '/images/games/stumble-guys.jpg', popular: false },
+];
+
 /**
- * Map remote image URL to local copy.
- * Remote images from coindrop.uz are blocked by CORS/hotlink protection,
- * so we serve local copies from /images/games/.
+ * Map remote image URL or gameKey directly to local static asset.
+ * Guarantees 0ms instant loading from local public directory.
  */
 function resolveGameImage(remoteUrl: string, gameKey: string): string {
+  if (gameKey) {
+    const keyMap: Record<string, string> = {
+      'pubg-mobile-buykos': '/images/games/pubg-mobile-buykos.avif',
+      'pubg': '/images/games/pubg-mobile-buykos.avif',
+      'free-fire-cis-new': '/images/games/free-fire-cis-new.webp',
+      'freefire': '/images/games/free-fire-cis-new.webp',
+      'mobile-legends-ru': '/images/games/mobile-legends-ru.jpg',
+      'mobile-legends-global': '/images/games/mobile-legends-global.webp',
+      'standoff2-buydon': '/images/games/standoff2-buydon.jpg',
+      'blood-strike': '/images/games/blood-strike.avif',
+      'delta-force': '/images/games/delta-force.avif',
+      'arena-breakout': '/images/games/arena-breakout.avif',
+      'steam': '/images/games/steam.jpg',
+      'capcut': '/images/games/capcut.jpg',
+      'stumble-guys': '/images/games/stumble-guys.jpg',
+    };
+    if (keyMap[gameKey]) return keyMap[gameKey];
+  }
   if (!remoteUrl) return '';
   try {
     const filename = remoteUrl.split('/').pop()?.split('?')[0];
@@ -164,17 +195,16 @@ export async function getDynamicGames(): Promise<DynamicGame[]> {
     const res = await fetch(`${API_BASE}/packages/games`);
     if (!res.ok) throw new Error('Failed to fetch dynamic games');
     const json = await res.json();
-    console.log('[API] getDynamicGames raw response:', json);
-    if (json.status === 'success') {
+    if (json.status === 'success' && Array.isArray(json.games) && json.games.length > 0) {
       return json.games.map((g: any) => ({
         ...g,
         image: resolveGameImage(g.image, g.key),
       }));
     }
-    return [];
+    return DEFAULT_GAMES;
   } catch (error) {
     console.error('[API] getDynamicGames error:', error);
-    return [];
+    return DEFAULT_GAMES;
   }
 }
 

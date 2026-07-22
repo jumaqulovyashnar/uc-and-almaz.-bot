@@ -6,7 +6,7 @@ import BottomNav from '../components/layout/BottomNav';
 import HeroSlider from '../components/shared/HeroSlider';
 import Modal from '../components/ui/Modal';
 import useStore from '../store/useStore';
-import { getPublicStats, getDynamicGames, type DynamicGame } from '../services/api';
+import { getPublicStats, getDynamicGames, DEFAULT_GAMES, type DynamicGame } from '../services/api';
 
 const HERO_SLIDES = [
   { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: "🎮 UC & To'plamlar — eng qulay narxlarda" },
@@ -20,8 +20,8 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { setGame, language } = useStore();
   const [stats, setStats] = useState<{ total_uc: number; total_diamonds: number } | null>(null);
-  const [games, setGames] = useState<DynamicGame[]>([]);
-  const [gamesLoading, setGamesLoading] = useState<boolean>(true);
+  const [games, setGames] = useState<DynamicGame[]>(DEFAULT_GAMES);
+  const [gamesLoading, setGamesLoading] = useState<boolean>(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
 
   const isUz = language === 'uz';
@@ -31,7 +31,7 @@ const Home: React.FC = () => {
     
     getDynamicGames()
       .then(g => {
-        setGames(g);
+        if (g && g.length > 0) setGames(g);
         setGamesLoading(false);
       })
       .catch(() => setGamesLoading(false));
