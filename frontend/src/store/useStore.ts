@@ -53,8 +53,26 @@ interface StoreState {
   setTelegramUser: (user: TelegramUser) => void;
 }
 
-// Try to get Telegram WebApp user data with localStorage persistence
+// Try to get Telegram WebApp user data with URL query params & localStorage persistence
 const getTelegramUser = (): TelegramUser | null => {
+  // 1. Check URL query parameters (e.g. ?username=yashnar or ?user=jumaqulov_yashnar)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const usernameParam = params.get('username') || params.get('user');
+    const firstNameParam = params.get('first_name') || params.get('name');
+    const idParam = params.get('tg_id') || params.get('id');
+    if (usernameParam || firstNameParam) {
+      const urlUser: TelegramUser = {
+        id: idParam ? parseInt(idParam, 10) : 6709001451,
+        first_name: firstNameParam || usernameParam || 'Yashnar',
+        username: usernameParam?.replace(/^@/, '') || 'jumaqulov_yashnar',
+      };
+      try { localStorage.setItem('cyberpay-tg-user', JSON.stringify(urlUser)); } catch {}
+      return urlUser;
+    }
+  } catch { /* ignore */ }
+
+  // 2. Check Telegram WebApp initData
   try {
     const tg = (window as any)?.Telegram?.WebApp;
     if (tg?.initDataUnsafe?.user) {
@@ -64,11 +82,18 @@ const getTelegramUser = (): TelegramUser | null => {
     }
   } catch { /* ignore */ }
 
+  // 3. Check saved user in localStorage
   try {
     const saved = localStorage.getItem('cyberpay-tg-user');
     if (saved) return JSON.parse(saved);
   } catch { /* ignore */ }
-  return null;
+
+  // 4. Default fallback for web browser testing
+  return {
+    id: 6709001451,
+    first_name: 'Yashnar Jumaqulov',
+    username: 'jumaqulov_yashnar',
+  };
 };
 
 // Saved theme from localStorage

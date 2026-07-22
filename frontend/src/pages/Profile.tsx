@@ -90,7 +90,7 @@ export default function Profile() {
     ? `@${tgUser.username}` 
     : (tgUser?.first_name 
         ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
-        : '@user');
+        : '@jumaqulov_yashnar');
 
   const userSubText = tgUser?.username && tgUser?.first_name 
     ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
