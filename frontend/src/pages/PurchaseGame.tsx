@@ -21,14 +21,14 @@ const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onClick }) =
       className={`
         flex justify-between items-center px-4 py-4 bg-cyber-card border cursor-pointer transition-all rounded-none w-full select-none
         ${isSelected
-          ? 'border-[#c6f806] ring-1 ring-[#c6f806]/20'
+          ? 'border-[#FF6B00] ring-1 ring-[#FF6B00]/20'
           : 'border-cyber-border hover:border-white/10'
         }
       `}
     >
       <span className="font-extrabold text-white text-sm">{pkg.name}</span>
       <div className="text-right">
-        <span className="text-[#c6f806] font-black text-sm">{formatPrice(pkg.price_uzs)}</span>
+        <span className="text-[#FF6B00] font-black text-sm">{formatPrice(pkg.price_uzs)}</span>
         <span className="text-gray-400 text-[11px] font-semibold ml-1">so'm</span>
       </div>
     </div>
@@ -132,7 +132,7 @@ export default function PurchaseGame() {
       {/* ── Section 02: SELECT PRODUCT ── */}
       <div className="px-4 mt-2 animate-fade-in">
         <div className="flex items-center mb-3">
-          <span className="bg-[#c6f806] text-black font-extrabold px-1.5 py-0.5 text-[10px] rounded-none">02</span>
+          <span className="bg-[#FF6B00] text-white font-extrabold px-1.5 py-0.5 text-[10px] rounded-none">02</span>
           <span className="text-white font-black tracking-wider text-[11px] ml-2 uppercase">
             {isUz ? 'PAKETNI TANLA' : 'SELECT PRODUCT'}
           </span>
@@ -140,7 +140,7 @@ export default function PurchaseGame() {
         </div>
 
         {/* Game Title Bar */}
-        <div className="bg-[#121118] border-l-[3px] border-[#c6f806] px-3.5 py-2.5 flex items-center gap-2 rounded-none mb-4">
+        <div className="bg-[#121118] border-l-[3px] border-[#FF6B00] px-3.5 py-2.5 flex items-center gap-2 rounded-none mb-4">
           <span className="text-sm">🎮</span>
           <span className="font-black text-white text-xs tracking-wider uppercase">{gameDisplayName}</span>
         </div>
@@ -176,7 +176,7 @@ export default function PurchaseGame() {
       {/* ── Section 03: ENTER DETAILS ── */}
       <div className="px-4 mt-8 animate-fade-in">
         <div className="flex items-center mb-4">
-          <span className="bg-[#c6f806] text-black font-extrabold px-1.5 py-0.5 text-[10px] rounded-none">03</span>
+          <span className="bg-[#FF6B00] text-white font-extrabold px-1.5 py-0.5 text-[10px] rounded-none">03</span>
           <span className="text-white font-black tracking-wider text-[11px] ml-2 uppercase">
             {isUz ? "MA'LUMOTLARNI KIRIT" : "ENTER DETAILS"}
           </span>
@@ -185,10 +185,10 @@ export default function PurchaseGame() {
 
         {/* Selected package block */}
         {selectedPackage && (
-          <div className="border border-[#c6f806] bg-cyber-card px-4 py-4 flex justify-between items-center rounded-none mb-4 animate-fade-in w-full">
+          <div className="border border-[#FF6B00] bg-cyber-card px-4 py-4 flex justify-between items-center rounded-none mb-4 animate-fade-in w-full">
             <span className="font-extrabold text-white text-sm">{selectedPackage.name}</span>
             <div className="text-right">
-              <span className="text-[#c6f806] font-black text-sm">{formatPrice(selectedPackage.price)}</span>
+              <span className="text-[#FF6B00] font-black text-sm">{formatPrice(selectedPackage.price)}</span>
               <span className="text-gray-400 text-[11px] font-semibold ml-1">so'm</span>
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function PurchaseGame() {
                 placeholder={`${idLabel} ${isUz ? 'kiriting...' : 'here...'}`}
                 value={playerId}
                 roundedClassName="rounded-none"
-                containerClassName="border-[#201E29] focus-within:border-[#c6f806] focus-within:ring-[#c6f806]/40"
+                containerClassName="border-[#201E29] focus-within:border-[#FF6B00] focus-within:ring-[#FF6B00]/40"
                 onChange={(e) => setPlayerId(e.target.value)}
               />
             </div>
@@ -219,7 +219,7 @@ export default function PurchaseGame() {
                   placeholder={isUz ? 'Server ID kiriting...' : 'Enter server ID...'}
                   value={serverId}
                   roundedClassName="rounded-none"
-                  containerClassName="border-[#201E29] focus-within:border-[#c6f806] focus-within:ring-[#c6f806]/40"
+                  containerClassName="border-[#201E29] focus-within:border-[#FF6B00] focus-within:ring-[#FF6B00]/40"
                   onChange={(e) => setServerId(e.target.value)}
                 />
               </div>
@@ -249,7 +249,7 @@ export default function PurchaseGame() {
           <button
             disabled={!selectedPackage || !playerId || (requiresServer && !serverId)}
             onClick={() => navigate('/checkout')}
-            className="w-full rounded-none bg-[#c6f806] hover:bg-[#b0dc05] active:scale-[0.99] text-black font-black text-sm uppercase py-4 tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-none bg-[#FF6B00] hover:bg-[#E65C00] text-white font-black text-sm uppercase py-4 tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{isUz ? 'DAVOM ETISH' : 'CONTINUE'}</span>
             <span className="text-base font-bold">➔</span>
