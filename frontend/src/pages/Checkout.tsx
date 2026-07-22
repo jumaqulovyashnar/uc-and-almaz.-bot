@@ -89,9 +89,45 @@ export default function Checkout() {
     return () => clearInterval(intervalId);
   }, [createdOrder, clearCart, navigate]);
 
+  // ── Card & Expire Date Regex Validation ──
+  const EXPIRE_REGEX = /^(0[1-9]|1[0-2])\/([2-9][0-9])$/;
+
+  const validateCardInputs = (): boolean => {
+    if (paymentMethod === 'uzcard' || paymentMethod === 'humo') {
+      const rawCard = userCardNumber.trim();
+      const rawExpire = userCardExpire.trim();
+
+      if (rawCard) {
+        const digitsOnly = rawCard.replace(/\s/g, '');
+        if (digitsOnly.length !== 16) {
+          setError(isUz ? "Karta raqami 16 ta raqamdan iborat bo'lishi kerak!" : "Card number must be exactly 16 digits!");
+          return false;
+        }
+        if (paymentMethod === 'uzcard' && !digitsOnly.startsWith('8600')) {
+          setError(isUz ? "UZCARD karta raqami '8600' bilan boshlanishi kerak!" : "UZCARD number must start with '8600'!");
+          return false;
+        }
+        if (paymentMethod === 'humo' && !digitsOnly.startsWith('9860')) {
+          setError(isUz ? "HUMO karta raqami '9860' bilan boshlanishi kerak!" : "HUMO number must start with '9860'!");
+          return false;
+        }
+      }
+
+      if (rawExpire) {
+        if (!EXPIRE_REGEX.test(rawExpire)) {
+          setError(isUz ? "Amal qilish muddati noto'g'ri! Format: OO/YY (masalan: 12/28)" : "Invalid expiry date! Format: MM/YY (e.g. 12/28)");
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!paymentMethod || !agreed || !selectedPackage || !selectedGame) return;
     
+    if (!validateCardInputs()) return;
+
     setLoading(true);
     setError(null);
     try {
