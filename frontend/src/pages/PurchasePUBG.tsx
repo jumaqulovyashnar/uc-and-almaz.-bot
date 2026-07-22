@@ -193,24 +193,26 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
   return (
     <div
       onClick={() => onClick(pkg)}
-      className={`relative overflow-hidden rounded-none p-3.5 cursor-pointer border transition-all duration-200 select-none flex flex-col justify-between h-[113px] ${
-        isSelected
-          ? 'bg-orange-500/15 border-orange-500 shadow-[0_0_14px_rgba(255,107,0,0.3)]'
+      className={`
+        flex justify-between items-center px-4 py-4 cursor-pointer border transition-all rounded-none w-full select-none
+        ${isSelected
+          ? 'bg-orange-500/15 border-orange-500 shadow-[0_0_12px_rgba(255,107,0,0.3)]'
           : 'bg-cyber-card border-cyber-border hover:border-orange-500/40'
-      }`}
+        }
+      `}
     >
-      <div className="absolute top-2 right-2 opacity-20">
-        <CurrencyIcon type="uc" className="w-5 h-5" />
+      <div className="flex items-center gap-2">
+        <span className="font-extrabold text-white text-sm">{pkg.name || `${pkg.amount} UC`}</span>
+        {pkg.discount !== undefined && pkg.discount > 0 && (
+          <span className="text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-none">
+            -{pkg.discount}%
+          </span>
+        )}
       </div>
-      <div>
-        <p className="text-base font-black text-white">{pkg.amount} UC</p>
+      <div className="text-right">
+        <span className="text-orange-500 font-black text-sm">{formatPrice(pkg.price)}</span>
+        <span className="text-gray-400 text-[11px] font-semibold ml-1">so'm</span>
       </div>
-      <p className={`text-xs font-bold ${isSelected ? 'text-orange-500' : 'text-gray-300'}`}>
-        {formatPrice(pkg.price)} <span className="text-[10px] font-normal text-gray-500">so'm</span>
-      </p>
-      {isSelected && (
-        <span className="absolute top-2 left-2 w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(255,107,0,0.8)]" />
-      )}
     </div>
   );
 };
