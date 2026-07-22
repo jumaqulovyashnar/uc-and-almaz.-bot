@@ -43,6 +43,21 @@ export default function Checkout() {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
+  const [userCardNumber, setUserCardNumber] = useState('');
+  const [userCardExpire, setUserCardExpire] = useState('');
+
+  const formatCardNumber = (val: string): string => {
+    const digits = val.replace(/\D/g, '').slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const formatCardExpire = (val: string): string => {
+    const digits = val.replace(/\D/g, '').slice(0, 4);
+    if (digits.length >= 3) {
+      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    return digits;
+  };
 
   // Timer logic
   useEffect(() => {
@@ -266,6 +281,43 @@ export default function Checkout() {
             onSelect={() => setPaymentMethod('humo')}
           />
         </div>
+
+        {/* Karta raqami va amal qilish muddati inputlari */}
+        {(paymentMethod === 'uzcard' || paymentMethod === 'humo') && (
+          <div className="mt-4 p-4 bg-cyber-card border border-orange-500/30 rounded-none animate-fade-in space-y-3">
+            <p className="text-xs font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1.5">
+              💳 {isUz ? "Karta Ma'lumotlaringiz (Karta Raqami va Amal Qilish Muddati):" : "Your Card Details (Number & Expiry Date):"}
+            </p>
+            
+            <div>
+              <label className="block text-[11px] text-gray-400 font-semibold mb-1">
+                {isUz ? "Karta raqami (16 ta raqam):" : "Card Number (16 digits):"}
+              </label>
+              <input
+                type="text"
+                maxLength={19}
+                placeholder={paymentMethod === 'uzcard' ? '8600 0000 0000 0000' : '9860 0000 0000 0000'}
+                value={userCardNumber}
+                onChange={(e) => setUserCardNumber(formatCardNumber(e.target.value))}
+                className="w-full bg-black/40 border border-white/10 text-white text-sm font-mono p-3 rounded-none focus:border-orange-500 outline-none tracking-widest placeholder-gray-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-gray-400 font-semibold mb-1">
+                {isUz ? "Amal qilish muddati (OO/YY):" : "Expiry Date (MM/YY):"}
+              </label>
+              <input
+                type="text"
+                maxLength={5}
+                placeholder="12/28"
+                value={userCardExpire}
+                onChange={(e) => setUserCardExpire(formatCardExpire(e.target.value))}
+                className="w-full bg-black/40 border border-white/10 text-white text-sm font-mono p-3 rounded-none focus:border-orange-500 outline-none tracking-widest placeholder-gray-600"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-5 flex items-center gap-3 animate-fade-in">

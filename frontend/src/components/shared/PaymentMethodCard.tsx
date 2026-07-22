@@ -74,10 +74,6 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({ method, se
         {/* Brand Display */}
         {getLogo()}
       </div>
-
-      <span className="text-[10px] text-gray-400 font-medium">
-        {method === 'visa' ? 'Xalqaro to\'lov' : 'Milliy to\'lov'}
-      </span>
     </div>
   );
 };
