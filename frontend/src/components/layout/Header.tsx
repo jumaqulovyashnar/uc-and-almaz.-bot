@@ -28,7 +28,7 @@ export const Header: React.FC = () => {
           variant="ghost"
           size="none"
           onClick={toggleLanguage}
-          className="h-8 px-3 flex items-center justify-center rounded-none bg-cyber-card border border-cyber-border text-xs font-black tracking-wider text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
+          className="h-8 px-3 flex items-center justify-center rounded-none bg-[#FF6B00]/10 border border-[#FF6B00] text-xs font-black tracking-wider text-[#FF6B00] hover:bg-[#FF6B00] hover:text-black hover:shadow-[0_0_12px_rgba(255,107,0,0.5)] transition-all duration-300"
           title={language === 'uz' ? "Switch to English" : "O'zbek tiliga o'tish"}
         >
           {language === 'uz' ? 'UZ' : 'EN'}
@@ -38,18 +38,18 @@ export const Header: React.FC = () => {
           variant="ghost"
           size="none"
           onClick={toggleTheme}
-          className="w-8 h-8 flex items-center justify-center rounded-none bg-cyber-card border border-cyber-border text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
+          className="w-8 h-8 flex items-center justify-center rounded-none bg-[#FF6B00]/10 border border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-black hover:shadow-[0_0_12px_rgba(255,107,0,0.5)] transition-all duration-300"
           title={theme === 'dark' ? "Kunduzgi rejim" : "Tungi rejim"}
         >
 
           {theme === 'dark' ? (
             // Sun icon for switching to light mode
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
             </svg>
           ) : (
             // Moon icon for switching to dark mode
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           )}
