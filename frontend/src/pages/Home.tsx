@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, ShoppingBag, BarChart3, ChevronRight } from 'lucide-react';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
 import HeroSlider from '../components/shared/HeroSlider';
+import Modal from '../components/ui/Modal';
 import useStore from '../store/useStore';
 import { getPublicStats, getDynamicGames, type DynamicGame } from '../services/api';
 
@@ -21,6 +22,7 @@ const Home: React.FC = () => {
   const [stats, setStats] = useState<{ total_uc: number; total_diamonds: number } | null>(null);
   const [games, setGames] = useState<DynamicGame[]>([]);
   const [gamesLoading, setGamesLoading] = useState<boolean>(true);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState<boolean>(false);
 
   const isUz = language === 'uz';
 
@@ -39,7 +41,6 @@ const Home: React.FC = () => {
 
   const handleGameSelect = (gameKey: string) => {
     setGame(gameKey);
-    // Legacy support for pubg-mobile-buykos to PurchasePUBG, free-fire-cis-new to PurchaseFreeFire, etc.
     if (gameKey === 'pubg-mobile-buykos' || gameKey === 'pubg') {
       navigate('/purchase/pubg');
     } else if (gameKey === 'free-fire-cis-new' || gameKey === 'freefire') {
@@ -49,6 +50,8 @@ const Home: React.FC = () => {
     }
   };
 
+  const totalItemsSold = stats ? (stats.total_uc + stats.total_diamonds) : 0;
+
   return (
     <div className="min-h-screen bg-cyber-bg pb-36">
       <Header />
@@ -57,29 +60,54 @@ const Home: React.FC = () => {
         <HeroSlider slides={HERO_SLIDES} autoPlayInterval={5000} />
       </div>
 
-      {/* Stats — real data from backend */}
+      {/* ── Modern Stat Cards (Clickable for full category breakdown) ── */}
       <div className="flex gap-4 px-4 mt-4 animate-slide-up">
-        <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3 flex-1 transition-all hover:shadow-[0_0_12px_rgba(255,107,0,0.25)]">
-          <p className="text-xs text-gray-400 font-medium">{isUz ? 'Jami UC' : 'Total UC'}</p>
-          <p className="text-xl font-black text-white mt-1">
-            {stats !== null ? fmt(stats.total_uc) : '—'}
+        {/* Card 1: Jami Sotilgan Tovarlar */}
+        <div
+          onClick={() => setIsStatsModalOpen(true)}
+          className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3.5 flex-1 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(255,107,0,0.25)] flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
+                {isUz ? 'Jami Buyurtmalar' : 'Total Orders'}
+              </p>
+              <ShoppingBag className="w-4 h-4 text-[#FF6B00]" />
+            </div>
+            <p className="text-2xl font-black text-white mt-1">
+              {stats !== null ? fmt(totalItemsSold) : '—'}
+            </p>
+          </div>
+          <p className="text-[10px] text-[#FF6B00] font-bold mt-2 flex items-center gap-0.5">
+            <span>{isUz ? '11 ta kategoriya' : '11 categories'}</span>
+            <ChevronRight className="w-3 h-3" />
           </p>
-          <svg className="w-4 h-4 text-cyber-purple opacity-60 mt-1" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
         </div>
-        <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3 flex-1 transition-all hover:shadow-[0_0_12px_rgba(255,107,0,0.25)]">
-          <p className="text-xs text-gray-400 font-medium">{isUz ? 'Jami Olmos' : 'Total Diamonds'}</p>
-          <p className="text-xl font-black text-white mt-1">
-            {stats !== null ? fmt(stats.total_diamonds) : '—'}
+
+        {/* Card 2: Kategoriyalar Statistikasi */}
+        <div
+          onClick={() => setIsStatsModalOpen(true)}
+          className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3.5 flex-1 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(255,107,0,0.25)] flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
+                {isUz ? 'Tovarlar Statistikasi' : 'Product Stats'}
+              </p>
+              <BarChart3 className="w-4 h-4 text-[#FFB300]" />
+            </div>
+            <p className="text-2xl font-black text-white mt-1">
+              11 <span className="text-xs font-semibold text-gray-400">o'yin</span>
+            </p>
+          </div>
+          <p className="text-[10px] text-[#FF6B00] font-bold mt-2 flex items-center gap-0.5">
+            <span>{isUz ? 'Batafsil ko\'rish' : 'View Breakdown'}</span>
+            <ChevronRight className="w-3 h-3" />
           </p>
-          <svg className="w-4 h-4 text-cyber-cyan opacity-60 mt-1" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
         </div>
       </div>
 
-      {/* Game select */}
+      {/* ── Game select Grid ── */}
       <div className="px-4 mt-6">
         <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-3">
           {isUz ? "O'yinni tanlang" : 'Select Game'}
@@ -88,9 +116,9 @@ const Home: React.FC = () => {
         {gamesLoading ? (
           <div className="flex justify-center py-10">
             <div className="flex gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyber-purple animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full bg-cyber-purple animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full bg-cyber-purple animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="w-2 h-2 rounded-full bg-[#FF6B00] animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 rounded-full bg-[#FF6B00] animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 rounded-full bg-[#FF6B00] animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
         ) : (
@@ -115,7 +143,6 @@ const Home: React.FC = () => {
                         alt={g.name}
                         className="w-full h-full object-cover rounded-none"
                         onError={(e) => {
-                          // Hide broken image, show fallback icon
                           (e.target as HTMLImageElement).style.display = 'none';
                           const parent = (e.target as HTMLImageElement).parentElement;
                           if (parent) {
@@ -134,7 +161,7 @@ const Home: React.FC = () => {
                   </h4>
                 </div>
                 <div className="text-[#FF6B00] font-extrabold text-[9px] tracking-wider uppercase mt-auto flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>{isUz ? 'DONAT OLISH' : 'DONAT OLISH'}</span>
+                  <span>DONAT OLISH</span>
                   <span className="text-[10px]">➔</span>
                 </div>
               </div>
@@ -142,6 +169,48 @@ const Home: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── Category Breakdown Modal for all 11 Games ── */}
+      <Modal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
+        title={isUz ? "BARCHA 11 TA KATEGORIYA STATISTIKASI" : "ALL 11 CATEGORIES STATS"}
+      >
+        <div className="max-h-[60vh] overflow-y-auto pr-1 flex flex-col gap-2 my-2 no-scrollbar">
+          {games.map((g) => (
+            <div
+              key={g.key}
+              onClick={() => {
+                setIsStatsModalOpen(false);
+                handleGameSelect(g.key);
+              }}
+              className="flex items-center justify-between p-3 bg-[#121118] border border-[#FF6B00]/30 hover:border-[#FF6B00] cursor-pointer transition-all rounded-none"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 border border-[#FF6B00]/40 bg-[#0c0e12] flex items-center justify-center rounded-none overflow-hidden flex-shrink-0">
+                  {g.image ? (
+                    <img src={g.image} alt={g.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Gamepad2 className="w-4 h-4 text-[#FF6B00]" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-extrabold text-white text-xs uppercase tracking-wide">{g.name}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    {isUz ? 'Mavjud xizmat' : 'Available service'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-1 border border-[#FF6B00]/30">
+                  DONAT OLISH ➔
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       <BottomNav />
     </div>
