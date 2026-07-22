@@ -53,16 +53,21 @@ interface StoreState {
   setTelegramUser: (user: TelegramUser) => void;
 }
 
-// Try to get Telegram WebApp user data
+// Try to get Telegram WebApp user data with localStorage persistence
 const getTelegramUser = (): TelegramUser | null => {
   try {
     const tg = (window as any)?.Telegram?.WebApp;
     if (tg?.initDataUnsafe?.user) {
-      return tg.initDataUnsafe.user as TelegramUser;
+      const u = tg.initDataUnsafe.user as TelegramUser;
+      try { localStorage.setItem('cyberpay-tg-user', JSON.stringify(u)); } catch {}
+      return u;
     }
-  } catch {
-    // not in Telegram WebApp
-  }
+  } catch { /* ignore */ }
+
+  try {
+    const saved = localStorage.getItem('cyberpay-tg-user');
+    if (saved) return JSON.parse(saved);
+  } catch { /* ignore */ }
   return null;
 };
 

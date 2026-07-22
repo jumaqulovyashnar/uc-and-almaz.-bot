@@ -86,11 +86,11 @@ export default function Profile() {
   const isUz = language === 'uz';
   const tgUser = telegramUser || (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  const nickname = tgUser?.username 
+  const realUsername = tgUser?.username 
     ? `@${tgUser.username}` 
     : (tgUser?.first_name 
         ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
-        : '@username');
+        : '@user');
 
   const userSubText = tgUser?.username && tgUser?.first_name 
     ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
@@ -109,7 +109,7 @@ export default function Profile() {
       {/* ── User Info Header ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-4 animate-fade-in">
         <h2 className="text-xl font-black text-white tracking-wide text-center">
-          {nickname}
+          {realUsername}
         </h2>
         {userSubText && (
           <p className="text-xs font-bold text-[#FF6B00] font-mono mt-1.5 bg-[#FF6B00]/10 px-3 py-1 border border-[#FF6B00]/30">
