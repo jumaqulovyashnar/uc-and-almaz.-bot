@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Copy, AlertTriangle, Check, ArrowLeft } from 'lucide-react';
+import { Copy, AlertTriangle, Check, ArrowLeft, CreditCard } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
 import { createOrder, getOrders } from '../services/api';
@@ -155,7 +155,7 @@ export default function Checkout() {
   };
 
   const price = selectedPackage?.price || 0;
-  const gameName = selectedGame ? selectedGame.replace(/-/g, ' ').toUpperCase() : 'GAME';
+  const gameName = selectedGame ? selectedGame.replace(/-buykos/gi, '').replace(/-cis-new/gi, '').replace(/-/g, ' ').toUpperCase() : 'GAME';
 
   const handleBack = () => {
     if (selectedGame) {
@@ -297,25 +297,25 @@ export default function Checkout() {
       )}
 
       <div className="mt-5 animate-fade-in">
-        <Card className="p-4 border-orange-500/30 bg-cyber-card/60">
+        <Card className="p-4 border-orange-500/40 bg-[#121118]/90">
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] text-orange-500 uppercase tracking-widest font-black">
+              <span className="text-xs text-orange-500 uppercase tracking-widest font-black">
                 {gameName}
               </span>
-              <h3 className="text-base font-black text-white mt-0.5">
+              <h3 className="text-lg font-black text-white mt-0.5">
                 {selectedPackage?.name || '—'}
               </h3>
-              <p className="text-xs text-gray-500 font-mono mt-1">
-                ID: {playerId || '—'}
+              <p className="text-xs text-gray-300 font-mono mt-1">
+                ID: <span className="text-white font-bold">{playerId || '—'}</span>
                 {serverId && ` (Server: ${serverId})`}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-lg font-black text-cyber-cyan">
+              <span className="text-xl font-black text-cyber-cyan">
                 {formatPrice(price)} so'm
               </span>
-              <p className="text-[10px] text-gray-500 font-bold mt-1">
+              <p className="text-[10px] text-emerald-400 font-bold mt-1 uppercase tracking-wide">
                 {isUz ? 'Avtomatik yetkazish' : 'Auto Delivery'}
               </p>
             </div>
@@ -342,13 +342,14 @@ export default function Checkout() {
 
         {/* Karta raqami va amal qilish muddati inputlari */}
         {(paymentMethod === 'uzcard' || paymentMethod === 'humo') && (
-          <div className="mt-4 p-4 bg-cyber-card border border-orange-500/30 rounded-none animate-fade-in space-y-3">
-            <p className="text-xs font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1.5">
-              💳 {isUz ? "Karta Ma'lumotlaringiz (Karta Raqami va Amal Qilish Muddati):" : "Your Card Details (Number & Expiry Date):"}
+          <div className="mt-4 p-4 bg-[#121118] border border-orange-500/40 rounded-none animate-fade-in space-y-3.5 shadow-lg">
+            <p className="text-xs font-black text-orange-500 uppercase tracking-wider flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-orange-500 shrink-0" />
+              <span>{isUz ? "Karta Ma'lumotlaringiz (Karta Raqami va Amal Qilish Muddati):" : "Your Card Details (Number & Expiry Date):"}</span>
             </p>
             
             <div>
-              <label className="block text-[11px] text-gray-400 font-semibold mb-1">
+              <label className="block text-xs text-gray-200 font-bold mb-1 tracking-wide">
                 {isUz ? "Karta raqami (16 ta raqam):" : "Card Number (16 digits):"}
               </label>
               <input
@@ -357,12 +358,12 @@ export default function Checkout() {
                 placeholder={paymentMethod === 'uzcard' ? '8600 0000 0000 0000' : '9860 0000 0000 0000'}
                 value={userCardNumber}
                 onChange={(e) => setUserCardNumber(formatCardNumber(e.target.value))}
-                className="w-full bg-black/40 border border-white/10 text-white text-sm font-mono p-3 rounded-none focus:border-orange-500 outline-none tracking-widest placeholder-gray-600"
+                className="w-full bg-black/70 border border-white/20 text-white font-black text-base font-mono p-3 rounded-none focus:border-orange-500 focus:bg-black/90 outline-none tracking-widest placeholder-gray-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] text-gray-400 font-semibold mb-1">
+              <label className="block text-xs text-gray-200 font-bold mb-1 tracking-wide">
                 {isUz ? "Amal qilish muddati (OO/YY):" : "Expiry Date (MM/YY):"}
               </label>
               <input
@@ -371,7 +372,7 @@ export default function Checkout() {
                 placeholder="12/28"
                 value={userCardExpire}
                 onChange={(e) => setUserCardExpire(formatCardExpire(e.target.value))}
-                className="w-full bg-black/40 border border-white/10 text-white text-sm font-mono p-3 rounded-none focus:border-orange-500 outline-none tracking-widest placeholder-gray-600"
+                className="w-full bg-black/70 border border-white/20 text-white font-black text-base font-mono p-3 rounded-none focus:border-orange-500 focus:bg-black/90 outline-none tracking-widest placeholder-gray-500 transition-colors"
               />
             </div>
           </div>
