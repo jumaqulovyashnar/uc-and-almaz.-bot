@@ -52,10 +52,6 @@ const Home: React.FC = () => {
 
   const totalItemsSold = stats ? (stats.total_uc + stats.total_diamonds) : 0;
 
-  return (
-    <div className="min-h-screen bg-cyber-bg pb-36">
-      <Header />
-
   const heroSlides = [
     { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: isUz ? "🎮 UC & To'plamlar — eng qulay narxlarda" : "🎮 UC & Bundles — best prices" },
     { id: 2, imageUrl: '/images/free.jpg',   title: 'FREE FIRE',    subtitle: isUz ? '💎 Olmos & Propuski — tez yetkazib berish' : '💎 Diamonds & Passes — instant delivery' },
