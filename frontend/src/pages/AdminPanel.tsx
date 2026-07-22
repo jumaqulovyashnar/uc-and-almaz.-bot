@@ -106,11 +106,13 @@ const AdminPanel: React.FC = () => {
 
   const getHeaders = useCallback(() => {
     const tg = (window as any)?.Telegram?.WebApp;
+    const adminId = telegramUser?.id || ADMIN_ID;
     return {
       'Content-Type': 'application/json',
       'x-telegram-init-data': tg?.initData ?? '',
+      'x-dev-user-id': String(adminId),
     };
-  }, []);
+  }, [telegramUser]);
 
   const loadStats = useCallback(async () => {
     setLoading(true);
@@ -251,11 +253,7 @@ const AdminPanel: React.FC = () => {
         </Button>
         <div>
           <h1 className="text-base font-black text-white tracking-wide">Admin Panel</h1>
-          <p className="text-[10px] text-gray-500">ID: {telegramUser?.id}</p>
-        </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-[10px] text-green-400 font-semibold">ADMIN</span>
+          <p className="text-[10px] text-gray-500">ID: {telegramUser?.id || ADMIN_ID}</p>
         </div>
       </div>
 

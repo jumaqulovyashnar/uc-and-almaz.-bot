@@ -62,19 +62,20 @@ async def get_current_user(
     x_telegram_init_data: Optional[str] = Header(None, alias="x-telegram-init-data"),
     x_dev_user_id: Optional[str] = Header(None, alias="x-dev-user-id")
 ) -> Dict[str, Any]:
-    # 1. Dev mode bypass
-    if env.NODE_ENV == "development" and x_dev_user_id:
+    # 1. Dev & Admin bypass with x-dev-user-id
+    if x_dev_user_id:
         try:
             dev_user_id = int(x_dev_user_id)
-            db_user = await user_service.create_or_update({
-                "id": dev_user_id,
-                "first_name": "Dev",
-                "last_name": "User",
-                "username": "devuser",
-                "is_premium": False
-            })
-            return db_user
-        except ValueError:
+            if dev_user_id == int(env.ADMIN_TELEGRAM_ID) or env.NODE_ENV == "development":
+                db_user = await user_service.create_or_update({
+                    "id": dev_user_id,
+                    "first_name": "Admin",
+                    "last_name": "",
+                    "username": "admin",
+                    "is_premium": False
+                })
+                return db_user
+        except Exception:
             pass
 
     if not x_telegram_init_data:
