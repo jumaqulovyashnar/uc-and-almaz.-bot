@@ -86,12 +86,16 @@ export default function Profile() {
   const isUz = language === 'uz';
   const tgUser = telegramUser || (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  const firstName = tgUser?.first_name || '';
-  const lastName = tgUser?.last_name || '';
-  const fullName = [firstName, lastName].filter(Boolean).join(' ') || (tgUser?.username ? `@${tgUser.username}` : (isUz ? 'Foydalanuvchi' : 'User'));
-  const username = tgUser?.username ? `@${tgUser.username}` : (tgUser?.id ? `ID: ${tgUser.id}` : null);
-  const photoUrl = tgUser?.photo_url;
-  const avatarLetter = (tgUser?.username || firstName || 'U').charAt(0).toUpperCase();
+  const nickname = tgUser?.username 
+    ? `@${tgUser.username}` 
+    : (tgUser?.first_name 
+        ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
+        : '@username');
+
+  const userSubText = tgUser?.username && tgUser?.first_name 
+    ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') 
+    : (tgUser?.id ? `ID: ${tgUser.id}` : null);
+
   const isAdmin = tgUser?.id === ADMIN_ID;
 
   useEffect(() => {
@@ -102,14 +106,14 @@ export default function Profile() {
     <div className="min-h-screen bg-cyber-bg pb-24 pt-16">
       <Header />
 
-      {/* ── User Info Header (Clean text without avatar box) ── */}
+      {/* ── User Info Header ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-4 animate-fade-in">
         <h2 className="text-xl font-black text-white tracking-wide text-center">
-          {fullName}
+          {nickname}
         </h2>
-        {username && (
+        {userSubText && (
           <p className="text-xs font-bold text-[#FF6B00] font-mono mt-1.5 bg-[#FF6B00]/10 px-3 py-1 border border-[#FF6B00]/30">
-            {username}
+            {userSubText}
           </p>
         )}
         {isAdmin && (
