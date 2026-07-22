@@ -5,14 +5,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import Button from '../components/ui/Button';
 import { Check, Copy } from 'lucide-react';
 import { getReferralData, type ReferralData } from '../services/api';
-
 import useStore from '../store/useStore';
 
 const Referrals: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { telegramUser } = useStore();
+  const { telegramUser, language } = useStore();
+
+  const isUz = language === 'uz';
   
   const fallbackLink = telegramUser 
     ? `https://t.me/top_DonateUzbot?startapp=${telegramUser.id}`
@@ -39,7 +40,6 @@ const Referrals: React.FC = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     
-    // Telegram haptic feedback if available
     if (window.Telegram?.WebApp?.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     }
@@ -55,25 +55,29 @@ const Referrals: React.FC = () => {
         {/* Title Section */}
         <div className="mb-6 animate-fade-in">
           <h1 className="text-2xl font-black tracking-wide text-white uppercase">
-            Referal Tizim
+            {isUz ? 'Referal Tizim' : 'Referral System'}
           </h1>
           <p className="text-xs text-gray-400 mt-1">
-            Do'stlaringizni taklif qiling va har bir xarididan daromad oling!
+            {isUz
+              ? "Do'stlaringizni taklif qiling va har bir xarididan daromad oling!"
+              : 'Invite friends and earn money from every purchase!'}
           </p>
         </div>
 
-        {/* Stats Grid using Shadcn Cards */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Card hover className="min-h-[130px]">
             <CardHeader>
-              <CardDescription className="text-gray-400">Jami a'zolar</CardDescription>
+              <CardDescription className="text-gray-400">
+                {isUz ? "Jami a'zolar" : 'Total Members'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mt-1" />
               ) : (
                 <p className="text-2xl font-black text-orange-500">
-                  {data?.referralsCount ?? 0} ta
+                  {data?.referralsCount ?? 0} {isUz ? 'ta' : 'members'}
                 </p>
               )}
             </CardContent>
@@ -81,14 +85,16 @@ const Referrals: React.FC = () => {
 
           <Card hover className="min-h-[130px]">
             <CardHeader>
-              <CardDescription className="text-gray-400">Ishlangan mablag'</CardDescription>
+              <CardDescription className="text-gray-400">
+                {isUz ? "Ishlangan mablag'" : 'Total Earned'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <div className="w-5 h-5 border-2 border-cyber-cyan border-t-transparent rounded-full animate-spin mt-1" />
               ) : (
                 <p className="text-xl font-black text-cyber-cyan">
-                  {(data?.referralBalance ?? 0).toLocaleString('uz-UZ')} so'm
+                  {(data?.referralBalance ?? 0).toLocaleString(isUz ? 'uz-UZ' : 'en-US')} {isUz ? "so'm" : 'UZS'}
                 </p>
               )}
             </CardContent>
@@ -98,8 +104,12 @@ const Referrals: React.FC = () => {
         {/* Referral Link Card */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Sizning taklif havolangiz</CardTitle>
-            <CardDescription>Ushbu havolani nusxalang va do'stlaringizga yuboring:</CardDescription>
+            <CardTitle>{isUz ? 'Sizning taklif havolangiz' : 'Your Referral Link'}</CardTitle>
+            <CardDescription>
+              {isUz
+                ? "Ushbu havolani nusxalang va do'stlaringizga yuboring:"
+                : 'Copy this link and send it to your friends:'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="mt-3">
             <div className="flex gap-2 bg-cyber-bg/50 border border-cyber-border rounded-none p-3 items-center justify-between">
@@ -120,9 +130,8 @@ const Referrals: React.FC = () => {
                 icon={copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 onClick={handleCopy}
               >
-                {copied ? 'Nusxalandi!' : 'Nusxa olish'}
+                {copied ? (isUz ? 'Nusxalandi!' : 'Copied!') : (isUz ? 'Nusxa olish' : 'Copy Link')}
               </Button>
-
             </div>
           </CardContent>
         </Card>
@@ -130,8 +139,12 @@ const Referrals: React.FC = () => {
         {/* Referred Users */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Taklif qilgan odamlar</CardTitle>
-            <CardDescription>Sizning havolangiz orqali qo'shilgan foydalanuvchilar:</CardDescription>
+            <CardTitle>{isUz ? 'Taklif qilgan odamlar' : 'Referred Users'}</CardTitle>
+            <CardDescription>
+              {isUz
+                ? "Sizning havolangiz orqali qo'shilgan foydalanuvchilar:"
+                : 'Users who joined via your referral link:'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -143,15 +156,17 @@ const Referrals: React.FC = () => {
                 {data.referredUsers.map((user) => (
                   <div key={user.id} className="flex justify-between items-center text-xs border-b border-cyber-border/40 pb-2 last:border-b-0 last:pb-0">
                     <div>
-                      <p className="text-white font-bold">{user.firstName || 'Foydalanuvchi'}</p>
+                      <p className="text-white font-bold">{user.firstName || (isUz ? 'Foydalanuvchi' : 'User')}</p>
                       <p className="text-gray-500 text-[10px] mt-0.5">ID: {user.telegramId}</p>
                     </div>
-                    <span className="text-gray-400 text-[10px]">{new Date(user.joinedAt).toLocaleDateString('uz-UZ')}</span>
+                    <span className="text-gray-400 text-[10px]">{new Date(user.joinedAt).toLocaleDateString(isUz ? 'uz-UZ' : 'en-US')}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500 text-center py-4">Hozircha taklif qilgan odamlar yo'q</p>
+              <p className="text-xs text-gray-500 text-center py-4">
+                {isUz ? "Hozircha taklif qilingan odamlar yo'q" : 'No referred users yet'}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -159,8 +174,12 @@ const Referrals: React.FC = () => {
         {/* Recent Earnings */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>So'nggi keshbeklar</CardTitle>
-            <CardDescription>Do'stlaringiz xaridlaridan tushgan daromadlar:</CardDescription>
+            <CardTitle>{isUz ? "So'nggi keshbeklar" : 'Recent Cashback'}</CardTitle>
+            <CardDescription>
+              {isUz
+                ? "Do'stlaringiz xaridlaridan tushgan daromadlar:"
+                : 'Income earned from your friends purchases:'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -173,14 +192,18 @@ const Referrals: React.FC = () => {
                   <div key={idx} className="flex justify-between items-center text-xs border-b border-cyber-border/40 pb-2 last:border-b-0 last:pb-0">
                     <div>
                       <p className="text-white font-bold">{earning.fromUser}</p>
-                      <p className="text-gray-500 text-[10px] mt-0.5">{new Date(earning.date).toLocaleString('uz-UZ')}</p>
+                      <p className="text-gray-500 text-[10px] mt-0.5">{new Date(earning.date).toLocaleString(isUz ? 'uz-UZ' : 'en-US')}</p>
                     </div>
-                    <span className="text-cyber-cyan font-bold font-mono">+{earning.amount.toLocaleString('uz-UZ')} so'm</span>
+                    <span className="text-cyber-cyan font-bold font-mono">
+                      +{earning.amount.toLocaleString(isUz ? 'uz-UZ' : 'en-US')} {isUz ? "so'm" : 'UZS'}
+                    </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500 text-center py-4">Hozircha keshbeklar mavjud emas</p>
+              <p className="text-xs text-gray-500 text-center py-4">
+                {isUz ? 'Hozircha keshbeklar mavjud emas' : 'No cashback earned yet'}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -188,7 +211,7 @@ const Referrals: React.FC = () => {
         {/* How it works */}
         <Card>
           <CardHeader>
-            <CardTitle className="mb-2">Bu qanday ishlaydi?</CardTitle>
+            <CardTitle className="mb-2">{isUz ? 'Bu qanday ishlaydi?' : 'How It Works?'}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-3 items-start">
@@ -196,9 +219,13 @@ const Referrals: React.FC = () => {
                 1
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Taklif qiling</p>
+                <p className="text-sm font-semibold text-white">
+                  {isUz ? 'Taklif qiling' : 'Invite Friends'}
+                </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Taklif havolangizni do'stlaringizga ijtimoiy tarmoqlar orqali yuboring.
+                  {isUz
+                    ? "Taklif havolangizni do'stlaringizga ijtimoiy tarmoqlar orqali yuboring."
+                    : 'Send your invitation link to friends via social networks.'}
                 </p>
               </div>
             </div>
@@ -208,9 +235,13 @@ const Referrals: React.FC = () => {
                 2
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Xarid amalga oshirishsin</p>
+                <p className="text-sm font-semibold text-white">
+                  {isUz ? 'Xarid amalga oshirishsin' : 'Make Purchases'}
+                </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Do'stingiz botga kirib, PUBG UC yoki Free Fire Diamonds sotib olsin.
+                  {isUz
+                    ? "Do'stingiz botga kirib, PUBG UC yoki Free Fire Diamonds sotib olsin."
+                    : 'Your friend enters the bot and buys PUBG UC or Free Fire Diamonds.'}
                 </p>
               </div>
             </div>
@@ -220,9 +251,13 @@ const Referrals: React.FC = () => {
                 3
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Keshbek oling (5%)</p>
+                <p className="text-sm font-semibold text-white">
+                  {isUz ? 'Keshbek oling (5%)' : 'Get Cashback (5%)'}
+                </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Do'stingiz to'lagan har bir tranzaksiyadan 5% sizning hisobingizga o'tadi!
+                  {isUz
+                    ? "Do'stingiz to'lagan har bir tranzaksiyadan 5% sizning hisobingizga o'tadi!"
+                    : 'Get 5% cashback transferred to your balance for every transaction!' }
                 </p>
               </div>
             </div>
