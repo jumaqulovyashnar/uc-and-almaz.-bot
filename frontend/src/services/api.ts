@@ -371,3 +371,55 @@ export async function getReferralData(): Promise<ReferralData | null> {
     return null;
   }
 }
+
+/**
+ * Paylov Merchant API Helper Methods
+ */
+export async function addPaylovCard(cardNumber: string, expireDate: string) {
+  const res = await fetch(`${API_BASE}/paylov/card/add`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ cardNumber, expireDate })
+  });
+  return res.json();
+}
+
+export async function confirmPaylovCard(cardId: string, otp: string) {
+  const res = await fetch(`${API_BASE}/paylov/card/confirm`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ cardId, otp })
+  });
+  return res.json();
+}
+
+export async function getPaylovCards() {
+  const res = await fetch(`${API_BASE}/paylov/cards`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+}
+
+export async function deletePaylovCard(cardId: string) {
+  const res = await fetch(`${API_BASE}/paylov/card/${cardId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return res.json();
+}
+
+export async function payWithPaylovSavedCard(orderId: string, cardId: string) {
+  const res = await fetch(`${API_BASE}/paylov/pay`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ orderId, cardId })
+  });
+  return res.json();
+}
+
+export async function getPaylovTransactionStatus(transactionId: string) {
+  const res = await fetch(`${API_BASE}/paylov/transactions/${transactionId}`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+}
