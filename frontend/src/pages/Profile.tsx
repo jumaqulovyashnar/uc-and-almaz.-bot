@@ -84,11 +84,15 @@ export default function Profile() {
   const [userStats, setUserStats] = useState<UserStats>({ order_count: 0, total_spent: 0 });
 
   const isUz = language === 'uz';
-  const isAdmin = telegramUser?.id === ADMIN_ID;
+  const tgUser = telegramUser || (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  const firstName   = telegramUser?.first_name ?? (isUz ? 'Foydalanuvchi' : 'User');
-  const username    = telegramUser?.username ? `@${telegramUser.username}` : null;
-  const avatarLetter = firstName.charAt(0).toUpperCase();
+  const firstName = tgUser?.first_name || '';
+  const lastName = tgUser?.last_name || '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ') || (tgUser?.username ? `@${tgUser.username}` : (isUz ? 'Foydalanuvchi' : 'User'));
+  const username = tgUser?.username ? `@${tgUser.username}` : (tgUser?.id ? `ID: ${tgUser.id}` : null);
+  const photoUrl = tgUser?.photo_url;
+  const avatarLetter = (tgUser?.username || firstName || 'U').charAt(0).toUpperCase();
+  const isAdmin = tgUser?.id === ADMIN_ID;
 
   useEffect(() => {
     fetchUserStats().then(s => setUserStats(s)).catch(() => {});
@@ -100,18 +104,28 @@ export default function Profile() {
 
       {/* ── Avatar & info ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-4 animate-fade-in">
-        {/* Avatar circle */}
-        <div className="relative">
-          <div className="w-20 h-20 rounded-none flex items-center justify-center shadow-xl"
-            style={{ background: 'linear-gradient(135deg, #FF6B00, #FFB300)' }}>
-            <span className="text-3xl font-black text-white">{avatarLetter}</span>
+        {/* Avatar box */}
+        <div className="relative mb-3">
+          <div className="w-20 h-20 rounded-none flex items-center justify-center shadow-xl border border-[#FF6B00]/40 overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #FF6B00, #E65C00)' }}>
+            {photoUrl ? (
+              <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl font-black text-white">{avatarLetter}</span>
+            )}
           </div>
-          {/* Online dot */}
-          <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-green-400 border-2 border-cyber-bg" />
+          {/* Online status indicator */}
+          <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-cyber-bg" />
         </div>
 
-        <h2 className="text-xl font-black text-white mt-3 tracking-wide">{firstName}</h2>
-        {username && <p className="text-xs text-gray-400 font-mono mt-0.5">{username}</p>}
+        <h2 className="text-xl font-black text-white tracking-wide text-center">
+          {fullName}
+        </h2>
+        {username && (
+          <p className="text-xs font-bold text-[#FF6B00] font-mono mt-1.5 bg-[#FF6B00]/10 px-3 py-1 border border-[#FF6B00]/30">
+            {username}
+          </p>
+        )}
         {isAdmin && (
           <span className="mt-2 text-[10px] font-black px-3 py-1 rounded-none bg-orange-500/20 border border-orange-500/40 text-orange-500 tracking-widest uppercase inline-flex items-center gap-1">
             <Crown className="w-3 h-3 text-orange-500" /> Admin
