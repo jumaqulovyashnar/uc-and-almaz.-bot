@@ -187,7 +187,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
-        "http://192.168.0.126:5173",  # LAN dev access
+        "http://192.168.0.126:5173",  # LAN dev access (old)
+        "http://192.168.100.104:5173",  # LAN dev access
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
