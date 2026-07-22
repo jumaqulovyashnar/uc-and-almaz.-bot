@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Copy, AlertTriangle, Check } from 'lucide-react';
+import { Copy, AlertTriangle, Check, ArrowLeft } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
 import { createOrder, getOrders } from '../services/api';
@@ -187,28 +187,13 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8">
-      <Button
-        variant="ghost"
-        size="none"
+      <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+        className="mb-4 flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-black px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M19 12H5" />
-          <path d="m12 19-7-7 7-7" />
-        </svg>
-        <span className="text-sm font-semibold">{isUz ? 'Ortga' : 'Back'}</span>
-      </Button>
+        <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+        <span>{language === 'uz' ? 'ORQAGA' : 'BACK'}</span>
+      </button>
 
       <h1 className="text-2xl font-black text-white mt-4 tracking-wide uppercase animate-fade-in">
         {isUz ? "To'lov" : 'Checkout'}

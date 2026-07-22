@@ -114,10 +114,10 @@ export default function PurchaseGame() {
       <div className="p-4 flex items-center">
         <button
           onClick={() => navigate('/home')}
-          className="bg-black/40 border border-white/20 text-gray-300 hover:text-white px-3 py-1.5 font-extrabold text-[11px] tracking-wider rounded-none transition-colors flex items-center gap-1.5"
+          className="flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-black px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          {isUz ? 'ORQAGA' : 'BACK'}
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+          <span>{isUz ? 'ORQAGA' : 'BACK'}</span>
         </button>
       </div>
 

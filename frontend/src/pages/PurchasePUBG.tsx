@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Gamepad2, CheckCircle2, AlertTriangle, Package, Sparkles, ShoppingCart } from 'lucide-react';
+import { Gamepad2, CheckCircle2, AlertTriangle, Package, Sparkles, ShoppingCart, ArrowLeft } from 'lucide-react';
 import CurrencyIcon from '../components/icons/CurrencyIcon';
 import { pubgPackages } from '../data/packages';
 import { useStore } from '../store/useStore';
@@ -353,9 +353,10 @@ const PurchasePUBG: React.FC = () => {
         {/* Back button */}
         <button
           onClick={() => navigate('/home')}
-          className="absolute top-3 left-3 z-20 bg-black/40 border border-white/20 text-gray-300 hover:text-white px-3 py-1.5 font-extrabold text-[11px] tracking-wider rounded-none transition-colors"
+          className="absolute top-3 left-3 z-20 flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-black px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95"
         >
-          ◀ {isUz ? 'ORQAGA' : 'BACK'}
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+          <span>{isUz ? 'ORQAGA' : 'BACK'}</span>
         </button>
 
         <PubgBannerSlider />
