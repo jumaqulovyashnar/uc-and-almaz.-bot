@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Copy, AlertTriangle, Check, ArrowLeft, CreditCard } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
-import { createOrder, getOrders } from '../services/api';
+import { createOrder, getOrders, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard } from '../services/api';
 import type { Order } from '../types';
 
 function formatPrice(price: number): string {
@@ -45,6 +45,11 @@ export default function Checkout() {
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
   const [userCardNumber, setUserCardNumber] = useState('');
   const [userCardExpire, setUserCardExpire] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [paylovCardId, setPaylovCardId] = useState<string | null>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
 
   const formatCardNumber = (val: string): string => {
     const digits = val.replace(/\D/g, '').slice(0, 16);
@@ -143,10 +148,55 @@ export default function Checkout() {
         serverId: serverId || undefined
       });
       setCreatedOrder(order);
+
+      // Initiate Paylov card creation and SMS OTP if card number is filled
+      const rawCard = userCardNumber.replace(/\s/g, '');
+      const rawExpire = userCardExpire.replace(/\s/g, '');
+      if (rawCard.length === 16 && rawExpire.length === 5) {
+        try {
+          const cardRes = await addPaylovCard(userCardNumber, userCardExpire);
+          const cid = cardRes?.data?.result?.cardId || cardRes?.data?.cardId || cardRes?.cardId;
+          if (cid) {
+            setPaylovCardId(cid);
+            setShowOtpModal(true);
+          }
+        } catch (cardErr: any) {
+          console.error('[Checkout] Paylov addCard failed:', cardErr);
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Xatolik yuz berdi');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmOtp = async () => {
+    if (!createdOrder || !paylovCardId || otpCode.length < 6) return;
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      // 1. Confirm OTP SMS code
+      const confirmRes = await confirmPaylovCard(paylovCardId, otpCode);
+      if (confirmRes?.error) {
+        setOtpError(confirmRes.error.message || 'SMS kod noto\'g\'ri');
+        setOtpLoading(false);
+        return;
+      }
+
+      // 2. Execute 1-click payment
+      const payRes = await payWithPaylovSavedCard(String(createdOrder.id), paylovCardId);
+      if (payRes?.success) {
+        clearCart();
+        setShowOtpModal(false);
+        navigate('/orders');
+      } else {
+        setOtpError(payRes?.detail || 'Kartadan pul yechishda xatolik');
+      }
+    } catch (err: any) {
+      setOtpError(err.message || 'OTP tasdiqlashda xatolik');
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -432,6 +482,65 @@ export default function Checkout() {
           {isUz ? "SOTIB OLISH ➔" : 'BUY NOW ➔'}
         </Button>
       </div>
+
+      {/* ── Paylov SMS OTP Modal ── */}
+      {showOtpModal && createdOrder && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#121118] border border-[#FF6B00] w-full max-w-md p-6 shadow-[0_0_30px_rgba(255,107,0,0.3)]">
+            <h3 className="text-base font-black text-white uppercase tracking-wider text-center flex items-center justify-center gap-2">
+              <span>📲</span>
+              <span>{isUz ? "SMS KODNI KIRITING" : "ENTER SMS OTP CODE"}</span>
+            </h3>
+            <p className="text-xs text-gray-300 mt-2 text-center">
+              {isUz ? "Karta egasining telefoniga yuborilgan 6 xonali SMS kodini kiriting:" : "Enter the 6-digit SMS OTP code sent to your phone:"}
+            </p>
+
+            {otpError && (
+              <div className="mt-3 p-2.5 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
+                {otpError}
+              </div>
+            )}
+
+            <div className="mt-4">
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="123456"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                className="w-full bg-black/80 border border-[#FF6B00]/60 text-white font-mono font-black text-2xl p-3 text-center tracking-[0.5em] focus:border-[#FF6B00] focus:bg-black outline-none placeholder-gray-600 shadow-inner"
+              />
+            </div>
+
+            <div className="mt-5 space-y-2">
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                disabled={otpCode.length < 6 || otpLoading}
+                onClick={handleConfirmOtp}
+                className="font-black text-sm uppercase py-3.5 tracking-wider"
+              >
+                {otpLoading ? (
+                  <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin mx-auto" />
+                ) : (
+                  <span>⚡ {isUz ? "TASDIQLASH VA TO'LASH" : "CONFIRM & PAY NOW"}</span>
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                fullWidth
+                size="sm"
+                onClick={() => setShowOtpModal(false)}
+                className="text-gray-400 font-bold text-xs hover:text-white"
+              >
+                {isUz ? "Bekor qilish" : "Cancel"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
