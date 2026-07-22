@@ -53,7 +53,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({ method, se
     <div
       onClick={() => onSelect(method)}
       className={`
-        flex items-center justify-between p-4 rounded-none border cursor-pointer transition-all duration-300 active:scale-98 select-none
+        flex items-center justify-between p-4 rounded-none border cursor-pointer transition-all duration-300 select-none
         ${getColors()}
       `}
     >

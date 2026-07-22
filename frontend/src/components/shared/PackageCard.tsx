@@ -19,11 +19,11 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onCli
     <div
       onClick={() => onClick(pkg)}
       className={`
-        relative overflow-hidden rounded-none p-4 cursor-pointer border transition-all duration-300 active:scale-95 flex flex-col justify-between h-[125px] select-none
+        relative overflow-hidden rounded-none p-4 cursor-pointer border transition-all duration-300 flex flex-col justify-between h-[125px] select-none
         ${isSelected
           ? isPubg
-            ? 'bg-[#FF6B00]/20 border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)] scale-[1.02]'
-            : 'bg-[#FFB300]/20 border-[#FFB300] shadow-[0_0_15px_rgba(255,179,0,0.3)] scale-[1.02]'
+            ? 'bg-[#FF6B00]/20 border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]'
+            : 'bg-[#FFB300]/20 border-[#FFB300] shadow-[0_0_15px_rgba(255,179,0,0.3)]'
           : 'bg-cyber-card border-cyber-border hover:border-[#FF6B00]/40'
         }
       `}

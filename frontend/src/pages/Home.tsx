@@ -59,7 +59,7 @@ const Home: React.FC = () => {
 
       {/* Stats — real data from backend */}
       <div className="flex gap-4 px-4 mt-4 animate-slide-up">
-        <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-2 hover:border-[#FF6B00] rounded-none p-3 flex-1 transition-all hover:shadow-[0_0_12px_rgba(255,107,0,0.25)]">
+        <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3 flex-1 transition-all hover:shadow-[0_0_12px_rgba(255,107,0,0.25)]">
           <p className="text-xs text-gray-400 font-medium">{isUz ? 'Jami UC' : 'Total UC'}</p>
           <p className="text-xl font-black text-white mt-1">
             {stats !== null ? fmt(stats.total_uc) : '—'}
@@ -68,7 +68,7 @@ const Home: React.FC = () => {
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
           </svg>
         </div>
-        <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-2 hover:border-[#FF6B00] rounded-none p-3 flex-1 transition-all hover:shadow-[0_0_12px_rgba(255,107,0,0.25)]">
+        <div className="bg-gradient-to-br from-amber-900/10 to-cyber-card border border-[#FF6B00]/40 hover:border-[#FF6B00] rounded-none p-3 flex-1 transition-all hover:shadow-[0_0_12px_rgba(255,107,0,0.25)]">
           <p className="text-xs text-gray-400 font-medium">{isUz ? 'Jami Olmos' : 'Total Diamonds'}</p>
           <p className="text-xl font-black text-white mt-1">
             {stats !== null ? fmt(stats.total_diamonds) : '—'}
@@ -99,7 +99,7 @@ const Home: React.FC = () => {
               <div
                 key={g.key}
                 onClick={() => handleGameSelect(g.key)}
-                className="relative bg-cyber-card border border-[#FF6B00]/50 hover:border-2 hover:border-[#FF6B00] hover:shadow-[0_0_15px_rgba(255,107,0,0.35)] rounded-none p-4 cursor-pointer transition-all flex flex-col justify-between h-[155px] animate-fade-in group select-none"
+                className="relative bg-cyber-card border border-[#FF6B00]/50 hover:border-[#FF6B00] hover:shadow-[0_0_15px_rgba(255,107,0,0.35)] rounded-none p-4 cursor-pointer transition-all flex flex-col justify-between h-[155px] animate-fade-in group select-none"
               >
                 {g.popular && (
                   <div className="absolute top-0 right-0 bg-[#FF6B00] text-white font-black text-[9px] px-1.5 py-0.5 tracking-wider uppercase">

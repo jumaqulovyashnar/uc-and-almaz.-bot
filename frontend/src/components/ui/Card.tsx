@@ -10,7 +10,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={`bg-cyber-card border border-[#FF6B00]/30 rounded-none p-4 animate-slide-up transition-all duration-300 ${
-        hover ? 'hover:scale-[1.02] hover:border-2 hover:border-[#FF6B00] hover:shadow-[0_0_15px_rgba(255,107,0,0.3)]' : ''
+        hover ? 'hover:border-[#FF6B00] hover:shadow-[0_0_15px_rgba(255,107,0,0.35)]' : ''
       } ${props.onClick ? 'cursor-pointer' : ''} ${className}`}
       {...props}
     />

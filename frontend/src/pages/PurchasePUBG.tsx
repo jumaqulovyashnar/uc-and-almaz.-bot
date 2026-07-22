@@ -138,7 +138,7 @@ const ToplamlarCard: React.FC<ToplamlarCardProps> = ({ pkg, isSelected, onClick 
   return (
     <div
       onClick={() => onClick(pkg)}
-      className={`relative flex items-center gap-3 rounded-none p-3 cursor-pointer border transition-all duration-200 active:scale-95 select-none ${borderColor}`}
+      className={`relative flex items-center gap-3 rounded-none p-3 cursor-pointer border transition-all duration-200 select-none ${borderColor}`}
     >
       {/* Icon box */}
       <div className={`w-11 h-11 rounded-none bg-gradient-to-br ${iconBg} flex items-center justify-center flex-shrink-0 shadow-md`}>
@@ -193,7 +193,7 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
   return (
     <div
       onClick={() => onClick(pkg)}
-      className={`relative overflow-hidden rounded-none p-3.5 cursor-pointer border transition-all duration-200 active:scale-95 select-none flex flex-col justify-between h-[113px] ${
+      className={`relative overflow-hidden rounded-none p-3.5 cursor-pointer border transition-all duration-200 select-none flex flex-col justify-between h-[113px] ${
         isSelected
           ? 'bg-orange-500/15 border-orange-500 shadow-[0_0_14px_rgba(255,107,0,0.3)]'
           : 'bg-cyber-card border-cyber-border hover:border-orange-500/40'
