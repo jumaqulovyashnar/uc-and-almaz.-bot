@@ -146,7 +146,7 @@ const Home: React.FC = () => {
                   </h4>
                 </div>
                 <div className="text-[#FF6B00] font-extrabold text-[9px] tracking-wider uppercase mt-auto flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>{isUz ? 'DONAT OLISH' : 'BUY NOW'}</span>
+                  <span>{isUz ? 'DONAT QILISH' : 'DONATE NOW'}</span>
                   <span className="text-[10px]">➔</span>
                 </div>
               </div>
@@ -189,7 +189,7 @@ const Home: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-1 border border-[#FF6B00]/30">
-                  {isUz ? 'DONAT OLISH ➔' : 'BUY NOW ➔'}
+                  {isUz ? 'DONAT QILISH ➔' : 'DONATE NOW ➔'}
                 </span>
               </div>
             </div>
