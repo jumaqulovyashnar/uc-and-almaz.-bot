@@ -17,10 +17,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
   return (
     <div
       onClick={onClick}
-      className="relative overflow-hidden rounded-2xl border border-cyber-border cursor-pointer select-none bg-black transition-all duration-300 card-hover"
+      className="relative overflow-hidden rounded-none border border-cyber-border cursor-pointer select-none bg-black transition-all duration-300 card-hover"
       style={{
         boxShadow: isPubg
-          ? '0 0 15px rgba(124,58,237,0.15)'
+          ? '0 0 15px rgba(255,107,0,0.15)'
           : '0 0 15px rgba(255,107,0,0.15)',
         height: '140px',
       }}
@@ -40,15 +40,15 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
           {/* Badge */}
           <div className="flex items-center gap-1.5 mb-2">
             <span
-              className="text-[10px] font-black px-2 py-0.5 rounded-full tracking-widest uppercase inline-flex items-center gap-1"
+              className="text-[10px] font-black px-2 py-0.5 rounded-none tracking-widest uppercase inline-flex items-center gap-1"
               style={{
                 background: isPubg
-                  ? 'rgba(180,80,255,0.25)'
+                  ? 'rgba(255,107,0,0.25)'
                   : 'rgba(255,140,0,0.25)',
                 border: isPubg
-                  ? '1px solid rgba(180,80,255,0.5)'
+                  ? '1px solid rgba(255,107,0,0.5)'
                   : '1px solid rgba(255,140,0,0.5)',
-                color: isPubg ? '#d580ff' : '#ffaa40',
+                color: isPubg ? '#FF6B00' : '#ffaa40',
               }}
             >
               {isPubg ? (
@@ -81,11 +81,11 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
 
         {/* Right side — arrow button */}
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
+          className="w-12 h-12 rounded-none flex items-center justify-center flex-shrink-0 shadow-lg"
           style={{
             background: isPubg
-              ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
-              : 'linear-gradient(135deg, #f97316, #ea580c)',
+              ? 'linear-gradient(135deg, #FF6B00, #E65C00)'
+              : 'linear-gradient(135deg, #FFB300, #E6A200)',
           }}
         >
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -99,7 +99,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, packagesCount, onClick
         className="absolute bottom-0 left-0 right-0 h-0.5"
         style={{
           background: isPubg
-            ? 'linear-gradient(90deg, transparent, #a855f7, transparent)'
+            ? 'linear-gradient(90deg, transparent, #FF6B00, transparent)'
             : 'linear-gradient(90deg, transparent, #f97316, transparent)',
         }}
       />

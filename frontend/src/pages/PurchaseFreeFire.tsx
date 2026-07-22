@@ -82,7 +82,7 @@ const FFBannerSlider: React.FC = () => {
               variant="ghost"
               size="none"
               onClick={() => goTo(i)}
-              className={`transition-all duration-300 rounded-full ${
+              className={`transition-all duration-300 rounded-none ${
                 i === current ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
               }`}
             />

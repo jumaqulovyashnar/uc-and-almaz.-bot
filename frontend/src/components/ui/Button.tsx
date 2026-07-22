@@ -28,7 +28,7 @@ const Button: React.FC<ButtonProps> = ({
   title,
 }) => {
   const baseClasses =
-    'rounded-xl font-semibold transition-all duration-200 inline-flex items-center justify-center gap-2';
+    'rounded-none font-semibold transition-all duration-200 inline-flex items-center justify-center gap-2';
 
   const variantClasses: Record<string, string> = {
     primary: 'gradient-primary text-white hover:brightness-110',

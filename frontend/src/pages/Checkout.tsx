@@ -128,7 +128,7 @@ export default function Checkout() {
             {isUz ? "Karta raqami (nusxa oling):" : "Card number (copy):"}
           </p>
           <div 
-            className="bg-black/30 p-4 rounded-xl flex justify-between items-center cursor-pointer border border-white/5 hover:border-white/20 transition-all"
+            className="bg-black/30 p-4 rounded-none flex justify-between items-center cursor-pointer border border-white/5 hover:border-white/20 transition-all"
             onClick={() => copyToClipboard(PAYMENT_CARDS[paymentMethod || 'uzcard'])}
           >
             <span className="text-xl font-mono font-bold tracking-widest text-white">
@@ -141,7 +141,7 @@ export default function Checkout() {
             {isUz ? "Karta egasi:" : "Card holder:"} <span className="text-white font-bold">{CARD_HOLDERS[paymentMethod || 'uzcard']}</span>
           </p>
 
-          <div className="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
+          <div className="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-none">
             <p className="text-xs text-red-400 font-bold mb-2 uppercase tracking-wide flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse flex-shrink-0" /> {isUz ? "Muhim!" : "Important!"}
             </p>
@@ -149,7 +149,7 @@ export default function Checkout() {
               {isUz ? "Ilovadan (Click, Payme, Uzum) to'lov qilayotganda izoh (kommentariya) qismiga faqatgina quydagini yozing:" : "When paying via your app (Click, Payme, Uzum) write exactly this in the comment:"}
             </p>
             <div 
-              className="bg-red-500/20 p-3 rounded-lg mt-3 flex justify-between items-center cursor-pointer hover:bg-red-500/30 transition-all"
+              className="bg-red-500/20 p-3 rounded-none mt-3 flex justify-between items-center cursor-pointer hover:bg-red-500/30 transition-all"
               onClick={() => copyToClipboard(`#${createdOrder.id}`)}
             >
               <span className="text-2xl font-black text-red-400 font-mono tracking-widest">
@@ -215,16 +215,16 @@ export default function Checkout() {
       </h1>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold">
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-none text-red-400 text-xs font-bold">
           {error}
         </div>
       )}
 
       <div className="mt-5 animate-fade-in">
-        <Card className="p-4 border-cyber-purple/30 bg-cyber-card/60">
+        <Card className="p-4 border-orange-500/30 bg-cyber-card/60">
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] text-cyber-purple uppercase tracking-widest font-black">
+              <span className="text-[10px] text-orange-500 uppercase tracking-widest font-black">
                 {gameName}
               </span>
               <h3 className="text-base font-black text-white mt-0.5">
@@ -272,7 +272,7 @@ export default function Checkout() {
           onClick={() => setAgreed(!agreed)}
           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
             agreed
-              ? 'bg-cyber-purple border-cyber-purple shadow-[0_0_8px_rgba(255,107,0,0.4)]'
+              ? 'bg-orange-500 border-orange-500 shadow-[0_0_8px_rgba(255,107,0,0.4)]'
               : 'border-gray-600 bg-transparent'
           }`}
         >
@@ -300,7 +300,7 @@ export default function Checkout() {
       {/* Total */}
       <div className="mt-6 flex justify-between items-center animate-fade-in">
         <span className="text-gray-400 text-sm font-semibold">{isUz ? 'Jami:' : 'Total:'}</span>
-        <span className="text-2xl font-black bg-gradient-to-r from-cyber-purple to-cyber-cyan bg-clip-text text-transparent tracking-wide">
+        <span className="text-2xl font-black bg-gradient-to-r from-orange-500 to-cyber-cyan bg-clip-text text-transparent tracking-wide">
           {formatPrice(price)} so'm
         </span>
       </div>

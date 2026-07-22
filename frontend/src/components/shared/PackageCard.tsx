@@ -19,12 +19,12 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onCli
     <div
       onClick={() => onClick(pkg)}
       className={`
-        relative overflow-hidden rounded-2xl p-4 cursor-pointer border transition-all duration-300 active:scale-95 flex flex-col justify-between h-[125px] select-none
+        relative overflow-hidden rounded-none p-4 cursor-pointer border transition-all duration-300 active:scale-95 flex flex-col justify-between h-[125px] select-none
         ${isSelected
           ? isPubg
-            ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_15px_rgba(124,58,237,0.3)] scale-[1.02]'
-            : 'bg-amber-500/20 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)] scale-[1.02]'
-          : 'bg-cyber-card border-cyber-border hover:border-cyber-purple/40'
+            ? 'bg-[#FF6B00]/20 border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)] scale-[1.02]'
+            : 'bg-[#FFB300]/20 border-[#FFB300] shadow-[0_0_15px_rgba(255,179,0,0.3)] scale-[1.02]'
+          : 'bg-cyber-card border-cyber-border hover:border-[#FF6B00]/40'
         }
       `}
     >
@@ -50,7 +50,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, isSelected, onCli
         </p>
         
         {pkg.discount !== undefined && pkg.discount > 0 && (
-          <span className="text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-md animate-pulse">
+          <span className="text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-none animate-pulse">
             -{pkg.discount}%
           </span>
         )}

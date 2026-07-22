@@ -16,7 +16,7 @@ interface CategoryTabsProps {
 export const CategoryTabs: React.FC<CategoryTabsProps> = ({ activeCategory, onChange, tabs }) => {
 
   return (
-    <div className="flex bg-cyber-card border border-cyber-border rounded-xl p-1 gap-1 mb-4 select-none">
+    <div className="flex bg-cyber-card border border-cyber-border rounded-none p-1 gap-1 mb-4 select-none">
       {tabs.map((tab) => {
         const active = activeCategory === tab.id;
         return (
@@ -26,7 +26,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({ activeCategory, onCh
             size="none"
             onClick={() => onChange(tab.id)}
             className={`
-              flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300
+              flex-1 py-2 text-xs font-bold rounded-none transition-all duration-300
               ${!active ? 'text-gray-400 hover:text-white' : 'shadow-md'}
             `}
           >

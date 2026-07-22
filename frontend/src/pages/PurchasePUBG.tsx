@@ -68,7 +68,7 @@ const PubgBannerSlider: React.FC = () => {
             PUBG MOBILE
           </h1>
           <p className="text-xs text-gray-300 mt-0.5 flex items-center gap-1">
-            <Gamepad2 className="w-3.5 h-3.5 text-cyber-purple" />
+            <Gamepad2 className="w-3.5 h-3.5 text-orange-500" />
             UC & To'plamlar
           </p>
         </div>
@@ -80,7 +80,7 @@ const PubgBannerSlider: React.FC = () => {
               variant="ghost"
               size="none"
               onClick={() => goTo(i)}
-              className={`transition-all duration-300 rounded-full ${
+              className={`transition-all duration-300 rounded-none ${
                 i === current ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
               }`}
             />
@@ -92,7 +92,7 @@ const PubgBannerSlider: React.FC = () => {
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
         <div
           key={current}
-          className="h-full bg-gradient-to-r from-cyber-purple to-cyber-cyan"
+          className="h-full bg-gradient-to-r from-orange-500 to-cyber-cyan"
           style={{ animation: 'pubgProgress 5s linear' }}
         />
       </div>
@@ -132,16 +132,16 @@ const ToplamlarCard: React.FC<ToplamlarCardProps> = ({ pkg, isSelected, onClick 
     : 'from-teal-600 to-emerald-800';
 
   const borderColor = isSelected
-    ? 'border-cyber-purple shadow-[0_0_12px_rgba(124,58,237,0.35)] bg-cyber-purple/10'
-    : 'border-cyber-border hover:border-cyber-purple/40 bg-cyber-card';
+    ? 'border-orange-500 shadow-[0_0_12px_rgba(255,107,0,0.35)] bg-orange-500/10'
+    : 'border-cyber-border hover:border-orange-500/40 bg-cyber-card';
 
   return (
     <div
       onClick={() => onClick(pkg)}
-      className={`relative flex items-center gap-3 rounded-2xl p-3 cursor-pointer border transition-all duration-200 active:scale-95 select-none ${borderColor}`}
+      className={`relative flex items-center gap-3 rounded-none p-3 cursor-pointer border transition-all duration-200 active:scale-95 select-none ${borderColor}`}
     >
       {/* Icon box */}
-      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${iconBg} flex items-center justify-center flex-shrink-0 shadow-md`}>
+      <div className={`w-11 h-11 rounded-none bg-gradient-to-br ${iconBg} flex items-center justify-center flex-shrink-0 shadow-md`}>
         {pkg.image ? (
           <span className="text-xl">{pkg.image}</span>
         ) : (
@@ -152,7 +152,7 @@ const ToplamlarCard: React.FC<ToplamlarCardProps> = ({ pkg, isSelected, onClick 
       {/* Text */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-white leading-tight truncate">{pkg.name}</p>
-        <p className="text-xs text-cyber-purple font-semibold mt-0.5">
+        <p className="text-xs text-orange-500 font-semibold mt-0.5">
           {formatPrice(pkg.price)} so'm
         </p>
       </div>
@@ -160,7 +160,7 @@ const ToplamlarCard: React.FC<ToplamlarCardProps> = ({ pkg, isSelected, onClick 
       {/* Selected radio dot */}
       <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all duration-200 ${
         isSelected
-          ? 'border-cyber-purple bg-cyber-purple shadow-[0_0_6px_rgba(124,58,237,0.6)]'
+          ? 'border-orange-500 bg-orange-500 shadow-[0_0_6px_rgba(255,107,0,0.6)]'
           : 'border-gray-600'
       }`}>
         {isSelected && (
@@ -193,10 +193,10 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
   return (
     <div
       onClick={() => onClick(pkg)}
-      className={`relative overflow-hidden rounded-2xl p-3.5 cursor-pointer border transition-all duration-200 active:scale-95 select-none flex flex-col justify-between h-[113px] ${
+      className={`relative overflow-hidden rounded-none p-3.5 cursor-pointer border transition-all duration-200 active:scale-95 select-none flex flex-col justify-between h-[113px] ${
         isSelected
-          ? 'bg-cyber-purple/15 border-cyber-purple shadow-[0_0_14px_rgba(124,58,237,0.3)]'
-          : 'bg-cyber-card border-cyber-border hover:border-cyber-purple/40'
+          ? 'bg-orange-500/15 border-orange-500 shadow-[0_0_14px_rgba(255,107,0,0.3)]'
+          : 'bg-cyber-card border-cyber-border hover:border-orange-500/40'
       }`}
     >
       <div className="absolute top-2 right-2 opacity-20">
@@ -205,11 +205,11 @@ const UcCard: React.FC<UcCardProps> = ({ pkg, isSelected, onClick }) => {
       <div>
         <p className="text-base font-black text-white">{pkg.amount} UC</p>
       </div>
-      <p className={`text-xs font-bold ${isSelected ? 'text-cyber-purple' : 'text-gray-300'}`}>
+      <p className={`text-xs font-bold ${isSelected ? 'text-orange-500' : 'text-gray-300'}`}>
         {formatPrice(pkg.price)} <span className="text-[10px] font-normal text-gray-500">so'm</span>
       </p>
       {isSelected && (
-        <span className="absolute top-2 left-2 w-2 h-2 rounded-full bg-cyber-purple shadow-[0_0_6px_rgba(124,58,237,0.8)]" />
+        <span className="absolute top-2 left-2 w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(255,107,0,0.8)]" />
       )}
     </div>
   );
@@ -465,7 +465,7 @@ const PurchasePUBG: React.FC = () => {
                 <p className="text-[10px] text-gray-500">{isUz ? 'Tanlangan:' : 'Selected:'}</p>
                 <p className="text-white font-bold text-sm">{selectedPackage.name}</p>
               </div>
-              <p className="text-cyber-purple font-black text-base">
+              <p className="text-orange-500 font-black text-base">
                 {formatPrice(selectedPackage.price)} <span className="text-xs font-normal text-gray-400">so'm</span>
               </p>
             </div>

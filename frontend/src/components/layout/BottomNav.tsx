@@ -72,7 +72,7 @@ export const BottomNav: React.FC = () => {
                   : 'text-gray-400 hover:text-gray-200'
               }`}
             >
-              <div className={`transition-transform duration-300 ${active ? 'drop-shadow-[0_0_6px_rgba(124,58,237,0.8)]' : ''}`}>
+              <div className={`transition-transform duration-300 ${active ? 'drop-shadow-[0_0_6px_rgba(255,107,0,0.8)]' : ''}`}>
                 {item.icon}
               </div>
               <span className="text-[10px] mt-0.5 tracking-wider">{item.label}</span>

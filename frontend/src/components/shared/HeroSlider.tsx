@@ -83,8 +83,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({
             variant="ghost"
             size="none"
             onClick={() => handleDotClick(i)}
-            className={`transition-all duration-300 rounded-full ${
-              i === current ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
+            className={`transition-all duration-300 rounded-none ${
+              i === current ? 'w-5 h-1.5 bg-[#FF6B00]' : 'w-1.5 h-1.5 bg-white/40'
             }`}
           />
         ))}

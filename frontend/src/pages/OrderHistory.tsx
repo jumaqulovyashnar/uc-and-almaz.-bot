@@ -60,7 +60,7 @@ export default function OrderHistory() {
               variant={active ? 'primary' : 'ghost'}
               size="none"
               onClick={() => setActiveFilter(filter.value)}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ${
+              className={`whitespace-nowrap rounded-none px-4 py-1.5 text-xs font-bold transition-all duration-300 ${
                 active
                   ? 'shadow-lg text-white'
                   : 'bg-cyber-card text-gray-400 border border-cyber-border hover:text-gray-300'
@@ -75,7 +75,7 @@ export default function OrderHistory() {
       {/* Order list */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-8 h-8 border-4 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredOrders.length > 0 ? (
         <div className="mt-6 flex flex-col gap-1">

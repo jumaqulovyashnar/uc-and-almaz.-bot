@@ -54,9 +54,9 @@ const SettingRow: React.FC<SettingRowProps> = ({ icon, iconBg, label, sub, right
   const inner = (
     <div
       onClick={onClick}
-      className="flex items-center gap-3 px-4 py-3.5 bg-cyber-card border border-cyber-border rounded-2xl active:scale-[0.98] transition-all duration-150 cursor-pointer hover:border-cyber-purple/40"
+      className="flex items-center gap-3 px-4 py-3.5 bg-cyber-card border border-cyber-border rounded-none active:scale-[0.98] transition-all duration-150 cursor-pointer hover:border-orange-500/40"
     >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+      <div className={`w-9 h-9 rounded-none flex items-center justify-center flex-shrink-0 ${iconBg}`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -102,7 +102,7 @@ export default function Profile() {
       <div className="flex flex-col items-center pt-6 pb-4 px-4 animate-fade-in">
         {/* Avatar circle */}
         <div className="relative">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-xl"
+          <div className="w-20 h-20 rounded-none flex items-center justify-center shadow-xl"
             style={{ background: 'linear-gradient(135deg, #FF6B00, #FFB300)' }}>
             <span className="text-3xl font-black text-white">{avatarLetter}</span>
           </div>
@@ -113,23 +113,23 @@ export default function Profile() {
         <h2 className="text-xl font-black text-white mt-3 tracking-wide">{firstName}</h2>
         {username && <p className="text-xs text-gray-400 font-mono mt-0.5">{username}</p>}
         {isAdmin && (
-          <span className="mt-2 text-[10px] font-black px-3 py-1 rounded-full bg-cyber-purple/20 border border-cyber-purple/40 text-cyber-purple tracking-widest uppercase inline-flex items-center gap-1">
-            <Crown className="w-3 h-3 text-cyber-purple" /> Admin
+          <span className="mt-2 text-[10px] font-black px-3 py-1 rounded-none bg-orange-500/20 border border-orange-500/40 text-orange-500 tracking-widest uppercase inline-flex items-center gap-1">
+            <Crown className="w-3 h-3 text-orange-500" /> Admin
           </span>
         )}
       </div>
 
       {/* ── Stats — real data ── */}
       <div className="grid grid-cols-2 gap-3 px-4 mt-2">
-        <div className="bg-cyber-card border border-cyber-border rounded-2xl p-4 text-center">
+        <div className="bg-cyber-card border border-cyber-border rounded-none p-4 text-center">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
             {isUz ? 'Buyurtmalar' : 'Orders'}
           </p>
-          <p className="text-3xl font-black text-cyber-purple mt-1">
+          <p className="text-3xl font-black text-orange-500 mt-1">
             {userStats.order_count}
           </p>
         </div>
-        <div className="bg-cyber-card border border-cyber-border rounded-2xl p-4 text-center">
+        <div className="bg-cyber-card border border-cyber-border rounded-none p-4 text-center">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
             {isUz ? 'Sarflangan' : 'Spent'}
           </p>
@@ -145,8 +145,8 @@ export default function Profile() {
 
         {/* Language */}
         <SettingRow
-          iconBg="bg-cyber-purple/15 border border-cyber-purple/25"
-          icon={<svg className="w-4 h-4 text-cyber-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
+          iconBg="bg-orange-500/15 border border-orange-500/25"
+          icon={<svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
           label={isUz ? 'Til' : 'Language'}
           right={<span className="text-xs text-gray-400 mr-1">{isUz ? "O'zbek" : 'English'}</span>}
           onClick={() => setLanguage(isUz ? 'en' : 'uz')}
@@ -198,7 +198,7 @@ export default function Profile() {
               ? "CyberPay bot — O'zbekistondagi eng yirik va ishonchli geyming do'koni."
               : 'CyberPay bot is the largest and most reliable gaming store in Uzbekistan.'}
           </p>
-          <div className="bg-cyber-bg/50 rounded-xl p-4 mb-4 border border-cyber-border">
+          <div className="bg-cyber-bg/50 rounded-none p-4 mb-4 border border-cyber-border">
             <h4 className="text-xs font-black text-white uppercase tracking-wider mb-2">
               {isUz ? 'Nega aynan biz?' : 'Why choose us?'}
             </h4>
@@ -219,10 +219,10 @@ export default function Profile() {
             <div className="flex flex-col gap-1">
               <p>Versiya: <span className="text-white font-mono">2.0.1</span></p>
               <p>Yaratuvchi:{' '}
-                <a href="https://t.me/yashnar" target="_blank" rel="noopener noreferrer" className="text-cyber-purple hover:underline">@yashnar</a>
+                <a href="https://t.me/yashnar" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">@yashnar</a>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+            <div className="w-10 h-10 rounded-none flex items-center justify-center shadow-lg"
               style={{ background: 'linear-gradient(135deg, #FF6B00, #FFB300)' }}>
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />

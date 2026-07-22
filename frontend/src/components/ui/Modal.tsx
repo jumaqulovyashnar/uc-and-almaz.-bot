@@ -25,14 +25,14 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={`
-          bg-cyber-card rounded-t-3xl p-6 w-full max-w-md animate-slide-up
+          bg-cyber-card rounded-none p-6 w-full max-w-md animate-slide-up
           border-t border-cyber-border relative
           ${className}
         `}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Pull indicator */}
-        <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+        <div className="w-12 h-1 bg-gray-600 rounded-none mx-auto mb-4" />
 
         {/* Close button */}
         <Button

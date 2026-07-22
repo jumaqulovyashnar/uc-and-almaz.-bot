@@ -24,23 +24,21 @@ export const Header: React.FC = () => {
 
       {/* Control panel (Theme & Language) */}
       <div className="flex items-center gap-2">
-        {/* Language selector toggle */}
         <Button
           variant="ghost"
           size="none"
           onClick={toggleLanguage}
-          className="h-8 px-3 flex items-center justify-center rounded-full bg-cyber-card border border-cyber-border text-xs font-black tracking-wider text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
+          className="h-8 px-3 flex items-center justify-center rounded-none bg-cyber-card border border-cyber-border text-xs font-black tracking-wider text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
           title={language === 'uz' ? "Switch to English" : "O'zbek tiliga o'tish"}
         >
           {language === 'uz' ? 'UZ' : 'EN'}
         </Button>
 
-        {/* Theme switcher toggle */}
         <Button
           variant="ghost"
           size="none"
           onClick={toggleTheme}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-card border border-cyber-border text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
+          className="w-8 h-8 flex items-center justify-center rounded-none bg-cyber-card border border-cyber-border text-gray-300 hover:text-white hover:border-cyber-purple/50 transition-all duration-300"
           title={theme === 'dark' ? "Kunduzgi rejim" : "Tungi rejim"}
         >
 

@@ -37,8 +37,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-            isPubg ? 'bg-purple-900/30 text-cyber-purple border border-purple-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+          <div className={`w-10 h-10 rounded-none flex items-center justify-center font-bold text-lg ${
+            isPubg ? 'bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
           }`}>
             {isPubg ? <Gamepad2 className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
           </div>
@@ -77,7 +77,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
             <span className="font-mono text-white/80">{order.id}</span>
           </div>
           {order.errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 mt-2">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-none p-2.5 mt-2">
               <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Xatolik sababi:</p>
               <p className="text-red-300/90 mt-0.5 text-[11px] leading-relaxed">{order.errorMessage}</p>
             </div>

@@ -70,9 +70,9 @@ const Referrals: React.FC = () => {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="w-5 h-5 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin mt-1" />
+                <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mt-1" />
               ) : (
-                <p className="text-2xl font-black text-cyber-purple">
+                <p className="text-2xl font-black text-orange-500">
                   {data?.referralsCount ?? 0} ta
                 </p>
               )}
@@ -102,7 +102,7 @@ const Referrals: React.FC = () => {
             <CardDescription>Ushbu havolani nusxalang va do'stlaringizga yuboring:</CardDescription>
           </CardHeader>
           <CardContent className="mt-3">
-            <div className="flex gap-2 bg-cyber-bg/50 border border-cyber-border rounded-xl p-3 items-center justify-between">
+            <div className="flex gap-2 bg-cyber-bg/50 border border-cyber-border rounded-none p-3 items-center justify-between">
               <a
                 href={referralLink}
                 target="_blank"
@@ -136,7 +136,7 @@ const Referrals: React.FC = () => {
           <CardContent>
             {loading ? (
               <div className="flex justify-center py-4">
-                <div className="w-5 h-5 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : data && data.referredUsers && data.referredUsers.length > 0 ? (
               <div className="space-y-3">
@@ -165,7 +165,7 @@ const Referrals: React.FC = () => {
           <CardContent>
             {loading ? (
               <div className="flex justify-center py-4">
-                <div className="w-5 h-5 border-2 border-cyber-purple border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : data && data.recentEarnings.length > 0 ? (
               <div className="space-y-3">
@@ -192,7 +192,7 @@ const Referrals: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-3 items-start">
-              <div className="w-6 h-6 rounded-full bg-cyber-purple/10 border border-cyber-purple/20 flex items-center justify-center text-xs font-bold text-cyber-purple shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-none bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-xs font-bold text-orange-500 shrink-0 mt-0.5">
                 1
               </div>
               <div>
@@ -204,7 +204,7 @@ const Referrals: React.FC = () => {
             </div>
 
             <div className="flex gap-3 items-start">
-              <div className="w-6 h-6 rounded-full bg-cyber-purple/10 border border-cyber-purple/20 flex items-center justify-center text-xs font-bold text-cyber-purple shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-none bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-xs font-bold text-orange-500 shrink-0 mt-0.5">
                 2
               </div>
               <div>
@@ -216,7 +216,7 @@ const Referrals: React.FC = () => {
             </div>
 
             <div className="flex gap-3 items-start">
-              <div className="w-6 h-6 rounded-full bg-cyber-purple/10 border border-cyber-purple/20 flex items-center justify-center text-xs font-bold text-cyber-purple shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-none bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-xs font-bold text-orange-500 shrink-0 mt-0.5">
                 3
               </div>
               <div>
