@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     PAYME_MERCHANT_ID: str = "54321ec0-f607-50c1-a5e0-27665e715b15"
     PAYME_MERCHANT_KEY: str = ""
 
+    # Paylov.uz Merchant API
+    PAYLOV_BASE_URL: str = "https://merchant.paylov.uz"
+    PAYLOV_USERNAME: str = ""
+    PAYLOV_PASSWORD: str = ""
+    PAYLOV_CONSUMER_KEY: str = ""
+    PAYLOV_CONSUMER_SECRET: str = ""
+
     # Provider Reseller API
     PROVIDER_API_KEY: str = ""
 
