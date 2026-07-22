@@ -56,8 +56,20 @@ const Home: React.FC = () => {
     <div className="min-h-screen bg-cyber-bg pb-36">
       <Header />
 
+  const heroSlides = [
+    { id: 1, imageUrl: '/images/pubg.jpg',   title: 'PUBG MOBILE',  subtitle: isUz ? "🎮 UC & To'plamlar — eng qulay narxlarda" : "🎮 UC & Bundles — best prices" },
+    { id: 2, imageUrl: '/images/free.jpg',   title: 'FREE FIRE',    subtitle: isUz ? '💎 Olmos & Propuski — tez yetkazib berish' : '💎 Diamonds & Passes — instant delivery' },
+    { id: 3, imageUrl: '/images/pubg1.webp', title: 'PUBG MOBILE',  subtitle: isUz ? "🏆 Prime & Prime Plus obunalar" : "🏆 Prime & Prime Plus subscriptions" },
+    { id: 4, imageUrl: '/images/free1.webp', title: 'FREE FIRE MAX', subtitle: isUz ? "⚡ 24/7 avtomatik to'ldirish" : "⚡ 24/7 automatic top-up" },
+    { id: 5, imageUrl: '/images/pubg2.jpg',  title: 'PUBG MOBILE',  subtitle: isUz ? '🎯 Barcha paketlar bir joyda' : '🎯 All packages in one place' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-cyber-bg pb-36">
+      <Header />
+
       <div className="pt-16">
-        <HeroSlider slides={HERO_SLIDES} autoPlayInterval={5000} />
+        <HeroSlider slides={heroSlides} autoPlayInterval={5000} />
       </div>
 
       {/* ── Single Full Width Horizontal Flex Stat Card ── */}
@@ -77,7 +89,9 @@ const Home: React.FC = () => {
             <span className="text-lg font-black text-[#FF6B00]">
               {stats !== null ? fmt(totalItemsSold) : '0'}
             </span>
-            <span className="text-sm font-extrabold text-[#FF6B00]">ta</span>
+            <span className="text-sm font-extrabold text-[#FF6B00]">
+              {isUz ? 'ta' : 'orders'}
+            </span>
           </div>
         </div>
       </div>
@@ -136,7 +150,7 @@ const Home: React.FC = () => {
                   </h4>
                 </div>
                 <div className="text-[#FF6B00] font-extrabold text-[9px] tracking-wider uppercase mt-auto flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>DONAT OLISH</span>
+                  <span>{isUz ? 'DONAT OLISH' : 'BUY NOW'}</span>
                   <span className="text-[10px]">➔</span>
                 </div>
               </div>
@@ -179,7 +193,7 @@ const Home: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-1 border border-[#FF6B00]/30">
-                  DONAT OLISH ➔
+                  {isUz ? 'DONAT OLISH ➔' : 'BUY NOW ➔'}
                 </span>
               </div>
             </div>
