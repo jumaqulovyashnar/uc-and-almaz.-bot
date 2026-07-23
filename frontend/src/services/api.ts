@@ -15,9 +15,8 @@ const getApiBase = (): string => {
     const params = new URLSearchParams(window.location.search);
     const urlApi = params.get('api_url');
     if (urlApi) {
-      // If we are on production (Vercel) and URL has 127.0.0.1 or localhost, ignore it
       if (!isLocal && (urlApi.includes('127.0.0.1') || urlApi.includes('localhost'))) {
-        // ignore invalid local IP on production
+        // ignore invalid local loopback IP on production
       } else {
         localStorage.setItem('cyberpay-api-url', urlApi);
         return urlApi;
@@ -27,28 +26,33 @@ const getApiBase = (): string => {
     console.error('Failed to parse URL params:', e);
   }
 
-  // 2. If running on Vercel / production domain, use relative /api (proxied via vercel.json)
-  if (!isLocal) {
-    return '/api';
-  }
-
-  // 3. Try to read from localStorage for dev testing
+  // 2. Try to read from localStorage (clean up stale local IP on production)
   try {
     const saved = localStorage.getItem('cyberpay-api-url');
     if (saved) {
-      return saved;
+      if (!isLocal && (saved.includes('127.0.0.1') || saved.includes('localhost') || saved.includes('192.168.'))) {
+        localStorage.removeItem('cyberpay-api-url');
+      } else {
+        return saved;
+      }
     }
   } catch (e) {
     // ignore
   }
 
-  // 4. Fallback to build-time environment variable or local dev
+  // 3. Fallback to build-time environment variable
   const envApi = import.meta.env.VITE_API_URL as string;
   if (envApi && !envApi.includes('REPLACE_WITH_YOUR_BACKEND_DOMAIN')) {
     return envApi;
   }
 
-  return 'http://localhost:3002/api';
+  // 4. Local dev machine fallback
+  if (isLocal) {
+    return 'http://localhost:3002/api';
+  }
+
+  // 5. Default Production HTTPS Backend API
+  return 'https://9b982d20125760.lhr.life/api';
 };
 
 export const API_BASE = getApiBase();
