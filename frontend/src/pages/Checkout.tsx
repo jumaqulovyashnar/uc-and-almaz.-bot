@@ -77,15 +77,15 @@ export default function Checkout() {
     return () => clearInterval(t);
   }, [createdOrder, timeLeft]);
 
-  // Polling logic
+  // Polling logic: only redirect if order is completed, processing or failed (NOT while pending/pending_payment or when entering OTP)
   useEffect(() => {
-    if (!createdOrder) return;
+    if (!createdOrder || showOtpModal) return;
 
     const poll = async () => {
       const orders = await getOrders();
       const current = orders.find(o => String(o.id) === String(createdOrder.id));
-      if (current && current.status !== 'pending_payment') {
-        // Status changed!
+      if (current && current.status !== 'pending' && current.status !== 'pending_payment') {
+        // Status changed to completed, processing or failed!
         clearCart();
         navigate('/orders');
       }
@@ -93,7 +93,7 @@ export default function Checkout() {
 
     const intervalId = setInterval(poll, 5000); // Poll every 5s
     return () => clearInterval(intervalId);
-  }, [createdOrder, clearCart, navigate]);
+  }, [createdOrder, showOtpModal, clearCart, navigate]);
 
   // ── Card & Expire Date Regex Validation ──
   const EXPIRE_REGEX = /^(0[1-9]|1[0-2])\/([2-9][0-9])$/;
