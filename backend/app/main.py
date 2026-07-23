@@ -3,8 +3,11 @@ import asyncio
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+import time
 import logging
 from contextlib import asynccontextmanager
+
+START_TIME = time.time()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.env import env
@@ -71,35 +74,32 @@ async def lifespan(app: FastAPI):
     db_ok = False
     redis_ok = False
 
-    # 1. Initialize PostgreSQL database
+    # 1. Initialize SQLite database
     try:
         await init_db()
         db_ok = await test_connection()
         if db_ok:
-            logging.info("[Server] ✅ PostgreSQL connected successfully.")
+            logging.info("[Server] ✅ SQLite database connected successfully.")
         else:
-            logging.warning("[Server] ⚠️ PostgreSQL connection test failed.")
+            logging.critical("[Server] ❌ SQLite database initialization test failed!")
+            raise RuntimeError("SQLite connection failed")
     except Exception as e:
-        logging.warning(f"[Server] ⚠️ PostgreSQL not available: {e}")
-        if env.NODE_ENV == "production":
-            logging.critical("[Server] PostgreSQL connection failed in production! Exiting...")
-            raise SystemExit(1)
-        logging.info("[Server] Development mode — continuing without PostgreSQL...")
+        logging.critical(f"[Server] ❌ SQLite database failed to initialize: {e}")
+        raise SystemExit(1)
 
-    # 2. Initialize Redis
+    # 2. Initialize Redis (Mandatory)
     try:
         await init_redis()
         redis_ok = await test_redis_connection()
         if redis_ok:
             logging.info("[Server] ✅ Redis connected successfully.")
         else:
-            logging.warning("[Server] ⚠️ Redis connection test failed.")
+            logging.critical("[Server] ❌ Redis connection test failed!")
+            raise RuntimeError("Redis connection test failed")
     except Exception as e:
-        logging.warning(f"[Server] ⚠️ Redis not available: {e}")
-        if env.NODE_ENV == "production":
-            logging.critical("[Server] Redis connection failed in production! Exiting...")
-            raise SystemExit(1)
-        logging.info("[Server] Development mode — continuing without Redis...")
+        logging.critical(f"[Server] ❌ Mandatory Redis service failed: {e}")
+        logging.critical("[Server] Redis is required for production operations. Exiting...")
+        raise SystemExit(1)
 
     # 3. Start Telegram Bot (aiogram long polling)
     try:
@@ -109,23 +109,17 @@ async def lifespan(app: FastAPI):
         logging.warning(f"[Server] ⚠️ Telegram Bot failed to start: {e}")
 
     # 4. Start Background Queue Worker
-    if redis_ok:
-        try:
-            worker_task = await start_purchase_worker()
-            logging.info("[Server] ✅ Purchase Worker started.")
-        except Exception as e:
-            logging.warning(f"[Server] ⚠️ Purchase Worker failed to start: {e}")
-    else:
-        logging.info("[Server] ⏭️ Skipping Purchase Worker (Redis not available).")
+    try:
+        worker_task = await start_purchase_worker()
+        logging.info("[Server] ✅ Purchase Worker started.")
+    except Exception as e:
+        logging.warning(f"[Server] ⚠️ Purchase Worker failed to start: {e}")
 
-    # 5. Start Price Sync Scheduler task
-    if db_ok:
-        sync_task = asyncio.create_task(price_sync_scheduler())
-        logging.info("[Server] ✅ Price Sync Scheduler started.")
-        expire_task = asyncio.create_task(expire_orders_scheduler())
-        logging.info("[Server] ✅ Expire Orders Scheduler started.")
-    else:
-        logging.info("[Server] ⏭️ Skipping Price Sync (PostgreSQL not available).")
+    # 5. Start Price Sync & Expiry Scheduler tasks
+    sync_task = asyncio.create_task(price_sync_scheduler())
+    logging.info("[Server] ✅ Price Sync Scheduler started.")
+    expire_task = asyncio.create_task(expire_orders_scheduler())
+    logging.info("[Server] ✅ Expire Orders Scheduler started.")
 
     logging.info("[Server] 🚀 CyberPay API server is ready!")
 
@@ -216,10 +210,34 @@ app.include_router(paylov_router, prefix="/api/paylov", tags=["Paylov Merchant A
 
 @app.get("/api/health")
 async def health_check():
-    return {
-        "success": True,
-        "message": "CyberPay API is healthy"
-    }
+    import os
+    import psutil
+    from fastapi.responses import JSONResponse
+
+    db_ok = await test_connection()
+    redis_ok = await test_redis_connection()
+
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    uptime_seconds = round(time.time() - START_TIME, 2)
+
+    is_healthy = db_ok and redis_ok
+    status_code = 200 if is_healthy else 503
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "healthy" if is_healthy else "degraded",
+            "database": db_ok,
+            "redis": redis_ok,
+            "uptime": f"{uptime_seconds}s",
+            "memory": {
+                "rss_mb": round(mem_info.rss / 1024 / 1024, 2),
+                "vms_mb": round(mem_info.vms / 1024 / 1024, 2)
+            },
+            "version": "1.0.0"
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn

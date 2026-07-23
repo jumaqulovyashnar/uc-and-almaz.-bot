@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     WELCOME_PHOTO_URL: str = "https://telegra.ph/file/0c99dfde637dfbf2b2207.png"
     WEBAPP_URL: str = "https://localhost:5173"
     API_URL: str = ""
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite:///cyberpay.db"
     REDIS_URL: str = "redis://localhost:6379"
     PORT: str = "3000"
     NODE_ENV: str = "development"
