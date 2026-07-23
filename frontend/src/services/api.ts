@@ -7,46 +7,47 @@ import type {
 } from '../types';
 
 const getApiBase = (): string => {
-  // 1. Try to read from URL query parameters
+  const isLocal = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.'));
+
+  // 1. Try to read from URL query parameters (only accept valid remote URLs or local when testing)
   try {
     const params = new URLSearchParams(window.location.search);
     const urlApi = params.get('api_url');
     if (urlApi) {
-      localStorage.setItem('cyberpay-api-url', urlApi);
-      return urlApi;
+      // If we are on production (Vercel) and URL has 127.0.0.1 or localhost, ignore it
+      if (!isLocal && (urlApi.includes('127.0.0.1') || urlApi.includes('localhost'))) {
+        // ignore invalid local IP on production
+      } else {
+        localStorage.setItem('cyberpay-api-url', urlApi);
+        return urlApi;
+      }
     }
   } catch (e) {
     console.error('Failed to parse URL params:', e);
   }
 
-  // 2. Try to read from localStorage (ignore stale LAN IPs when on localhost)
+  // 2. If running on Vercel / production domain, use relative /api (proxied via vercel.json)
+  if (!isLocal) {
+    return '/api';
+  }
+
+  // 3. Try to read from localStorage for dev testing
   try {
     const saved = localStorage.getItem('cyberpay-api-url');
     if (saved) {
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        if (saved.includes('192.168.')) {
-          localStorage.removeItem('cyberpay-api-url');
-        } else {
-          return saved;
-        }
-      } else {
-        return saved;
-      }
+      return saved;
     }
   } catch (e) {
     // ignore
   }
 
-  // 3. Fallback to build-time environment variable
+  // 4. Fallback to build-time environment variable or local dev
   const envApi = import.meta.env.VITE_API_URL as string;
   if (envApi && !envApi.includes('REPLACE_WITH_YOUR_BACKEND_DOMAIN')) {
-    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && envApi.includes('192.168.')) {
-      return 'http://localhost:3002/api';
-    }
     return envApi;
   }
 
-  // 4. Ultimate fallback (local dev)
   return 'http://localhost:3002/api';
 };
 
