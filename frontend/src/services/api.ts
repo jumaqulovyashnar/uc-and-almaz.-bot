@@ -51,8 +51,11 @@ const getApiBase = (): string => {
     return 'http://localhost:3002/api';
   }
 
-  // 5. Default Production HTTPS Backend API Tunnel
-  return 'https://54a8ee436e59de.lhr.life/api';
+  // 5. Default Production API (Vercel Serverless Function Proxy to EC2 Server)
+  if (typeof window !== 'undefined' && window.location.origin && !isLocal) {
+    return `${window.location.origin}/api`;
+  }
+  return '/api';
 };
 
 export const API_BASE = getApiBase();
