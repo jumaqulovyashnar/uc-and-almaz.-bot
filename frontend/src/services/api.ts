@@ -51,14 +51,21 @@ const getApiBase = (): string => {
     return 'http://localhost:3002/api';
   }
 
-  // 5. Default Production API (Vercel Proxy to EC2 Server)
-  if (typeof window !== 'undefined' && window.location.origin && !isLocal) {
-    return `${window.location.origin}/api`;
-  }
-  return '/api';
+  // 5. Default Production HTTPS Backend API Tunnel
+  return 'https://54a8ee436e59de.lhr.life/api';
 };
 
 export const API_BASE = getApiBase();
+
+async function safeJson(res: Response): Promise<any> {
+  try {
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  } catch (e) {
+    console.error('[API] Safe JSON parse error:', e);
+    return {};
+  }
+}
 
 const getHeaders = () => {
   const tg = (window as any)?.Telegram?.WebApp;
@@ -288,7 +295,7 @@ export async function createOrder(data: {
     })
   });
   
-  const json = await res.json();
+  const json = await safeJson(res);
   if (res.ok && json.success) {
     const o = json.data.order;
     return {
@@ -402,7 +409,7 @@ export async function addPaylovCard(cardNumber: string, expireDate: string) {
     headers: getHeaders(),
     body: JSON.stringify({ cardNumber, expireDate })
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function confirmPaylovCard(cardId: string, otp: string) {
@@ -411,14 +418,14 @@ export async function confirmPaylovCard(cardId: string, otp: string) {
     headers: getHeaders(),
     body: JSON.stringify({ cardId, otp })
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function getPaylovCards() {
   const res = await fetch(`${API_BASE}/paylov/cards`, {
     headers: getHeaders(),
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function deletePaylovCard(cardId: string) {
@@ -426,7 +433,7 @@ export async function deletePaylovCard(cardId: string) {
     method: 'DELETE',
     headers: getHeaders(),
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function payWithPaylovSavedCard(orderId: string, cardId: string) {
@@ -435,14 +442,14 @@ export async function payWithPaylovSavedCard(orderId: string, cardId: string) {
     headers: getHeaders(),
     body: JSON.stringify({ orderId, cardId })
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function getPaylovTransactionStatus(transactionId: string) {
   const res = await fetch(`${API_BASE}/paylov/transactions/${transactionId}`, {
     headers: getHeaders(),
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function paylovPaymentWithoutRegistration(cardNumber: string, expireDate: string, orderId: string) {
@@ -451,7 +458,7 @@ export async function paylovPaymentWithoutRegistration(cardNumber: string, expir
     headers: getHeaders(),
     body: JSON.stringify({ cardNumber, expireDate, orderId })
   });
-  return res.json();
+  return safeJson(res);
 }
 
 export async function paylovConfirmPaymentWithoutRegistration(transactionId: string, otp: string, orderId?: string) {
@@ -460,6 +467,6 @@ export async function paylovConfirmPaymentWithoutRegistration(transactionId: str
     headers: getHeaders(),
     body: JSON.stringify({ transactionId, otp, orderId })
   });
-  return res.json();
+  return safeJson(res);
 }
 
