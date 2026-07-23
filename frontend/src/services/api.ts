@@ -52,7 +52,7 @@ const getApiBase = (): string => {
   }
 
   // 5. Default Production HTTPS Backend API
-  return 'https://9b982d20125760.lhr.life/api';
+  return 'https://0f4ac90fb299d8.lhr.life/api';
 };
 
 export const API_BASE = getApiBase();
