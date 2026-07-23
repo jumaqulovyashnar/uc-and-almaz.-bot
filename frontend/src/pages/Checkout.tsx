@@ -100,30 +100,24 @@ export default function Checkout() {
 
   const validateCardInputs = (): boolean => {
     if (paymentMethod === 'uzcard' || paymentMethod === 'humo') {
-      const rawCard = userCardNumber.trim();
+      const rawCard = userCardNumber.replace(/\s/g, '');
       const rawExpire = userCardExpire.trim();
 
-      if (rawCard) {
-        const digitsOnly = rawCard.replace(/\s/g, '');
-        if (digitsOnly.length !== 16) {
-          setError(isUz ? "Karta raqami 16 ta raqamdan iborat bo'lishi kerak!" : "Card number must be exactly 16 digits!");
-          return false;
-        }
-        if (paymentMethod === 'uzcard' && !digitsOnly.startsWith('8600')) {
-          setError(isUz ? "UZCARD karta raqami '8600' bilan boshlanishi kerak!" : "UZCARD number must start with '8600'!");
-          return false;
-        }
-        if (paymentMethod === 'humo' && !digitsOnly.startsWith('9860')) {
-          setError(isUz ? "HUMO karta raqami '9860' bilan boshlanishi kerak!" : "HUMO number must start with '9860'!");
-          return false;
-        }
+      if (rawCard.length !== 16) {
+        setError(isUz ? "Karta raqami (16 xonali) to'liq kiritilishi kerak!" : "Card number must be exactly 16 digits!");
+        return false;
       }
-
-      if (rawExpire) {
-        if (!EXPIRE_REGEX.test(rawExpire)) {
-          setError(isUz ? "Amal qilish muddati noto'g'ri! Format: OO/YY (masalan: 12/28)" : "Invalid expiry date! Format: MM/YY (e.g. 12/28)");
-          return false;
-        }
+      if (paymentMethod === 'uzcard' && !rawCard.startsWith('8600')) {
+        setError(isUz ? "UZCARD karta raqami '8600' bilan boshlanishi kerak!" : "UZCARD number must start with '8600'!");
+        return false;
+      }
+      if (paymentMethod === 'humo' && !rawCard.startsWith('9860')) {
+        setError(isUz ? "HUMO karta raqami '9860' bilan boshlanishi kerak!" : "HUMO number must start with '9860'!");
+        return false;
+      }
+      if (!EXPIRE_REGEX.test(rawExpire)) {
+        setError(isUz ? "Amal qilish muddati noto'g'ri! Format: OO/YY (masalan: 12/28)" : "Invalid expiry date! Format: MM/YY (e.g. 12/28)");
+        return false;
       }
     }
     return true;
@@ -319,7 +313,7 @@ export default function Checkout() {
           </div>
         </Card>
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-3">
           <Button
             variant="primary"
             fullWidth
@@ -337,6 +331,75 @@ export default function Checkout() {
         <p className="text-center text-xs text-gray-500 mt-4">
           {isUz ? "To'lov qilganingizdan so'ng order avtomatik yangilanadi." : "Your order will be automatically updated after payment."}
         </p>
+
+        {/* Render OTP Modal when triggered inside createdOrder view */}
+        {showOtpModal && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-[#121118] border-2 border-[#FF6B00] w-full max-w-md p-6 shadow-[0_0_30px_rgba(255,107,0,0.4)]">
+              <h3 className="text-base font-black text-white uppercase tracking-wider text-center flex items-center justify-center gap-2">
+                <span className="text-xl">📲</span>
+                <span>{isUz ? "SMS KODNI KIRITING" : "ENTER SMS OTP CODE"}</span>
+              </h3>
+              <p className="text-xs text-gray-300 mt-2 text-center">
+                {isUz ? "Karta egasining telefoniga yuborilgan 6 xonali SMS kodini kiriting:" : "Enter the 6-digit SMS OTP code sent to your phone:"}
+              </p>
+
+              {otpError && (
+                <div className="mt-3 p-2.5 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
+                  {otpError}
+                </div>
+              )}
+
+              <div className="mt-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={otpCode}
+                  autoFocus
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtpCode(val);
+                    if (otpError) setOtpError(null);
+                  }}
+                  className="w-full bg-black/80 border-2 border-[#FF6B00] text-[#FF6B00] font-mono font-black text-3xl p-3 text-center tracking-[0.5em] focus:border-[#FF6B00] focus:bg-black outline-none placeholder-gray-700 shadow-inner"
+                />
+              </div>
+
+              <div className="mt-5 space-y-2">
+                <Button
+                  variant="primary"
+                  fullWidth
+                  size="lg"
+                  disabled={!/^\d{6}$/.test(otpCode) || otpLoading}
+                  onClick={handleConfirmOtp}
+                  className="font-black text-sm uppercase py-3.5 tracking-wider bg-[#FF6B00] text-black hover:bg-[#FF8500]"
+                >
+                  {otpLoading ? (
+                    <div className="w-4 h-4 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
+                  ) : (
+                    <span>⚡ {isUz ? "TASDIQLASH VA TO'LASH" : "CONFIRM & PAY NOW"}</span>
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  fullWidth
+                  size="sm"
+                  onClick={() => {
+                    setShowOtpModal(false);
+                    setOtpError(null);
+                    setOtpCode('');
+                  }}
+                  className="text-gray-400 font-bold text-xs hover:text-white"
+                >
+                  {isUz ? "Bekor qilish" : "Cancel"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
