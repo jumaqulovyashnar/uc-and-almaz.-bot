@@ -87,19 +87,20 @@ async def lifespan(app: FastAPI):
         logging.critical(f"[Server] ❌ SQLite database failed to initialize: {e}")
         raise SystemExit(1)
 
-    # 2. Initialize Redis (Mandatory)
+    # 2. Initialize Redis
     try:
         await init_redis()
         redis_ok = await test_redis_connection()
         if redis_ok:
             logging.info("[Server] ✅ Redis connected successfully.")
         else:
-            logging.critical("[Server] ❌ Redis connection test failed!")
-            raise RuntimeError("Redis connection test failed")
+            logging.warning("[Server] ⚠️ Redis connection test failed.")
     except Exception as e:
-        logging.critical(f"[Server] ❌ Mandatory Redis service failed: {e}")
-        logging.critical("[Server] Redis is required for production operations. Exiting...")
-        raise SystemExit(1)
+        logging.warning(f"[Server] ⚠️ Redis service not available: {e}")
+        if env.NODE_ENV == "production":
+            logging.critical("[Server] Redis is required for production operations. Exiting...")
+            raise SystemExit(1)
+        logging.info("[Server] Development mode — server starting without local Redis...")
 
     # 3. Start Telegram Bot (aiogram long polling)
     try:

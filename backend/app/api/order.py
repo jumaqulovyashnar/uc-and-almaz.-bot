@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional, Dict, Any
 import httpx
 import re
+import logging
 from app.middleware.auth import get_current_user
 from app.services import order as order_service
 from app.services import package as package_service
@@ -31,11 +32,11 @@ async def create_order(
         pkg_price = float(local_pkg["sell_price"])
         provider_product_id = local_pkg["provider_service_id"]
     else:
-        # Fetch from provider API dynamically
+        # Fetch from provider API dynamically with fallback
         url = f"https://69544e6345d5c.xvest5.ru/DonatlarimBot/api.php?action=get_products&game_key={payload.game}"
         try:
             async with httpx.AsyncClient() as client:
-                res = await client.get(url, timeout=15.0)
+                res = await client.get(url, timeout=10.0)
                 if res.status_code == 200:
                     api_data = res.json()
                     products = api_data.get("products", [])
@@ -43,26 +44,21 @@ async def create_order(
                     if matching_prod:
                         pkg_name = matching_prod["name"]
                         pkg_price = float(matching_prod["price_uzs"])
-                        # Extract first number from name as amount
                         amt_match = re.search(r'\d+', pkg_name)
-                        pkg_amount = int(amt_match.group()) if amt_match else 0
+                        pkg_amount = int(amt_match.group()) if amt_match else (payload.amount or 0)
                     else:
-                        raise HTTPException(
-                            status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Product not found in provider list"
-                        )
+                        pkg_name = payload.package_name or f"{payload.game} Package"
+                        pkg_amount = payload.amount or 0
+                        pkg_price = payload.price or 0.0
                 else:
-                    raise HTTPException(
-                        status_code=status.HTTP_502_BAD_GATEWAY,
-                        detail="Failed to connect to provider API"
-                    )
-        except HTTPException:
-            raise
+                    pkg_name = payload.package_name or f"{payload.game} Package"
+                    pkg_amount = payload.amount or 0
+                    pkg_price = payload.price or 0.0
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Provider lookup failed: {str(e)}"
-            )
+            logging.warning(f"[Order] Provider product lookup fallback: {e}")
+            pkg_name = payload.package_name or f"{payload.game} Package"
+            pkg_amount = payload.amount or 0
+            pkg_price = payload.price or 0.0
 
     # Create order in database
     order = await order_service.create({

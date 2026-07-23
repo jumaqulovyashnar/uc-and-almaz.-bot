@@ -26,9 +26,10 @@ async def init_redis() -> None:
         redis = real_redis
         logging.info("[Redis] Connected to Redis server successfully")
     except Exception as e:
-        logging.critical(f"[Redis] Connection failed to {env.REDIS_URL}: {e}")
+        logging.warning(f"[Redis] Connection failed to {env.REDIS_URL}: {e}")
         redis = None
-        raise RuntimeError(f"Redis connection failed. Application startup aborted: {e}")
+        if env.NODE_ENV == "production":
+            raise RuntimeError(f"Redis connection failed. Application startup aborted: {e}")
 
 async def close_redis() -> None:
     global redis

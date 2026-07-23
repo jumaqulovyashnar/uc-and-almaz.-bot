@@ -6,6 +6,9 @@ class CreateOrderInput(BaseModel):
     game: str = Field(..., min_length=1)
     category: str = Field(..., min_length=1)
     package_id: str = Field(..., min_length=1)
+    package_name: Optional[str] = None
+    amount: Optional[int] = 0
+    price: Optional[float] = 0.0
     player_id: str = Field(..., min_length=1, max_length=50)
     player_nickname: Optional[str] = Field(None, max_length=100)
     payment_method: str = Field(..., pattern="^(uzcard|humo|visa)$")
