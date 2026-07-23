@@ -123,10 +123,26 @@ export default function Checkout() {
     return true;
   };
 
+  const buildPaylovCheckoutUrl = (amount: number, orderId: string | number): string => {
+    const merchantId = '76345ec0-f509-49c1-a5e0-27665e715b13';
+    const returnUrl = `${window.location.origin}/orders`;
+    const queryStr = `merchant_id=${merchantId}&amount=${amount}&account.order_id=${orderId}&return_url=${encodeURIComponent(returnUrl)}`;
+    const base64Query = btoa(unescape(encodeURIComponent(queryStr)));
+    return `https://my.paylov.uz/checkout/create/${base64Query}`;
+  };
+
+  const openPaylovCheckout = (amount: number, orderId: string | number) => {
+    const paylovUrl = buildPaylovCheckoutUrl(amount, orderId);
+    const tg = (window as any)?.Telegram?.WebApp;
+    if (tg?.openLink) {
+      tg.openLink(paylovUrl);
+    } else {
+      window.location.href = paylovUrl;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!paymentMethod || !agreed || !selectedPackage || !selectedGame) return;
-    
-    if (!validateCardInputs()) return;
 
     setLoading(true);
     setError(null);
@@ -144,27 +160,8 @@ export default function Checkout() {
       });
       setCreatedOrder(order);
 
-      // Initiate Paylov Direct Card Payment and SMS OTP if card fields are filled
-      const rawCard = userCardNumber.replace(/\s/g, '');
-      const rawExpire = userCardExpire.replace(/\s/g, '');
-      if (rawCard.length === 16 && rawExpire.length === 5) {
-        try {
-          const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(order.id));
-          const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId;
-          if (txId) {
-            setPaylovTxId(txId);
-            setShowOtpModal(true);
-          } else {
-            const errDetail = cardRes?.detail || cardRes?.data?.error?.message || cardRes?.error?.message || (isUz ? "Karta ma'lumotlarini tekshiring yoki SMS kod yuborishda xatolik" : "Check card details or error sending SMS code");
-            setError(errDetail);
-          }
-        } catch (cardErr: any) {
-          console.error('[Checkout] Paylov direct payment error:', cardErr);
-          setError(cardErr.message || (isUz ? "Karta so'rovida xatolik yuz berdi" : "Error processing card request"));
-        }
-      } else {
-        setError(isUz ? "Karta raqami (16 xonali) va amal qilish muddatini (OO/YY) to'liq kiriting!" : "Please enter full 16-digit card number and MM/YY expiry!");
-      }
+      // Trigger Paylov Official Checkout (sends real SMS OTP to phone)
+      openPaylovCheckout(order.price, order.id);
     } catch (err: any) {
       setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
     } finally {
@@ -261,14 +258,13 @@ export default function Checkout() {
             <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
               ⚡ {isUz ? "Avtomatik Lahzalik To'lov (Paylov)" : "Instant Auto Payment (Paylov)"}
             </p>
-            <a
-              href={`https://my.paylov.uz/checkout/create/${btoa(`merchant_id=76345ec0-f509-49c1-a5e0-27665e715b13&amount=${createdOrder.price}&account.order_id=${createdOrder.id}&return_url=${encodeURIComponent(window.location.origin + '/orders')}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)]"
+            <button
+              type="button"
+              onClick={() => openPaylovCheckout(createdOrder.price, createdOrder.id)}
+              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
             >
               🚀 {isUz ? "Paylov orqali to'lash (Uzcard / Humo / Visa / Mastercard)" : "Pay via Paylov (Uzcard / Humo / Visa / Mastercard)"}
-            </a>
+            </button>
             <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">
               {isUz ? "To'lov bajarilishi bilan donat 0.1 sekundda avtomatik o'yinga tushadi." : "Donate will be automatically delivered in 0.1s after payment."}
             </p>
