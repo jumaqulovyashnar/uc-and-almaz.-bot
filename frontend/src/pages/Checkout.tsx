@@ -293,7 +293,7 @@ export default function Checkout() {
 
         <Card className="mt-6">
           {/* Paylov Direct Online Auto Payment */}
-          <div className="mb-6 pb-6 border-b border-white/10">
+          <div>
             <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
               ⚡ {isUz ? "Avtomatik Lahzalik To'lov (Paylov)" : "Instant Auto Payment (Paylov)"}
             </p>
@@ -326,61 +326,8 @@ export default function Checkout() {
               {isUz ? "Tepasidagi tugmani bossangiz SMS kod yuboriladi va avtomatik to'lov oynasi ochiladi." : "Clicking the button above will send SMS code and open payment modal."}
             </p>
           </div>
-
-          <p className="text-xs text-gray-400 font-semibold mb-2 uppercase tracking-wide">
-            {isUz ? "Yoki qo'lda kartaga o'tkazish (P2P):" : "Or manual card transfer (P2P):"}
-          </p>
-          <div 
-            className="bg-black/30 p-4 rounded-none flex justify-between items-center cursor-pointer border border-white/5 hover:border-white/20 transition-all"
-            onClick={() => copyToClipboard(PAYMENT_CARDS[paymentMethod || 'uzcard'])}
-          >
-            <span className="text-xl font-mono font-bold tracking-widest text-white">
-              {PAYMENT_CARDS[paymentMethod || 'uzcard']}
-            </span>
-            <Copy className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
-          </div>
-          
-          <p className="text-xs text-gray-400 mt-3 font-semibold">
-            {isUz ? "Karta egasi:" : "Card holder:"} <span className="text-white font-bold">{CARD_HOLDERS[paymentMethod || 'uzcard']}</span>
-          </p>
-
-          <div className="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-none">
-            <p className="text-xs text-red-400 font-bold mb-2 uppercase tracking-wide flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse flex-shrink-0" /> {isUz ? "Muhim!" : "Important!"}
-            </p>
-            <p className="text-sm text-white/90">
-              {isUz ? "Ilovadan (Click, Payme, Uzum) to'lov qilayotganda izoh (kommentariya) qismiga faqatgina quydagini yozing:" : "When paying via your app (Click, Payme, Uzum) write exactly this in the comment:"}
-            </p>
-            <div 
-              className="bg-red-500/20 p-3 rounded-none mt-3 flex justify-between items-center cursor-pointer hover:bg-red-500/30 transition-all"
-              onClick={() => copyToClipboard(`#${createdOrder.id}`)}
-            >
-              <span className="text-2xl font-black text-red-400 font-mono tracking-widest">
-                #{createdOrder.id}
-              </span>
-              <Copy className="w-5 h-5 text-red-400 hover:text-red-300 transition-colors" />
-            </div>
-            <p className="text-[10px] text-red-400 mt-2 font-semibold">
-              {isUz ? "Aks holda to'lov avtomatik qabul qilinmaydi va pulingiz qaytarilmaydi!" : "Otherwise your payment will not be processed automatically and money will not be refunded!"}
-            </p>
-          </div>
         </Card>
 
-        <div className="mt-6 space-y-3">
-          <Button
-            variant="primary"
-            fullWidth
-            size="lg"
-            onClick={() => {
-              clearCart();
-              navigate('/orders');
-            }}
-            icon={<Check className="w-4 h-4" />}
-            className="font-black text-sm py-3.5 tracking-wider"
-          >
-            {isUz ? "Men to'lov qildim" : 'I have paid'}
-          </Button>
-        </div>
         <p className="text-center text-xs text-gray-500 mt-4">
           {isUz ? "To'lov qilganingizdan so'ng order avtomatik yangilanadi." : "Your order will be automatically updated after payment."}
         </p>
