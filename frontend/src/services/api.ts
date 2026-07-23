@@ -19,10 +19,20 @@ const getApiBase = (): string => {
     console.error('Failed to parse URL params:', e);
   }
 
-  // 2. Try to read from localStorage
+  // 2. Try to read from localStorage (ignore stale LAN IPs when on localhost)
   try {
     const saved = localStorage.getItem('cyberpay-api-url');
-    if (saved) return saved;
+    if (saved) {
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (saved.includes('192.168.')) {
+          localStorage.removeItem('cyberpay-api-url');
+        } else {
+          return saved;
+        }
+      } else {
+        return saved;
+      }
+    }
   } catch (e) {
     // ignore
   }
@@ -30,6 +40,9 @@ const getApiBase = (): string => {
   // 3. Fallback to build-time environment variable
   const envApi = import.meta.env.VITE_API_URL as string;
   if (envApi && !envApi.includes('REPLACE_WITH_YOUR_BACKEND_DOMAIN')) {
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && envApi.includes('192.168.')) {
+      return 'http://localhost:3002/api';
+    }
     return envApi;
   }
 
