@@ -428,7 +428,10 @@ async def echo_all(message: types.Message, state: FSMContext):
 
 async def start_bot():
     logging.info("[Bot] Starting bot polling...")
-    await bot.delete_webhook(drop_pending_updates=True)
+    try:
+        await asyncio.wait_for(bot.delete_webhook(drop_pending_updates=True), timeout=3.0)
+    except Exception as e:
+        logging.warning(f"[Bot] Could not delete webhook or reach Telegram API: {e}")
     task = asyncio.create_task(dp.start_polling(bot))
     logging.info("[Bot] Bot polling task created.")
     return task

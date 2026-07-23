@@ -225,26 +225,34 @@ async def start_purchase_worker() -> asyncio.Task:
     async def delayed_jobs_loop():
         while True:
             try:
+                r = get_redis()
+                if not r:
+                    await asyncio.sleep(5.0)
+                    continue
                 now = int(time.time())
                 # Get jobs with score <= now
-                jobs = await get_redis().zrangebyscore(DELAYED_QUEUE_KEY, 0, now)
+                jobs = await r.zrangebyscore(DELAYED_QUEUE_KEY, 0, now)
                 if jobs:
                     for job_str in jobs:
-                        removed = await get_redis().zrem(DELAYED_QUEUE_KEY, job_str)
+                        removed = await r.zrem(DELAYED_QUEUE_KEY, job_str)
                         if removed:
-                            await get_redis().lpush(QUEUE_KEY, job_str)
+                            await r.lpush(QUEUE_KEY, job_str)
                             logging.info("[Queue] Moved delayed job to main queue")
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logging.error(f"[Worker] Delayed job processing error: {e}")
+                logging.debug(f"[Worker] Delayed job loop check: {e}")
             await asyncio.sleep(1.0)
 
     async def worker_loop():
         while True:
             try:
+                r = get_redis()
+                if not r:
+                    await asyncio.sleep(5.0)
+                    continue
                 # BRPOP blocks until an item is available, returns (list_key, value)
-                res = await get_redis().brpop(QUEUE_KEY, timeout=5)
+                res = await r.brpop(QUEUE_KEY, timeout=5)
                 if not res:
                     continue
                 
@@ -257,7 +265,7 @@ async def start_purchase_worker() -> asyncio.Task:
                 logging.info("[Worker] Worker loop stopped")
                 break
             except Exception as e:
-                logging.error(f"[Worker] Exception in worker loop: {e}")
+                logging.debug(f"[Worker] Exception in worker loop: {e}")
                 await asyncio.sleep(2.0)
                 
     asyncio.create_task(delayed_jobs_loop())
