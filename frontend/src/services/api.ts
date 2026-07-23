@@ -423,3 +423,22 @@ export async function getPaylovTransactionStatus(transactionId: string) {
   });
   return res.json();
 }
+
+export async function paylovPaymentWithoutRegistration(cardNumber: string, expireDate: string, orderId: string) {
+  const res = await fetch(`${API_BASE}/paylov/payment-without-registration`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ cardNumber, expireDate, orderId })
+  });
+  return res.json();
+}
+
+export async function paylovConfirmPaymentWithoutRegistration(transactionId: string, otp: string, orderId?: string) {
+  const res = await fetch(`${API_BASE}/paylov/confirm-payment-without-registration`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ transactionId, otp, orderId })
+  });
+  return res.json();
+}
+

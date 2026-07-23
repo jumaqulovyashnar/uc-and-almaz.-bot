@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Copy, AlertTriangle, Check, ArrowLeft, CreditCard } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
-import { createOrder, getOrders, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard } from '../services/api';
+import { createOrder, getOrders, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration } from '../services/api';
 import type { Order } from '../types';
 
 function formatPrice(price: number): string {
@@ -48,6 +48,7 @@ export default function Checkout() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [paylovCardId, setPaylovCardId] = useState<string | null>(null);
+  const [paylovTxId, setPaylovTxId] = useState<string | null>(null);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
 
@@ -149,26 +150,25 @@ export default function Checkout() {
       });
       setCreatedOrder(order);
 
-      // Initiate Paylov card creation and SMS OTP if card number is filled
+      // Initiate Paylov Direct Card Payment and SMS OTP if card fields are filled
       const rawCard = userCardNumber.replace(/\s/g, '');
       const rawExpire = userCardExpire.replace(/\s/g, '');
       if (rawCard.length === 16 && rawExpire.length === 5) {
         try {
-          const cardRes = await addPaylovCard(userCardNumber, userCardExpire);
-          const cid = cardRes?.data?.result?.cardId || cardRes?.data?.cardId || cardRes?.result?.cardId || cardRes?.cardId;
-          if (cid) {
-            setPaylovCardId(cid);
+          const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(order.id));
+          const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId;
+          if (txId) {
+            setPaylovTxId(txId);
             setShowOtpModal(true);
           } else {
             const errDetail = cardRes?.detail || cardRes?.data?.error?.message || cardRes?.error?.message || (isUz ? "Karta ma'lumotlarini tekshiring yoki SMS kod yuborishda xatolik" : "Check card details or error sending SMS code");
             setError(errDetail);
           }
         } catch (cardErr: any) {
-          console.error('[Checkout] Paylov addCard error:', cardErr);
-          setError(cardErr.message || (isUz ? "Karta qo'shishda xatolik yuz berdi" : "Error adding card"));
+          console.error('[Checkout] Paylov direct payment error:', cardErr);
+          setError(cardErr.message || (isUz ? "Karta so'rovida xatolik yuz berdi" : "Error processing card request"));
         }
       } else {
-        // If manual transfer or card fields not fully filled, show payment order info
         setError(isUz ? "Karta raqami (16 xonali) va amal qilish muddatini (OO/YY) to'liq kiriting!" : "Please enter full 16-digit card number and MM/YY expiry!");
       }
     } catch (err: any) {
@@ -179,26 +179,34 @@ export default function Checkout() {
   };
 
   const handleConfirmOtp = async () => {
-    if (!createdOrder || !paylovCardId || otpCode.length < 6) return;
+    if (!createdOrder || (!paylovTxId && !paylovCardId) || otpCode.length < 6) return;
     setOtpLoading(true);
     setOtpError(null);
     try {
-      // 1. Confirm OTP SMS code
-      const confirmRes = await confirmPaylovCard(paylovCardId, otpCode);
-      if (confirmRes?.error) {
-        setOtpError(confirmRes.error.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
-        setOtpLoading(false);
-        return;
-      }
-
-      // 2. Execute 1-click payment
-      const payRes = await payWithPaylovSavedCard(String(createdOrder.id), paylovCardId);
-      if (payRes?.success || payRes?.data?.success) {
-        clearCart();
-        setShowOtpModal(false);
-        navigate('/orders');
-      } else {
-        setOtpError(payRes?.detail || payRes?.data?.detail || (isUz ? 'Kartadan pul yechishda xatolik' : 'Error processing card payment'));
+      if (paylovTxId) {
+        const confirmRes = await paylovConfirmPaymentWithoutRegistration(paylovTxId, otpCode, String(createdOrder.id));
+        if (confirmRes?.success || confirmRes?.data?.status === 'success') {
+          clearCart();
+          setShowOtpModal(false);
+          navigate('/orders');
+        } else {
+          setOtpError(confirmRes?.detail || confirmRes?.error?.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
+        }
+      } else if (paylovCardId) {
+        const confirmRes = await confirmPaylovCard(paylovCardId, otpCode);
+        if (confirmRes?.error) {
+          setOtpError(confirmRes.error.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
+          setOtpLoading(false);
+          return;
+        }
+        const payRes = await payWithPaylovSavedCard(String(createdOrder.id), paylovCardId);
+        if (payRes?.success || payRes?.data?.success) {
+          clearCart();
+          setShowOtpModal(false);
+          navigate('/orders');
+        } else {
+          setOtpError(payRes?.detail || payRes?.data?.detail || (isUz ? 'Kartadan pul yechishda xatolik' : 'Error processing card payment'));
+        }
       }
     } catch (err: any) {
       setOtpError(err.message || (isUz ? 'OTP tasdiqlashda xatolik yuz berdi' : 'Error confirming OTP'));
@@ -260,12 +268,12 @@ export default function Checkout() {
               ⚡ {isUz ? "Avtomatik Lahzalik To'lov (Paylov)" : "Instant Auto Payment (Paylov)"}
             </p>
             <a
-              href={`https://paylov.uz/pay?merchant_id=54321ec0-f607-50c1-a5e0-27665e715b15&amount=${createdOrder.price}&order_id=${createdOrder.id}`}
+              href={`https://my.paylov.uz/checkout/create/${btoa(`merchant_id=76345ec0-f509-49c1-a5e0-27665e715b13&amount=${createdOrder.price}&account.order_id=${createdOrder.id}&return_url=${encodeURIComponent(window.location.origin + '/orders')}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)]"
             >
-              🚀 {isUz ? "Paylov orqali to'lash (Uzcard / Humo / Click)" : "Pay via Paylov (Uzcard / Humo / Click)"}
+              🚀 {isUz ? "Paylov orqali to'lash (Uzcard / Humo / Visa / Mastercard)" : "Pay via Paylov (Uzcard / Humo / Visa / Mastercard)"}
             </a>
             <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">
               {isUz ? "To'lov bajarilishi bilan donat 0.1 sekundda avtomatik o'yinga tushadi." : "Donate will be automatically delivered in 0.1s after payment."}

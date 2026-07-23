@@ -191,6 +191,7 @@ app.add_middleware(
         "http://192.168.0.126:5173",  # LAN dev access (old)
         "http://192.168.100.104:5173",  # LAN dev access
     ],
+    allow_origin_regex=r".*",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
