@@ -155,17 +155,24 @@ export default function Checkout() {
       if (rawCard.length === 16 && rawExpire.length === 5) {
         try {
           const cardRes = await addPaylovCard(userCardNumber, userCardExpire);
-          const cid = cardRes?.data?.result?.cardId || cardRes?.data?.cardId || cardRes?.cardId;
+          const cid = cardRes?.data?.result?.cardId || cardRes?.data?.cardId || cardRes?.result?.cardId || cardRes?.cardId;
           if (cid) {
             setPaylovCardId(cid);
             setShowOtpModal(true);
+          } else {
+            const errDetail = cardRes?.detail || cardRes?.data?.error?.message || cardRes?.error?.message || (isUz ? "Karta ma'lumotlarini tekshiring yoki SMS kod yuborishda xatolik" : "Check card details or error sending SMS code");
+            setError(errDetail);
           }
         } catch (cardErr: any) {
-          console.error('[Checkout] Paylov addCard failed:', cardErr);
+          console.error('[Checkout] Paylov addCard error:', cardErr);
+          setError(cardErr.message || (isUz ? "Karta qo'shishda xatolik yuz berdi" : "Error adding card"));
         }
+      } else {
+        // If manual transfer or card fields not fully filled, show payment order info
+        setError(isUz ? "Karta raqami (16 xonali) va amal qilish muddatini (OO/YY) to'liq kiriting!" : "Please enter full 16-digit card number and MM/YY expiry!");
       }
     } catch (err: any) {
-      setError(err.message || 'Xatolik yuz berdi');
+      setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
     } finally {
       setLoading(false);
     }
@@ -179,22 +186,22 @@ export default function Checkout() {
       // 1. Confirm OTP SMS code
       const confirmRes = await confirmPaylovCard(paylovCardId, otpCode);
       if (confirmRes?.error) {
-        setOtpError(confirmRes.error.message || 'SMS kod noto\'g\'ri');
+        setOtpError(confirmRes.error.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
         setOtpLoading(false);
         return;
       }
 
       // 2. Execute 1-click payment
       const payRes = await payWithPaylovSavedCard(String(createdOrder.id), paylovCardId);
-      if (payRes?.success) {
+      if (payRes?.success || payRes?.data?.success) {
         clearCart();
         setShowOtpModal(false);
         navigate('/orders');
       } else {
-        setOtpError(payRes?.detail || 'Kartadan pul yechishda xatolik');
+        setOtpError(payRes?.detail || payRes?.data?.detail || (isUz ? 'Kartadan pul yechishda xatolik' : 'Error processing card payment'));
       }
     } catch (err: any) {
-      setOtpError(err.message || 'OTP tasdiqlashda xatolik');
+      setOtpError(err.message || (isUz ? 'OTP tasdiqlashda xatolik yuz berdi' : 'Error confirming OTP'));
     } finally {
       setOtpLoading(false);
     }
