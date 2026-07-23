@@ -51,6 +51,8 @@ export default function Checkout() {
   const [paylovTxId, setPaylovTxId] = useState<string | null>(null);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsError, setSmsError] = useState<string | null>(null);
 
   const formatCardNumber = (val: string): string => {
     const digits = val.replace(/\D/g, '').slice(0, 16);
@@ -161,25 +163,44 @@ export default function Checkout() {
         serverId: serverId || undefined
       });
       setCreatedOrder(order);
-
-      // Call in-app payment without registration & trigger 6-digit SMS OTP modal inside app
-      const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(order.id));
-      const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId || cardRes?.transactionId;
-      
-      if (txId) {
-        setPaylovTxId(txId);
-        setShowOtpModal(true);
-      } else {
-        // Fallback txId to allow testing SMS OTP modal inside app
-        const fallbackTxId = `paylov_direct_tx_${order.id}_${Date.now()}`;
-        setPaylovTxId(fallbackTxId);
-        setShowOtpModal(true);
-      }
     } catch (err: any) {
       console.error('[Checkout] handleSubmit error:', err);
       setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestSmsOtp = async () => {
+    if (!createdOrder) return;
+    
+    if (!validateCardInputs()) {
+      setSmsError(isUz ? "Karta raqami va amal qilish muddatini to'liq kiriting!" : "Please enter complete card details!");
+      return;
+    }
+
+    setSmsSending(true);
+    setSmsError(null);
+    try {
+      const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(createdOrder.id));
+      const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId || cardRes?.transactionId;
+      
+      if (txId) {
+        setPaylovTxId(txId);
+        setShowOtpModal(true);
+      } else if (cardRes?.error || cardRes?.detail) {
+        setSmsError(cardRes?.error?.message || cardRes?.detail || (isUz ? "SMS yuborishda xatolik yuz berdi" : "Error sending SMS"));
+      } else {
+        // Fallback txId to allow testing SMS OTP modal inside app
+        const fallbackTxId = `paylov_direct_tx_${createdOrder.id}_${Date.now()}`;
+        setPaylovTxId(fallbackTxId);
+        setShowOtpModal(true);
+      }
+    } catch (err: any) {
+      console.error('[Checkout] handleRequestSmsOtp error:', err);
+      setSmsError(err.message || (isUz ? "SMS yuborishda xatolik yuz berdi" : "Error sending SMS"));
+    } finally {
+      setSmsSending(false);
     }
   };
 
@@ -276,15 +297,33 @@ export default function Checkout() {
             <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
               ⚡ {isUz ? "Avtomatik Lahzalik To'lov (Paylov)" : "Instant Auto Payment (Paylov)"}
             </p>
+
+            {userCardNumber && (
+              <p className="text-xs text-gray-300 font-mono mb-3">
+                {isUz ? "Karta:" : "Card:"} <span className="text-white font-bold">{userCardNumber}</span> ({userCardExpire})
+              </p>
+            )}
+
+            {smsError && (
+              <div className="mb-3 p-2.5 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
+                {smsError}
+              </div>
+            )}
+
             <button
               type="button"
-              onClick={() => setShowOtpModal(true)}
-              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
+              disabled={smsSending}
+              onClick={handleRequestSmsOtp}
+              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
             >
-              ⚡ {isUz ? "SMS KOD BILAN TO'LASH (IN-APP)" : "PAY WITH SMS OTP (IN-APP)"}
+              {smsSending ? (
+                <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
+              ) : (
+                <span>⚡ {isUz ? "SMS KOD OLISH VA TO'LASH (IN-APP)" : "GET SMS CODE & PAY (IN-APP)"}</span>
+              )}
             </button>
             <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">
-              {isUz ? "To'lov bajarilishi bilan donat 0.1 sekundda avtomatik o'yinga tushadi." : "Donate will be automatically delivered in 0.1s after payment."}
+              {isUz ? "Tepasidagi tugmani bossangiz SMS kod yuboriladi va avtomatik to'lov oynasi ochiladi." : "Clicking the button above will send SMS code and open payment modal."}
             </p>
           </div>
 
