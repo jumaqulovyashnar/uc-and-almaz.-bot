@@ -51,11 +51,8 @@ const getApiBase = (): string => {
     return 'http://localhost:3002/api';
   }
 
-  // 5. Default Production API (Vercel Serverless Function Proxy to EC2 Server)
-  if (typeof window !== 'undefined' && window.location.origin && !isLocal) {
-    return `${window.location.origin}/api`;
-  }
-  return '/api';
+  // 5. Default Production HTTPS Backend API (Cloudflare High-Speed Tunnel)
+  return 'https://introductory-non-portfolio-fridge.trycloudflare.com/api';
 };
 
 export const API_BASE = getApiBase();

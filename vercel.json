@@ -27,7 +27,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/proxy?path=:path*"
+      "destination": "https://introductory-non-portfolio-fridge.trycloudflare.com/api/:path*"
     },
     {
       "source": "/(.*)",
