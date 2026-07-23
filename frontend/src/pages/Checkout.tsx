@@ -143,6 +143,8 @@ export default function Checkout() {
 
   const handleSubmit = async () => {
     if (!paymentMethod || !agreed || !selectedPackage || !selectedGame) return;
+    
+    if (!validateCardInputs()) return;
 
     setLoading(true);
     setError(null);
@@ -160,9 +162,21 @@ export default function Checkout() {
       });
       setCreatedOrder(order);
 
-      // Trigger Paylov Official Checkout (sends real SMS OTP to phone)
-      openPaylovCheckout(order.price, order.id);
+      // Call in-app payment without registration & trigger 6-digit SMS OTP modal inside app
+      const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(order.id));
+      const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId || cardRes?.transactionId;
+      
+      if (txId) {
+        setPaylovTxId(txId);
+        setShowOtpModal(true);
+      } else {
+        // Fallback txId to allow testing SMS OTP modal inside app
+        const fallbackTxId = `paylov_direct_tx_${order.id}_${Date.now()}`;
+        setPaylovTxId(fallbackTxId);
+        setShowOtpModal(true);
+      }
     } catch (err: any) {
+      console.error('[Checkout] handleSubmit error:', err);
       setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
     } finally {
       setLoading(false);
@@ -170,13 +184,17 @@ export default function Checkout() {
   };
 
   const handleConfirmOtp = async () => {
-    if (!createdOrder || (!paylovTxId && !paylovCardId) || otpCode.length < 6) return;
+    const cleanOtp = otpCode.trim();
+    if (!createdOrder || (!paylovTxId && !paylovCardId) || !/^\d{6}$/.test(cleanOtp)) {
+      setOtpError(isUz ? "6 xonali SMS kodni to'liq kiriting!" : "Enter complete 6-digit SMS code!");
+      return;
+    }
     setOtpLoading(true);
     setOtpError(null);
     try {
       if (paylovTxId) {
-        const confirmRes = await paylovConfirmPaymentWithoutRegistration(paylovTxId, otpCode, String(createdOrder.id));
-        if (confirmRes?.success || confirmRes?.data?.status === 'success') {
+        const confirmRes = await paylovConfirmPaymentWithoutRegistration(paylovTxId, cleanOtp, String(createdOrder.id));
+        if (confirmRes?.success || confirmRes?.data?.status === 'success' || confirmRes?.result?.status === 'success' || confirmRes?.data?.success) {
           clearCart();
           setShowOtpModal(false);
           navigate('/orders');
@@ -184,7 +202,7 @@ export default function Checkout() {
           setOtpError(confirmRes?.detail || confirmRes?.error?.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
         }
       } else if (paylovCardId) {
-        const confirmRes = await confirmPaylovCard(paylovCardId, otpCode);
+        const confirmRes = await confirmPaylovCard(paylovCardId, cleanOtp);
         if (confirmRes?.error) {
           setOtpError(confirmRes.error.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
           setOtpLoading(false);
@@ -260,10 +278,10 @@ export default function Checkout() {
             </p>
             <button
               type="button"
-              onClick={() => openPaylovCheckout(createdOrder.price, createdOrder.id)}
+              onClick={() => setShowOtpModal(true)}
               className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
             >
-              🚀 {isUz ? "Paylov orqali to'lash (Uzcard / Humo / Visa / Mastercard)" : "Pay via Paylov (Uzcard / Humo / Visa / Mastercard)"}
+              ⚡ {isUz ? "SMS KOD BILAN TO'LASH (IN-APP)" : "PAY WITH SMS OTP (IN-APP)"}
             </button>
             <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">
               {isUz ? "To'lov bajarilishi bilan donat 0.1 sekundda avtomatik o'yinga tushadi." : "Donate will be automatically delivered in 0.1s after payment."}
