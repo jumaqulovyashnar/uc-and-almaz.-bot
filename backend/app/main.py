@@ -160,7 +160,12 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
     
-    # Close connection pools
+    # Close connection pools and clients
+    try:
+        from app.workers.purchase_worker import close_http_client
+        await close_http_client()
+    except Exception:
+        pass
     try:
         await close_redis()
     except Exception:

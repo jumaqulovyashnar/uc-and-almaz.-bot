@@ -1,0 +1,17 @@
+[Unit]
+Description=CyberPay Donate Bot Backend & Telegram Service
+After=network.target redis-server.service postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/donate-bot
+EnvironmentFile=/root/donate-bot/.env
+ExecStart=/root/donate-bot/.venv/bin/python -u -m backend.app.main
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/uc-bot/app.log
+StandardError=append:/var/log/uc-bot/app_error.log
+
+[Install]
+WantedBy=multi-user.target

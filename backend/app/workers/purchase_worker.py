@@ -33,6 +33,24 @@ import httpx
 import os
 from app.core.env import env
 
+_http_client: Optional[httpx.AsyncClient] = None
+
+def get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(25.0, connect=5.0),
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
+        )
+    return _http_client
+
+async def close_http_client() -> None:
+    global _http_client
+    if _http_client and not _http_client.is_closed:
+        await _http_client.aclose()
+        _http_client = None
+        logging.info("[Worker] Global HTTP client closed")
+
 async def call_provider_api(game: str, player_id: str, provider_service_id: str, order_id: int, server_id: Optional[str] = None) -> Dict[str, Any]:
     api_key = env.PROVIDER_API_KEY
     if not api_key:
@@ -56,23 +74,23 @@ async def call_provider_api(game: str, player_id: str, provider_service_id: str,
         
     try:
         async def make_request():
-            async with httpx.AsyncClient() as client:
-                logging.info(f"[Worker] Sending request to {url} | payload: {payload}")
-                response = await client.post(url, headers=headers, json=payload, timeout=25.0)
-                logging.info(f"[Worker] Response from provider API: {response.status_code} | {response.text}")
-                if response.status_code == 200:
-                    res_data = response.json()
-                    if res_data.get("status") == "success":
-                        order_id_val = res_data.get("order_id") or "12345"
-                        return {"success": True, "provider_order_id": str(order_id_val)}
-                    else:
-                        return {"success": False, "error": res_data.get("message") or "API error status"}
+            client = get_http_client()
+            logging.info(f"[Worker] Sending request to {url} | payload: {payload}")
+            response = await client.post(url, headers=headers, json=payload)
+            logging.info(f"[Worker] Response from provider API: {response.status_code} | {response.text}")
+            if response.status_code == 200:
+                res_data = response.json()
+                if res_data.get("status") == "success":
+                    order_id_val = res_data.get("order_id") or "12345"
+                    return {"success": True, "provider_order_id": str(order_id_val)}
                 else:
-                    try:
-                        err_msg = response.json().get("message")
-                    except Exception:
-                        err_msg = response.text
-                    return {"success": False, "error": err_msg or f"API status code {response.status_code}"}
+                    return {"success": False, "error": res_data.get("message") or "API error status"}
+            else:
+                try:
+                    err_msg = response.json().get("message")
+                except Exception:
+                    err_msg = response.text
+                return {"success": False, "error": err_msg or f"API status code {response.status_code}"}
         
         # Try 3 times with 2 seconds delay if API fails
         for attempt in range(3):

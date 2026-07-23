@@ -22,7 +22,7 @@ async def init_redis() -> None:
         real_redis = aioredis.from_url(
             env.REDIS_URL,
             decode_responses=True,
-            socket_timeout=3.0,
+            socket_timeout=None,
             socket_connect_timeout=3.0,
             retry_on_timeout=False
         )

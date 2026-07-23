@@ -37,8 +37,22 @@ async def init_db() -> None:
         except Exception:
             pass
         await db.commit()
+
+        # Create indexes for high-performance querying
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)",
+            "CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders(payment_status)",
+            "CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)",
+        ]
+        for idx_sql in indexes:
+            try:
+                await db.execute(idx_sql)
+            except Exception as idx_err:
+                logging.warning(f"[DB] Index creation notice: {idx_err}")
+        await db.commit()
         
-        logging.info(f"[DB] SQLite database initialized at {DB_PATH}")
+        logging.info(f"[DB] SQLite database initialized with indexes at {DB_PATH}")
     except Exception as e:
         logging.error(f"[DB] SQLite initialization failed: {e}")
         raise e

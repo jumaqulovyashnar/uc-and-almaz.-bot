@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     BOT_CARD_NUMBER: str = "9860 1801 0950 0686"
     WELCOME_PHOTO_URL: str = "https://telegra.ph/file/0c99dfde637dfbf2b2207.png"
     WEBAPP_URL: str = "https://localhost:5173"
+    API_URL: str = ""
     DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379"
     PORT: str = "3000"

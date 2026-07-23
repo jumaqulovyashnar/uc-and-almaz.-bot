@@ -1,0 +1,14 @@
+# Logrotate configuration for CyberPay / Donate Bot
+# Place this file in /etc/logrotate.d/uc-bot on your Linux server
+
+/var/log/uc-bot/*.log /home/*/donate-bot/backend/*.log {
+    weekly
+    rotate 4
+    size 50M
+    missingok
+    compress
+    delaycompress
+    notifempty
+    copytruncate
+    create 0640 root root
+}
