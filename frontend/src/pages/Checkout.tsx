@@ -94,9 +94,6 @@ export default function Checkout() {
         serverId: serverId || undefined
       });
       setCreatedOrder(order);
-
-      // Auto-redirect to Paylov official hosted checkout page immediately
-      await handlePaylovRedirect(order.id);
     } catch (err: any) {
       console.error('[Checkout] handleSubmit error:', err);
       setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
@@ -278,7 +275,7 @@ export default function Checkout() {
           {loading ? (
             <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin" />
           ) : (
-            <span>{isUz ? "PAYLOV ORQALI TO'LASH ➔" : "PAY VIA PAYLOV ➔"}</span>
+            <span>{isUz ? "TO'LOV QILISH" : "PROCEED TO PAY"}</span>
           )}
         </Button>
       </div>

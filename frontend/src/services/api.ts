@@ -290,7 +290,7 @@ export async function createOrder(data: {
       price: data.price,
       player_id: data.playerId,
       player_nickname: data.playerNickname,
-      payment_method: data.paymentMethod,
+      payment_method: data.paymentMethod === 'paylov' ? 'uzcard' : (data.paymentMethod || 'uzcard'),
       server_id: data.serverId
     })
   });
