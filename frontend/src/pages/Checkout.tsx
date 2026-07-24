@@ -76,6 +76,23 @@ export default function Checkout() {
         serverId: serverId || undefined
       });
       setCreatedOrder(order);
+
+      // Auto-redirect to Paylov Official Payment Page immediately
+      console.log('[Checkout] Order created:', order.id, 'Requesting Paylov Link...');
+      const res = await createPaylovCheckoutLink(String(order.id));
+      console.log('[Checkout] Paylov Link response:', res);
+
+      if (res?.success && res?.data?.checkoutUrl) {
+        const url = res.data.checkoutUrl;
+        console.log('[Checkout] Opening Paylov Url:', url);
+        if ((window as any).Telegram?.WebApp?.openLink) {
+          (window as any).Telegram.WebApp.openLink(url);
+        } else {
+          window.location.href = url;
+        }
+      } else {
+        setSmsError(res?.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov link"));
+      }
     } catch (err: any) {
       console.error('[Checkout] handleSubmit error:', err);
       setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
