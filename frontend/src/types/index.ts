@@ -1,6 +1,6 @@
 export type GameType = string;
 export type CategoryType = string;
-export type PaymentMethodType = 'uzcard' | 'humo' | 'visa';
+export type PaymentMethodType = 'uzcard' | 'humo' | 'visa' | 'paylov';
 export type OrderStatusType = 'pending' | 'processing' | 'completed' | 'failed' | 'pending_payment' | 'awaiting_admin_review';
 
 export interface GamePackage {

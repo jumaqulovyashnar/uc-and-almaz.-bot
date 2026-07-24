@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ArrowLeft } from 'lucide-react';
-import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
 import { createOrder, getOrderById, createPaylovCheckoutLink } from '../services/api';
 import type { Order } from '../types';
@@ -19,21 +18,17 @@ export default function Checkout() {
     selectedPackage,
     playerId,
     playerNickname,
-    paymentMethod,
     language,
     serverId,
-    setPaymentMethod,
     clearCart,
   } = useStore();
 
   const isUz = language === 'uz';
 
-  const [agreed, setAgreed] = useState(false);
+  const [agreed, setAgreed] = useState(true);
   const [loading, setLoading] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [smsSending, setSmsSending] = useState(false);
-  const [smsError, setSmsError] = useState<string | null>(null);
 
   // Check order status ONCE when createdOrder is set
   useEffect(() => {
@@ -58,8 +53,31 @@ export default function Checkout() {
     };
   }, [createdOrder?.id]);
 
+  const handlePaylovRedirect = async (orderId: string | number) => {
+    try {
+      console.log('[Checkout] Requesting Paylov Link for order:', orderId);
+      const res = await createPaylovCheckoutLink(String(orderId));
+      console.log('[Checkout] Paylov Link response:', res);
+
+      if (res?.success && res?.data?.checkoutUrl) {
+        const url = res.data.checkoutUrl;
+        console.log('[Checkout] Opening Paylov Hosted Link:', url);
+        if ((window as any).Telegram?.WebApp?.openLink) {
+          (window as any).Telegram.WebApp.openLink(url);
+        } else {
+          window.location.href = url;
+        }
+      } else {
+        setError(res?.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov link"));
+      }
+    } catch (e: any) {
+      console.error('[Checkout] handlePaylovRedirect error:', e);
+      setError(e.message || (isUz ? "Paylov ulanishida xatolik" : "Paylov connection error"));
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!paymentMethod || !agreed || !selectedPackage || !selectedGame) return;
+    if (!agreed || !selectedPackage || !selectedGame) return;
 
     setLoading(true);
     setError(null);
@@ -72,60 +90,18 @@ export default function Checkout() {
         price: selectedPackage.price,
         playerId,
         playerNickname,
-        paymentMethod,
+        paymentMethod: 'paylov',
         serverId: serverId || undefined
       });
       setCreatedOrder(order);
 
-      // Auto-redirect to Paylov Official Payment Page immediately
-      console.log('[Checkout] Order created:', order.id, 'Requesting Paylov Link...');
-      const res = await createPaylovCheckoutLink(String(order.id));
-      console.log('[Checkout] Paylov Link response:', res);
-
-      if (res?.success && res?.data?.checkoutUrl) {
-        const url = res.data.checkoutUrl;
-        console.log('[Checkout] Opening Paylov Url:', url);
-        if ((window as any).Telegram?.WebApp?.openLink) {
-          (window as any).Telegram.WebApp.openLink(url);
-        } else {
-          window.location.href = url;
-        }
-      } else {
-        setSmsError(res?.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov link"));
-      }
+      // Auto-redirect to Paylov official hosted checkout page immediately
+      await handlePaylovRedirect(order.id);
     } catch (err: any) {
       console.error('[Checkout] handleSubmit error:', err);
       setError(err.message || (isUz ? "Buyurtma yaratishda xatolik yuz berdi" : "Error creating order"));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePaylovHostedCheckout = async () => {
-    if (!createdOrder) return;
-    setSmsSending(true);
-    setSmsError(null);
-    try {
-      console.log('[Paylov Hosted Checkout] Requesting link for order:', createdOrder.id);
-      const res = await createPaylovCheckoutLink(String(createdOrder.id));
-      console.log('[Paylov Hosted Checkout] API response:', res);
-
-      if (res?.success && res?.data?.checkoutUrl) {
-        const url = res.data.checkoutUrl;
-        console.log('[Paylov Hosted Checkout] Opening URL:', url);
-        if ((window as any).Telegram?.WebApp?.openLink) {
-          (window as any).Telegram.WebApp.openLink(url);
-        } else {
-          window.location.href = url;
-        }
-      } else {
-        setSmsError(res?.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov checkout link"));
-      }
-    } catch (e: any) {
-      console.error('[Paylov Hosted Checkout] Exception:', e);
-      setSmsError(e.message || (isUz ? "Paylov ulanishda xatolik" : "Paylov connection error"));
-    } finally {
-      setSmsSending(false);
     }
   };
 
@@ -174,23 +150,23 @@ export default function Checkout() {
               <p>{isUz ? "Summa:" : "Amount:"} <span className="text-[#FF6B00] font-black text-sm">{formatPrice(createdOrder.price)} UZS</span></p>
             </div>
 
-            {smsError && (
+            {error && (
               <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
-                {smsError}
+                {error}
               </div>
             )}
           </div>
 
           <button
             type="button"
-            disabled={smsSending}
-            onClick={handlePaylovHostedCheckout}
+            disabled={loading}
+            onClick={() => handlePaylovRedirect(createdOrder.id)}
             className="w-full block text-center py-4 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer mt-4"
           >
-            {smsSending ? (
+            {loading ? (
               <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
             ) : (
-              <span>{isUz ? "TO'LOV QILISH (PAYLOV)" : "PAY VIA PAYLOV"}</span>
+              <span>{isUz ? "PAYLOV RASMIY TO'LOV OYNASIGA O'TISH ➔" : "OPEN PAYLOV PAYMENT PAGE ➔"}</span>
             )}
           </button>
         </Card>
@@ -249,25 +225,7 @@ export default function Checkout() {
         </Card>
       </div>
 
-      <div className="mt-6 animate-fade-in">
-        <h2 className="text-xs font-black text-white uppercase tracking-widest mb-3">
-          {isUz ? "To'lov usuli" : 'Payment Method'}
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <PaymentMethodCard
-            method="uzcard"
-            selected={paymentMethod === 'uzcard'}
-            onSelect={() => setPaymentMethod('uzcard')}
-          />
-          <PaymentMethodCard
-            method="humo"
-            selected={paymentMethod === 'humo'}
-            onSelect={() => setPaymentMethod('humo')}
-          />
-        </div>
-      </div>
-
-      <div className="mt-5 flex items-center gap-3 animate-fade-in">
+      <div className="mt-6 flex items-center gap-3 animate-fade-in">
         <Button
           variant="ghost"
           size="none"
@@ -313,12 +271,15 @@ export default function Checkout() {
           variant="primary"
           fullWidth
           size="lg"
-          disabled={!paymentMethod || !agreed || loading || !selectedPackage}
+          disabled={!agreed || loading || !selectedPackage}
           onClick={handleSubmit}
-          className="font-black text-sm uppercase py-3.5 tracking-wider flex justify-center items-center gap-2"
+          className="font-black text-sm uppercase py-4 tracking-wider flex justify-center items-center gap-2 bg-[#FF6B00] hover:bg-[#FF8500] text-black shadow-[0_0_20px_rgba(255,107,0,0.4)]"
         >
-          {loading && <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
-          {isUz ? "SOTIB OLISH ➔" : 'BUY NOW ➔'}
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin" />
+          ) : (
+            <span>{isUz ? "PAYLOV ORQALI TO'LASH ➔" : "PAY VIA PAYLOV ➔"}</span>
+          )}
         </Button>
       </div>
     </div>

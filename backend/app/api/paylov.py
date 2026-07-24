@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from app.middleware.auth import get_current_user
+from app.core.env import env
 from app.services import paylov as paylov_service
 from app.services import order as order_service
 from app.workers.purchase_worker import add_purchase_job
