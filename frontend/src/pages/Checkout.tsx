@@ -296,7 +296,94 @@ export default function Checkout() {
   if (createdOrder) {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
-    
+
+    if (showOtpModal) {
+      return (
+        <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8 animate-fade-in flex flex-col justify-between">
+          <div>
+            <button
+              onClick={() => {
+                setShowOtpModal(false);
+                setOtpError(null);
+                setOtpCode('');
+              }}
+              className="mb-4 flex items-center gap-2 bg-[#121118]/80 backdrop-blur-md border border-[#FF6B00] text-white hover:bg-[#FF6B00] hover:text-[#121118] px-3.5 py-1.5 font-black text-xs tracking-wider rounded-none shadow-[0_0_12px_rgba(255,107,0,0.35)] transition-all duration-300 active:scale-95 cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+              <span>{language === 'uz' ? 'ORQAGA' : 'BACK'}</span>
+            </button>
+
+            <div className="mt-4 text-center">
+              <h1 className="text-xl font-black text-white tracking-wide uppercase">
+                {isUz ? "SMS KODNI KIRITING" : "ENTER SMS OTP CODE"}
+              </h1>
+              <p className="text-xs text-gray-300 mt-2">
+                {isUz ? "Karta egasining telefoniga yuborilgan 6 xonali SMS kodini kiriting:" : "Enter the 6-digit SMS OTP code sent to your phone:"}
+              </p>
+            </div>
+
+            <Card className="mt-6 p-6 border-2 border-[#FF6B00]/70 bg-[#121118]/95 shadow-[0_0_30px_rgba(255,107,0,0.3)]">
+              {/* Live SMS Countdown Timer */}
+              <div className="text-center bg-black/70 border border-[#FF6B00]/50 p-3 text-xs">
+                <span className="text-gray-400">{isUz ? "SMS kodi amal qilish vaqti: " : "SMS code validity time: "}</span>
+                <span className={`font-black font-mono text-base ${otpTimer < 10 ? 'text-red-500 animate-pulse' : 'text-[#FF6B00]'}`}>
+                  00:{otpTimer.toString().padStart(2, '0')}
+                </span>
+              </div>
+
+              {otpError && (
+                <div className="mt-4 p-3 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
+                  {otpError}
+                </div>
+              )}
+
+              <div className="mt-6">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={otpCode}
+                  autoFocus
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtpCode(val);
+                    if (otpError) setOtpError(null);
+                  }}
+                  className="w-full bg-black border-2 border-[#FF6B00] text-[#FF6B00] font-mono font-black text-3xl py-4 text-center tracking-[0.5em] focus:border-[#FF6B00] outline-none placeholder-gray-800 shadow-inner"
+                />
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  disabled={!/^\d{6}$/.test(otpCode) || otpLoading}
+                  onClick={handleConfirmOtp}
+                  className="w-full block text-center py-4 px-4 bg-[#FF6B00] hover:bg-[#FF8500] disabled:bg-gray-700 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
+                >
+                  {otpLoading ? (
+                    <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
+                  ) : (
+                    <span>{isUz ? "TASDIQLASH VA TO'LASH" : "CONFIRM & PAY NOW"}</span>
+                  )}
+                </button>
+
+                {otpTimer === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleRequestSmsOtp}
+                    className="w-full text-center py-2 text-xs font-bold text-[#FF6B00] hover:underline cursor-pointer"
+                  >
+                    🔄 {isUz ? "SMS kod kelmadimi? Qayta yuborish" : "Didn't receive SMS? Resend code"}
+                  </button>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-cyber-bg px-4 pt-4 pb-8 animate-fade-in">
         <button
@@ -318,130 +405,43 @@ export default function Checkout() {
           </p>
         </div>
 
-        <Card className="mt-6">
-          {/* Paylov Direct Online Auto Payment */}
+        {/* Taller card with clean button (NO ICON) */}
+        <Card className="mt-6 py-7 px-6 min-h-[240px] flex flex-col justify-between border-2 border-[#FF6B00]/70 bg-[#121118]/95 shadow-[0_0_25px_rgba(255,107,0,0.25)]">
           <div>
-            <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-3 flex items-center gap-1.5">
               ⚡ {isUz ? "Paylov Rasmiy Lahzalik To'lov" : "Paylov Official Instant Payment"}
             </p>
 
             {userCardNumber && (
-              <p className="text-xs text-gray-300 font-mono mb-3">
+              <p className="text-xs text-gray-300 font-mono mb-4">
                 {isUz ? "Karta:" : "Card:"} <span className="text-white font-bold">{userCardNumber}</span> ({userCardExpire})
               </p>
             )}
 
             {smsError && (
-              <div className="mb-3 p-2.5 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
                 {smsError}
               </div>
             )}
-
-            <button
-              type="button"
-              disabled={smsSending}
-              onClick={handleRequestSmsOtp}
-              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
-            >
-              {smsSending ? (
-                <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
-              ) : (
-                <span>📩 {isUz ? "SMS YUBORISH" : "SEND SMS"}</span>
-              )}
-            </button>
           </div>
+
+          <button
+            type="button"
+            disabled={smsSending}
+            onClick={handleRequestSmsOtp}
+            className="w-full block text-center py-4 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer mt-4"
+          >
+            {smsSending ? (
+              <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
+            ) : (
+              <span>{isUz ? "SMS YUBORISH" : "SEND SMS"}</span>
+            )}
+          </button>
         </Card>
 
-        <p className="text-center text-xs text-gray-500 mt-4">
+        <p className="text-center text-xs text-gray-500 mt-6">
           {isUz ? "To'lov qilganingizdan so'ng order avtomatik yangilanadi." : "Your order will be automatically updated after payment."}
         </p>
-
-        {/* Render OTP Modal when triggered inside createdOrder view */}
-        {showOtpModal && (
-          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-[#121118] border-2 border-[#FF6B00] w-full max-w-md p-6 shadow-[0_0_30px_rgba(255,107,0,0.4)]">
-              <h3 className="text-base font-black text-white uppercase tracking-wider text-center flex items-center justify-center gap-2">
-                <span className="text-xl">📲</span>
-                <span>{isUz ? "SMS KODNI KIRITING" : "ENTER SMS OTP CODE"}</span>
-              </h3>
-              <p className="text-xs text-gray-300 mt-2 text-center">
-                {isUz ? "Karta egasining telefoniga yuborilgan 6 xonali SMS kodini kiriting:" : "Enter the 6-digit SMS OTP code sent to your phone:"}
-              </p>
-
-              {/* Live SMS Countdown Timer */}
-              <div className="mt-3 text-center bg-black/60 border border-[#FF6B00]/40 p-2.5 text-xs">
-                <span className="text-gray-400">{isUz ? "SMS kodi amal qilish vaqti: " : "SMS code validity time: "}</span>
-                <span className={`font-black font-mono text-sm ${otpTimer < 10 ? 'text-red-500 animate-pulse' : 'text-[#FF6B00]'}`}>
-                  00:{otpTimer.toString().padStart(2, '0')}
-                </span>
-              </div>
-
-              {otpError && (
-                <div className="mt-3 p-2.5 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
-                  {otpError}
-                </div>
-              )}
-
-              <div className="mt-4">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="123456"
-                  value={otpCode}
-                  autoFocus
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setOtpCode(val);
-                    if (otpError) setOtpError(null);
-                  }}
-                  className="w-full bg-black/80 border-2 border-[#FF6B00] text-[#FF6B00] font-mono font-black text-3xl p-3 text-center tracking-[0.5em] focus:border-[#FF6B00] focus:bg-black outline-none placeholder-gray-700 shadow-inner"
-                />
-              </div>
-
-              <div className="mt-5 space-y-2">
-                <Button
-                  variant="primary"
-                  fullWidth
-                  size="lg"
-                  disabled={!/^\d{6}$/.test(otpCode) || otpLoading}
-                  onClick={handleConfirmOtp}
-                  className="font-black text-sm uppercase py-3.5 tracking-wider bg-[#FF6B00] text-black hover:bg-[#FF8500]"
-                >
-                  {otpLoading ? (
-                    <div className="w-4 h-4 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
-                  ) : (
-                    <span>⚡ {isUz ? "TASDIQLASH VA TO'LASH" : "CONFIRM & PAY NOW"}</span>
-                  )}
-                </Button>
-
-                {otpTimer === 0 && (
-                  <button
-                    type="button"
-                    onClick={handleRequestSmsOtp}
-                    className="w-full text-center py-2 text-xs font-bold text-[#FF6B00] hover:underline cursor-pointer"
-                  >
-                    🔄 {isUz ? "SMS kod kelmadimi? Qayta yuborish" : "Didn't receive SMS? Resend code"}
-                  </button>
-                )}
-
-                <Button
-                  variant="ghost"
-                  fullWidth
-                  size="sm"
-                  onClick={() => {
-                    setShowOtpModal(false);
-                    setOtpError(null);
-                    setOtpCode('');
-                  }}
-                  className="text-gray-400 font-bold text-xs hover:text-white"
-                >
-                  {isUz ? "Bekor qilish" : "Cancel"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
