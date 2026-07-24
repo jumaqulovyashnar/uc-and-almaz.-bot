@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     PAYME_MERCHANT_KEY: str = ""
 
     # Paylov.uz Merchant API
-    PAYLOV_BASE_URL: str = "https://merchant.paylov.uz"
+    PAYLOV_BASE_URL: str = "https://paylov.uz"
     PAYLOV_MERCHANT_ID: str = ""
     PAYLOV_USERNAME: str = ""
     PAYLOV_PASSWORD: str = ""

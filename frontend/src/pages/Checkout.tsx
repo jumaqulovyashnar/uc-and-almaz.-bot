@@ -42,7 +42,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
+  const [timeLeft, setTimeLeft] = useState(2 * 60); // 2 minutes
   const [userCardNumber, setUserCardNumber] = useState('');
   const [userCardExpire, setUserCardExpire] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -298,7 +298,7 @@ export default function Checkout() {
         
         <div className="mt-6 text-center">
           <p className="text-gray-400 text-sm">{isUz ? "To'lov qilish uchun vaqt:" : "Time left to pay:"}</p>
-          <p className={`text-4xl font-black mt-2 ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-cyber-cyan'}`}>
+          <p className={`text-4xl font-black mt-2 ${timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-cyber-cyan'}`}>
             {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}
           </p>
         </div>
