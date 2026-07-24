@@ -423,22 +423,4 @@ async def paylov_webhook(request: Request, authorization: Optional[str] = Header
                 }
             }
         )
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "status": "-1",
-                    "statusText": f"Unknown method: {method}"
-                }
-            })
-
-    except Exception as e:
-        logging.error(f"[PaylovWeb] Error: {e}", exc_info=True)
-        return JSONResponse(content={
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "result": {
-                "status": "-1",
-                "statusText": "Internal error"
-            }
-        })
 
