@@ -20,10 +20,12 @@ class Settings(BaseSettings):
     NODE_ENV: str = "development"
     REFERRAL_CASHBACK_PERCENT: float = 0.05
 
-    # Click.uz
+    # Click.uz Merchant & Shop API
     CLICK_MERCHANT_ID: str = "76345ec0-f509-49c1-a5e0-26865e715b13"
     CLICK_SERVICE_ID: str = ""
     CLICK_SECRET_KEY: str = ""
+    CLICK_MERCHANT_USER_ID: str = ""
+    CLICK_BASE_URL: str = "https://api.click.uz/v2/merchant"
 
     # Payme.uz
     PAYME_MERCHANT_ID: str = "76345ec0-f509-49c1-a5e0-26865e715b13"

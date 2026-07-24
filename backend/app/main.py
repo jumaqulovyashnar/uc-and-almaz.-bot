@@ -27,6 +27,7 @@ from app.api.admin import router as admin_router
 from app.api.payments import router as payments_router
 from app.api.referral import router as referral_router
 from app.api.paylov import router as paylov_router
+from app.api.click import router as click_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -209,6 +210,7 @@ app.include_router(admin_router, prefix="/api/admin", tags=["Admin panel"])
 app.include_router(payments_router, prefix="/api/payments", tags=["Payments"])
 app.include_router(referral_router, prefix="/api/referrals", tags=["Referrals"])
 app.include_router(paylov_router, prefix="/api/paylov", tags=["Paylov Merchant API"])
+app.include_router(click_router, prefix="/api/click", tags=["Click Merchant API"])
 
 @app.get("/api/health")
 async def health_check():

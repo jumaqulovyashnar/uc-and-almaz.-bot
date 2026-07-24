@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Copy, AlertTriangle, Check, ArrowLeft, CreditCard } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
-import { createOrder, getOrders, getOrderById, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration } from '../services/api';
+import { createOrder, getOrders, getOrderById, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration, generateClickCheckoutLink } from '../services/api';
 import type { Order } from '../types';
 
 function formatPrice(price: number): string {
@@ -323,6 +323,29 @@ export default function Checkout() {
     }
   };
 
+  const handleClickCheckoutRedirect = async () => {
+    if (!createdOrder) return;
+    setSmsSending(true);
+    setSmsError(null);
+    try {
+      const res = await generateClickCheckoutLink(String(createdOrder.id));
+      if (res.success && res.data?.checkoutUrl) {
+        const url = res.data.checkoutUrl;
+        if ((window as any).Telegram?.WebApp?.openLink) {
+          (window as any).Telegram.WebApp.openLink(url);
+        } else {
+          window.location.href = url;
+        }
+      } else {
+        setSmsError(res.detail || (isUz ? "Click to'lov havolasini olishda xatolik" : "Error creating Click checkout link"));
+      }
+    } catch (e: any) {
+      setSmsError(e.message || "Click API ulanishda xatolik");
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
   if (createdOrder) {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
@@ -377,6 +400,19 @@ export default function Checkout() {
                 <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
               ) : (
                 <span>🚀 {isUz ? "PAYLOV RASMIY TO'LOV OYNASIDAN TO'LASH" : "PAY VIA PAYLOV OFFICIAL PAGE"}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={smsSending}
+              onClick={handleClickCheckoutRedirect}
+              className="w-full block text-center py-3.5 px-4 bg-[#00A8FF] hover:bg-[#0088CC] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(0,168,255,0.4)] cursor-pointer mb-3"
+            >
+              {smsSending ? (
+                <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
+              ) : (
+                <span>🔵 {isUz ? "CLICK RASMIY TO'LOV OYNASIDAN TO'LASH" : "PAY VIA CLICK OFFICIAL PAGE"}</span>
               )}
             </button>
 
