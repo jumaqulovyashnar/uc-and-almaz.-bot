@@ -489,6 +489,15 @@ export async function paylovPaymentWithoutRegistration(cardNumber: string, expir
   return safeJson(res);
 }
 
+export async function createPaylovCheckoutLink(orderId: string, returnUrl?: string) {
+  const res = await fetch(`${API_BASE}/paylov/checkout-link`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ orderId, returnUrl })
+  });
+  return safeJson(res);
+}
+
 export async function paylovConfirmPaymentWithoutRegistration(transactionId: string, otp: string, orderId?: string) {
   const res = await fetch(`${API_BASE}/paylov/confirm-payment-without-registration`, {
     method: 'POST',

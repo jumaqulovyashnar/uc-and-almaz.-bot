@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Copy, AlertTriangle, Check, ArrowLeft, CreditCard } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
-import { createOrder, getOrders, getOrderById, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration } from '../services/api';
+import { createOrder, getOrders, getOrderById, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration, createPaylovCheckoutLink } from '../services/api';
 import type { Order } from '../types';
 
 function formatPrice(price: number): string {
@@ -192,24 +192,11 @@ export default function Checkout() {
     setSmsSending(true);
     setSmsError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/paylov/checkout-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ orderId: String(createdOrder.id) })
-      });
-      let res: any = {};
-      try {
-        const text = await response.text();
-        res = text ? JSON.parse(text) : {};
-      } catch (e) {
-        res = {};
-      }
+      console.log('[Paylov Hosted Checkout] Requesting checkout link for order:', createdOrder.id);
+      const res = await createPaylovCheckoutLink(String(createdOrder.id));
+      console.log('[Paylov Hosted Checkout] API response:', res);
 
-      if (res.success && res.data?.checkoutUrl) {
+      if (res?.success && res?.data?.checkoutUrl) {
         const url = res.data.checkoutUrl;
         console.log('[Paylov Hosted Checkout] Redirecting to:', url);
         if ((window as any).Telegram?.WebApp?.openLink) {
@@ -218,7 +205,7 @@ export default function Checkout() {
           window.location.href = url;
         }
       } else {
-        setSmsError(res.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov checkout link"));
+        setSmsError(res?.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov checkout link"));
       }
     } catch (e: any) {
       console.error('[Paylov Hosted Checkout] Exception:', e);
