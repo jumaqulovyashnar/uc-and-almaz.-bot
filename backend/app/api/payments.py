@@ -285,6 +285,8 @@ def json_rpc_error(code: int, message: str, req_id: Any = None) -> JSONResponse:
 # ----------------------------------------------------------------------
 
 @router.post("/paylov")
+@router.post("/callback")
+@router.post("/callback/")
 async def paylov_webhook(request: Request, authorization: Optional[str] = Header(None)):
     """
     Paylov Server-to-Server JSON-RPC 2.0 Webhook Handler.

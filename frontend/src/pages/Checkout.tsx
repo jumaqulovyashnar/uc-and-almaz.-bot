@@ -187,37 +187,42 @@ export default function Checkout() {
     }
   };
 
-  const handleRequestSmsOtp = async () => {
+  const handlePaylovHostedCheckout = async () => {
     if (!createdOrder) return;
-    
-    if (!validateCardInputs()) {
-      setSmsError(isUz ? "Karta raqami va amal qilish muddatini to'liq kiriting!" : "Please enter complete card details!");
-      return;
-    }
-
     setSmsSending(true);
     setSmsError(null);
     try {
-      console.log('[Paylov Direct Payment] Requesting SMS OTP for order:', createdOrder.id);
-      const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(createdOrder.id));
-      console.log('[Paylov Direct Payment] SMS OTP API Response:', cardRes);
-
-      const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId || cardRes?.transactionId;
-
-      if (txId) {
-        setPaylovTxId(txId);
-      } else {
-        const fallbackTxId = `paylov_tx_${createdOrder.id}_${Date.now()}`;
-        setPaylovTxId(fallbackTxId);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/paylov/checkout-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId: String(createdOrder.id) })
+      });
+      let res: any = {};
+      try {
+        const text = await response.text();
+        res = text ? JSON.parse(text) : {};
+      } catch (e) {
+        res = {};
       }
-      setOtpTimer(60);
-      setShowOtpModal(true);
-    } catch (err: any) {
-      console.error('[Paylov Direct Payment] Exception:', err);
-      const fallbackTxId = `paylov_tx_${createdOrder.id}_${Date.now()}`;
-      setPaylovTxId(fallbackTxId);
-      setOtpTimer(60);
-      setShowOtpModal(true);
+
+      if (res.success && res.data?.checkoutUrl) {
+        const url = res.data.checkoutUrl;
+        console.log('[Paylov Hosted Checkout] Redirecting to:', url);
+        if ((window as any).Telegram?.WebApp?.openLink) {
+          (window as any).Telegram.WebApp.openLink(url);
+        } else {
+          window.location.href = url;
+        }
+      } else {
+        setSmsError(res.detail || (isUz ? "Paylov to'lov havolasini shakllantirishda xatolik" : "Error generating Paylov checkout link"));
+      }
+    } catch (e: any) {
+      console.error('[Paylov Hosted Checkout] Exception:', e);
+      setSmsError(e.message || (isUz ? "Paylov ulanishda xatolik" : "Paylov connection error"));
     } finally {
       setSmsSending(false);
     }
@@ -371,7 +376,7 @@ export default function Checkout() {
                 {otpTimer === 0 && (
                   <button
                     type="button"
-                    onClick={handleRequestSmsOtp}
+                    onClick={handlePaylovHostedCheckout}
                     className="w-full text-center py-2 text-xs font-bold text-[#FF6B00] hover:underline cursor-pointer"
                   >
                     🔄 {isUz ? "SMS kod kelmadimi? Qayta yuborish" : "Didn't receive SMS? Resend code"}
@@ -406,11 +411,10 @@ export default function Checkout() {
               ⚡ {isUz ? "Paylov Rasmiy Lahzalik To'lov" : "Paylov Official Instant Payment"}
             </p>
 
-            {userCardNumber && (
-              <p className="text-xs text-gray-300 font-mono mb-4">
-                {isUz ? "Karta:" : "Card:"} <span className="text-white font-bold">{userCardNumber}</span> ({userCardExpire})
-              </p>
-            )}
+            <div className="space-y-1.5 text-xs text-gray-300 mb-4 font-mono">
+              <p>{isUz ? "Buyurtma ID:" : "Order ID:"} <span className="text-white font-bold">#{createdOrder.id}</span></p>
+              <p>{isUz ? "Summa:" : "Amount:"} <span className="text-[#FF6B00] font-black text-sm">{formatPrice(createdOrder.price)} UZS</span></p>
+            </div>
 
             {smsError && (
               <div className="mb-4 p-3 bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold text-center">
@@ -422,13 +426,13 @@ export default function Checkout() {
           <button
             type="button"
             disabled={smsSending}
-            onClick={handleRequestSmsOtp}
+            onClick={handlePaylovHostedCheckout}
             className="w-full block text-center py-4 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer mt-4"
           >
             {smsSending ? (
               <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
             ) : (
-              <span>{isUz ? "SMS YUBORISH" : "SEND SMS"}</span>
+              <span>{isUz ? "TO'LOV QILISH (PAYLOV)" : "PAY VIA PAYLOV"}</span>
             )}
           </button>
         </Card>

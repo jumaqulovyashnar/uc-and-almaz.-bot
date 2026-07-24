@@ -207,6 +207,7 @@ app.include_router(order_router, prefix="/api/orders", tags=["Orders"])
 app.include_router(player_router, prefix="/api/verify-player", tags=["Player Verification"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin panel"])
 app.include_router(payments_router, prefix="/api/payments", tags=["Payments"])
+app.include_router(payments_router, prefix="/payment", tags=["Payment Callback"])
 app.include_router(referral_router, prefix="/api/referrals", tags=["Referrals"])
 app.include_router(paylov_router, prefix="/api/paylov", tags=["Paylov Merchant API"])
 
