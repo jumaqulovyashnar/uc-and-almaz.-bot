@@ -335,6 +335,7 @@ export async function getOrders(): Promise<Order[]> {
         status: o.status as any,
         paymentMethod: o.payment_method as any,
         createdAt: o.created_at,
+      }));
     }
     return [];
   } catch (error) {
