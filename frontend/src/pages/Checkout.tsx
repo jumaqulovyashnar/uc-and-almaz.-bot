@@ -182,22 +182,28 @@ export default function Checkout() {
     setSmsSending(true);
     setSmsError(null);
     try {
+      console.log('[Paylov Direct Payment] Requesting SMS OTP for order:', createdOrder.id);
       const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(createdOrder.id));
+      console.log('[Paylov Direct Payment] SMS OTP API Response:', cardRes);
+
       const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId || cardRes?.transactionId;
-      
+      const errorMsg = cardRes?.error?.message || cardRes?.detail || cardRes?.data?.error?.message;
+
       if (txId) {
+        console.log(`[Paylov Direct Payment] SUCCESS! transactionId: ${txId}`);
         setPaylovTxId(txId);
         setShowOtpModal(true);
-      } else if (cardRes?.error || cardRes?.detail) {
-        setSmsError(cardRes?.error?.message || cardRes?.detail || (isUz ? "SMS yuborishda xatolik yuz berdi" : "Error sending SMS"));
+      } else if (errorMsg) {
+        console.error('[Paylov Direct Payment] ERROR response from API:', errorMsg);
+        setSmsError(errorMsg);
       } else {
-        // Fallback txId to allow testing SMS OTP modal inside app
+        console.warn('[Paylov Direct Payment] No txId returned, using fallback transactionId');
         const fallbackTxId = `paylov_direct_tx_${createdOrder.id}_${Date.now()}`;
         setPaylovTxId(fallbackTxId);
         setShowOtpModal(true);
       }
     } catch (err: any) {
-      console.error('[Checkout] handleRequestSmsOtp error:', err);
+      console.error('[Paylov Direct Payment] Exception:', err);
       setSmsError(err.message || (isUz ? "SMS yuborishda xatolik yuz berdi" : "Error sending SMS"));
     } finally {
       setSmsSending(false);
@@ -214,13 +220,19 @@ export default function Checkout() {
     setOtpError(null);
     try {
       if (paylovTxId) {
+        console.log(`[Paylov Direct Payment] Confirming OTP ${cleanOtp} for txId: ${paylovTxId}`);
         const confirmRes = await paylovConfirmPaymentWithoutRegistration(paylovTxId, cleanOtp, String(createdOrder.id));
+        console.log('[Paylov Direct Payment] Confirm OTP Response:', confirmRes);
+
         if (confirmRes?.success || confirmRes?.data?.status === 'success' || confirmRes?.result?.status === 'success' || confirmRes?.data?.success) {
+          console.log('[Paylov Direct Payment] OTP Confirmation SUCCESS! Redirecting to /orders');
           clearCart();
           setShowOtpModal(false);
           navigate('/orders');
         } else {
-          setOtpError(confirmRes?.detail || confirmRes?.error?.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code'));
+          const errDetail = confirmRes?.detail || confirmRes?.error?.message || confirmRes?.data?.error?.message || (isUz ? 'SMS kod noto\'g\'ri' : 'Invalid SMS OTP code');
+          console.error('[Paylov Direct Payment] OTP Confirmation Failed:', errDetail);
+          setOtpError(errDetail);
         }
       } else if (paylovCardId) {
         const confirmRes = await confirmPaylovCard(paylovCardId, cleanOtp);

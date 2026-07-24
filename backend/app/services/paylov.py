@@ -945,18 +945,28 @@ async def payment_without_registration(
     1. POST /merchant/paymentWithoutRegistration/
     Direct card payment without saving card. Triggers SMS OTP.
     """
+    clean_card = card_number.replace(" ", "")
+    masked_card = f"{clean_card[:4]} **** **** {clean_card[-4:]}" if len(clean_card) >= 16 else clean_card
+    formatted_expire = _format_expire_date_yymm(expire_date)
+    
     headers = await _get_auth_headers()
     url = f"{env.PAYLOV_BASE_URL.rstrip('/')}/merchant/paymentWithoutRegistration/"
     payload = {
-        "cardNumber": card_number.replace(" ", ""),
-        "expireDate": _format_expire_date_yymm(expire_date),
+        "cardNumber": clean_card,
+        "expireDate": formatted_expire,
         "amount": int(amount),
         "account": {
             "order_id": str(order_id)
         }
     }
+
+    logging.info(f"=== [PAYLOV DIRECT PAYMENT SMS OTP REQUEST] ===")
+    logging.info(f"URL: {url}")
+    logging.info(f"Payload: card={masked_card}, expire={formatted_expire}, amount={int(amount)}, order_id={order_id}")
+
     try:
         if not env.PAYLOV_CONSUMER_KEY or "mock" in env.PAYLOV_CONSUMER_KEY:
+            logging.info("[PAYLOV API] Consumer Key missing or mock mode active. Returning mock SMS OTP success.")
             return {
                 "result": {
                     "transactionId": f"paylov_direct_tx_{int(time.time())}",
@@ -968,27 +978,25 @@ async def payment_without_registration(
 
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)
-            data = res.json()
+            try:
+                data = res.json()
+            except Exception:
+                data = {"raw_text": res.text, "status_code": res.status_code}
+            
+            logging.info(f"[PAYLOV API RESPONSE] HTTP {res.status_code}: {data}")
+
             if res.status_code != 200 or data.get("error"):
-                logging.warning(f"[Paylov API] payment_without_registration fallback: {data}")
-                return {
-                    "result": {
-                        "transactionId": f"paylov_direct_tx_{int(time.time())}",
-                        "otpSentPhone": "********6466",
-                        "extId": None
-                    },
-                    "error": None
-                }
+                logging.warning(f"[PAYLOV API ERROR] payment_without_registration failed: HTTP {res.status_code}, data={data}")
+                return data
+
             return data
     except Exception as e:
-        logging.error(f"[Paylov] payment_without_registration error: {e}")
+        logging.error(f"[PAYLOV API EXCEPTION] payment_without_registration error: {e}", exc_info=True)
         return {
-            "result": {
-                "transactionId": f"paylov_direct_tx_{int(time.time())}",
-                "otpSentPhone": "********6466",
-                "extId": None
-            },
-            "error": None
+            "error": {
+                "code": 500,
+                "message": f"Paylov API ulanishda xatolik: {str(e)}"
+            }
         }
 
 
@@ -1006,8 +1014,14 @@ async def confirm_payment_without_registration(
         "transactionId": str(transaction_id),
         "otp": str(otp)
     }
+
+    logging.info(f"=== [PAYLOV DIRECT PAYMENT CONFIRM OTP REQUEST] ===")
+    logging.info(f"URL: {url}")
+    logging.info(f"Payload: transactionId={transaction_id}, otp={otp}")
+
     try:
         if str(transaction_id).startswith("paylov_direct_tx_") or not env.PAYLOV_CONSUMER_KEY or "mock" in env.PAYLOV_CONSUMER_KEY:
+            logging.info("[PAYLOV API] Mock transaction ID or mock mode. Returning mock confirm success.")
             return {
                 "result": {
                     "status": "success",
@@ -1018,24 +1032,25 @@ async def confirm_payment_without_registration(
 
         async with httpx.AsyncClient() as client:
             res = await client.post(url, json=payload, headers=headers, timeout=15.0)
-            data = res.json()
+            try:
+                data = res.json()
+            except Exception:
+                data = {"raw_text": res.text, "status_code": res.status_code}
+
+            logging.info(f"[PAYLOV API RESPONSE] HTTP {res.status_code}: {data}")
+
             if res.status_code != 200 or data.get("error"):
-                return {
-                    "result": {
-                        "status": "success",
-                        "transactionId": str(transaction_id)
-                    },
-                    "error": None
-                }
+                logging.warning(f"[PAYLOV API ERROR] confirm_payment_without_registration failed: HTTP {res.status_code}, data={data}")
+                return data
+
             return data
     except Exception as e:
-        logging.error(f"[Paylov] confirm_payment_without_registration error: {e}")
+        logging.error(f"[PAYLOV API EXCEPTION] confirm_payment_without_registration error: {e}", exc_info=True)
         return {
-            "result": {
-                "status": "success",
-                "transactionId": str(transaction_id)
-            },
-            "error": None
+            "error": {
+                "code": 500,
+                "message": f"OTP tasdiqlashda xatolik: {str(e)}"
+            }
         }
 
 
