@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Copy, AlertTriangle, Check, ArrowLeft, CreditCard } from 'lucide-react';
 import { PaymentMethodCard } from '../components/shared/PaymentMethodCard';
 import { useStore } from '../store/useStore';
-import { createOrder, getOrders, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration } from '../services/api';
+import { createOrder, getOrders, getOrderById, addPaylovCard, confirmPaylovCard, payWithPaylovSavedCard, paylovPaymentWithoutRegistration, paylovConfirmPaymentWithoutRegistration } from '../services/api';
 import type { Order } from '../types';
 
 function formatPrice(price: number): string {
@@ -79,23 +79,29 @@ export default function Checkout() {
     return () => clearInterval(t);
   }, [createdOrder, timeLeft]);
 
-  // Polling logic: only redirect if order is completed, processing or failed (NOT while pending/pending_payment or when entering OTP)
+  // Polling logic: check single created order status every 8s
   useEffect(() => {
-    if (!createdOrder || showOtpModal) return;
+    if (!createdOrder?.id || showOtpModal) return;
 
+    let isMounted = true;
     const poll = async () => {
-      const orders = await getOrders();
-      const current = orders.find(o => String(o.id) === String(createdOrder.id));
-      if (current && current.status !== 'pending' && current.status !== 'pending_payment') {
-        // Status changed to completed, processing or failed!
-        clearCart();
-        navigate('/orders');
+      try {
+        const current = await getOrderById(String(createdOrder.id));
+        if (isMounted && current && current.status !== 'pending' && current.status !== 'pending_payment') {
+          clearCart();
+          navigate('/orders');
+        }
+      } catch (e) {
+        console.warn('[Checkout Poll] Order status check failed:', e);
       }
     };
 
-    const intervalId = setInterval(poll, 5000); // Poll every 5s
-    return () => clearInterval(intervalId);
-  }, [createdOrder, showOtpModal, clearCart, navigate]);
+    const intervalId = setInterval(poll, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [createdOrder?.id, showOtpModal, clearCart, navigate]);
 
   // ── Card & Expire Date Regex Validation ──
   const EXPIRE_REGEX = /^(0[1-9]|1[0-2])\/([2-9][0-9])$/;
@@ -186,10 +192,18 @@ export default function Checkout() {
       const cardRes = await paylovPaymentWithoutRegistration(userCardNumber, userCardExpire, String(createdOrder.id));
       console.log('[Paylov Direct Payment] SMS OTP API Response:', cardRes);
 
+      // Check if response contains HTML 405 or error from Paylov API
+      if (cardRes?.data?.status_code === 405 || cardRes?.data?.raw_text?.includes('405 Not Allowed')) {
+        setSmsError(isUz 
+          ? "Paylov kartadan in-app to'lovni qo'llab-quvvatlamaydi. Iltimos, tepasidagi 'PAYLOV RASMIY TO'LOV OYNASIDAN TO'LASH' tugmasini bosing!"
+          : "Paylov does not support direct in-app card payments. Please click 'PAY VIA PAYLOV OFFICIAL PAGE' above!");
+        return;
+      }
+
       const txId = cardRes?.data?.transactionId || cardRes?.data?.result?.transactionId || cardRes?.result?.transactionId || cardRes?.transactionId;
       const errorMsg = cardRes?.error?.message || cardRes?.detail || cardRes?.data?.error?.message;
 
-      if (txId) {
+      if (txId && !txId.includes('paylov_direct_tx_')) {
         console.log(`[Paylov Direct Payment] SUCCESS! transactionId: ${txId}`);
         setPaylovTxId(txId);
         setShowOtpModal(true);
@@ -197,10 +211,9 @@ export default function Checkout() {
         console.error('[Paylov Direct Payment] ERROR response from API:', errorMsg);
         setSmsError(errorMsg);
       } else {
-        console.warn('[Paylov Direct Payment] No txId returned, using fallback transactionId');
-        const fallbackTxId = `paylov_direct_tx_${createdOrder.id}_${Date.now()}`;
-        setPaylovTxId(fallbackTxId);
-        setShowOtpModal(true);
+        setSmsError(isUz 
+          ? "Paylov in-app karta to'lovini rad etdi. Iltimos, tepasidagi 'PAYLOV RASMIY TO'LOV OYNASIDAN TO'LASH' tugmasidan foydalaning!"
+          : "Paylov rejected direct in-app card payment. Please click 'PAY VIA PAYLOV OFFICIAL PAGE' above!");
       }
     } catch (err: any) {
       console.error('[Paylov Direct Payment] Exception:', err);

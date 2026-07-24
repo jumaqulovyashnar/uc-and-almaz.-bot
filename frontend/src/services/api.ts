@@ -335,12 +335,39 @@ export async function getOrders(): Promise<Order[]> {
         status: o.status as any,
         paymentMethod: o.payment_method as any,
         createdAt: o.created_at,
-      }));
     }
     return [];
   } catch (error) {
     console.error('[API] getOrders error:', error);
     return [];
+  }
+}
+
+export async function getOrderById(id: string): Promise<Order | null> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${id}`, {
+      headers: getHeaders(),
+    });
+    const json = await res.json();
+    if (res.ok && json.success && json.data?.order) {
+      const o = json.data.order;
+      return {
+        id: String(o.id),
+        game: o.game as GameType,
+        packageName: o.package_name,
+        amount: o.amount,
+        price: o.price,
+        playerId: o.player_id,
+        playerNickname: o.player_nickname,
+        status: o.status as any,
+        paymentMethod: o.payment_method as any,
+        createdAt: o.created_at,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('[API] getOrderById error:', error);
+    return null;
   }
 }
 

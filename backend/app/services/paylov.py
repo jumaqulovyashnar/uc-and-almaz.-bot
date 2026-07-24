@@ -988,6 +988,11 @@ async def payment_without_registration(
             logging.info(f"[PAYLOV API RESPONSE] HTTP {res.status_code}: {data}")
 
             if res.status_code != 200 or data.get("error"):
+                if not data.get("error"):
+                    data["error"] = {
+                        "code": res.status_code,
+                        "message": "Paylov ushbu kartadan to'g'ridan-to'g me'yorda to'lovni qo'llab-quvvatlamaydi. Iltimos, 'PAYLOV RASMIY TO'LOV OYNASIDAN TO'LASH' tugmasini bosing!"
+                    }
                 logging.warning(f"[PAYLOV API ERROR] payment_without_registration failed: HTTP {res.status_code}, data={data}")
                 return data
 
