@@ -90,7 +90,7 @@ export default function Checkout() {
         price: selectedPackage.price,
         playerId,
         playerNickname,
-        paymentMethod: 'paylov',
+        paymentMethod: 'uzcard',
         serverId: serverId || undefined
       });
       setCreatedOrder(order);
