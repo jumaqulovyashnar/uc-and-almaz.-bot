@@ -90,12 +90,12 @@ export default function Checkout() {
     return () => clearInterval(t);
   }, [createdOrder, timeLeft]);
 
-  // Polling logic: check single created order status every 8s
+  // Check order status ONLY ONCE when createdOrder is set (No repeated background polling)
   useEffect(() => {
-    if (!createdOrder?.id || showOtpModal) return;
+    if (!createdOrder?.id) return;
 
     let isMounted = true;
-    const poll = async () => {
+    const checkOnce = async () => {
       try {
         const current = await getOrderById(String(createdOrder.id));
         if (isMounted && current && current.status !== 'pending' && current.status !== 'pending_payment') {
@@ -103,16 +103,15 @@ export default function Checkout() {
           navigate('/orders');
         }
       } catch (e) {
-        console.warn('[Checkout Poll] Order status check failed:', e);
+        console.warn('[Checkout] Single order check failed:', e);
       }
     };
 
-    const intervalId = setInterval(poll, 8000);
+    checkOnce();
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
-  }, [createdOrder?.id, showOtpModal, clearCart, navigate]);
+  }, [createdOrder?.id]);
 
   // ── Card & Expire Date Regex Validation ──
   const EXPIRE_REGEX = /^(0[1-9]|1[0-2])\/([2-9][0-9])$/;
