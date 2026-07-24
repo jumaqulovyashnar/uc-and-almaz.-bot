@@ -398,12 +398,6 @@ export default function Checkout() {
           {isUz ? "To'lov ko'rsatmasi" : 'Payment Instructions'}
         </h1>
         
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-sm">{isUz ? "To'lov qilish uchun vaqt:" : "Time left to pay:"}</p>
-          <p className={`text-4xl font-black mt-2 ${timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-cyber-cyan'}`}>
-            {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}
-          </p>
-        </div>
 
         {/* Taller card with clean button (NO ICON) */}
         <Card className="mt-6 py-7 px-6 min-h-[240px] flex flex-col justify-between border-2 border-[#FF6B00]/70 bg-[#121118]/95 shadow-[0_0_25px_rgba(255,107,0,0.25)]">
