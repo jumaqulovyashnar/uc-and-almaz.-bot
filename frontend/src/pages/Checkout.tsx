@@ -278,6 +278,38 @@ export default function Checkout() {
     }
   };
 
+  const handlePaylovCheckoutRedirect = async () => {
+    if (!createdOrder) return;
+    setSmsSending(true);
+    setSmsError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/paylov/checkout-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId: String(createdOrder.id) })
+      });
+      const res = await response.json();
+      if (res.success && res.data?.checkoutUrl) {
+        const url = res.data.checkoutUrl;
+        if ((window as any).Telegram?.WebApp?.openLink) {
+          (window as any).Telegram.WebApp.openLink(url);
+        } else {
+          window.location.href = url;
+        }
+      } else {
+        setSmsError(res.detail || (isUz ? "Paylov to'lov havolasini olishda xatolik" : "Error creating checkout link"));
+      }
+    } catch (e: any) {
+      setSmsError(e.message || "Paylov ulanishda xatolik");
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
   if (createdOrder) {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
@@ -307,7 +339,7 @@ export default function Checkout() {
           {/* Paylov Direct Online Auto Payment */}
           <div>
             <p className="text-xs text-[#FF6B00] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              ⚡ {isUz ? "Avtomatik Lahzalik To'lov (Paylov)" : "Instant Auto Payment (Paylov)"}
+              ⚡ {isUz ? "Paylov Rasmiy Lahzalik To'lov" : "Paylov Official Instant Payment"}
             </p>
 
             {userCardNumber && (
@@ -325,17 +357,27 @@ export default function Checkout() {
             <button
               type="button"
               disabled={smsSending}
-              onClick={handleRequestSmsOtp}
-              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer"
+              onClick={handlePaylovCheckoutRedirect}
+              className="w-full block text-center py-3.5 px-4 bg-[#FF6B00] hover:bg-[#FFB300] disabled:bg-gray-600 text-black font-black text-sm tracking-wider uppercase rounded-none transition-all duration-200 shadow-[0_0_20px_rgba(255,107,0,0.4)] cursor-pointer mb-3"
             >
               {smsSending ? (
                 <div className="w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin mx-auto" />
               ) : (
-                <span>⚡ {isUz ? "SMS KOD OLISH VA TO'LASH (IN-APP)" : "GET SMS CODE & PAY (IN-APP)"}</span>
+                <span>🚀 {isUz ? "PAYLOV RASMIY TO'LOV OYNASIDAN TO'LASH" : "PAY VIA PAYLOV OFFICIAL PAGE"}</span>
               )}
             </button>
+
+            <button
+              type="button"
+              disabled={smsSending}
+              onClick={handleRequestSmsOtp}
+              className="w-full block text-center py-2.5 px-4 bg-transparent border border-gray-700 hover:border-[#FF6B00] text-gray-300 hover:text-white font-bold text-xs tracking-wider uppercase rounded-none transition-all duration-200 cursor-pointer"
+            >
+              <span>📲 {isUz ? "IN-APP SMS KOD OLISH" : "IN-APP SMS CODE"}</span>
+            </button>
+
             <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">
-              {isUz ? "Tepasidagi tugmani bossangiz SMS kod yuboriladi va avtomatik to'lov oynasi ochiladi." : "Clicking the button above will send SMS code and open payment modal."}
+              {isUz ? "Paylov rasmiy oynasidan to'lov qilsangiz SMS kod 100% yetib boradi va to'lov tasdiqlanadi." : "Official Paylov page guarantees 100% SMS OTP delivery and payment confirmation."}
             </p>
           </div>
         </Card>
