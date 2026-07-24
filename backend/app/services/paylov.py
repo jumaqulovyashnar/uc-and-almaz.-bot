@@ -22,11 +22,13 @@ async def get_access_token() -> Optional[str]:
     username = env.PAYLOV_USERNAME
     password = env.PAYLOV_PASSWORD
 
-    if not consumer_key or not consumer_secret:
-        logging.warning("[Paylov] Missing PAYLOV_CONSUMER_KEY or PAYLOV_CONSUMER_SECRET in environment")
+    if not username or not password:
+        logging.warning("[Paylov] Missing PAYLOV_USERNAME or PAYLOV_PASSWORD in environment")
         return "mock_paylov_access_token"
 
-    auth_str = f"{consumer_key}:{consumer_secret}"
+    auth_key = consumer_key if consumer_key else username
+    auth_secret = consumer_secret if consumer_secret else password
+    auth_str = f"{auth_key}:{auth_secret}"
     b64_auth = base64.b64encode(auth_str.encode()).decode()
 
     headers = {
@@ -965,8 +967,8 @@ async def payment_without_registration(
     logging.info(f"Payload: card={masked_card}, expire={formatted_expire}, amount={int(amount)}, order_id={order_id}")
 
     try:
-        if not env.PAYLOV_CONSUMER_KEY or "mock" in env.PAYLOV_CONSUMER_KEY:
-            logging.info("[PAYLOV API] Consumer Key missing or mock mode active. Returning mock SMS OTP success.")
+        if not env.PAYLOV_USERNAME or not env.PAYLOV_PASSWORD:
+            logging.info("[PAYLOV API] Paylov username/password missing. Returning mock SMS OTP success.")
             return {
                 "result": {
                     "transactionId": f"paylov_direct_tx_{int(time.time())}",
@@ -1020,8 +1022,8 @@ async def confirm_payment_without_registration(
     logging.info(f"Payload: transactionId={transaction_id}, otp={otp}")
 
     try:
-        if str(transaction_id).startswith("paylov_direct_tx_") or not env.PAYLOV_CONSUMER_KEY or "mock" in env.PAYLOV_CONSUMER_KEY:
-            logging.info("[PAYLOV API] Mock transaction ID or mock mode. Returning mock confirm success.")
+        if str(transaction_id).startswith("paylov_direct_tx_") or not env.PAYLOV_USERNAME or not env.PAYLOV_PASSWORD:
+            logging.info("[PAYLOV API] Mock transaction ID or missing username/password. Returning mock confirm success.")
             return {
                 "result": {
                     "status": "success",
